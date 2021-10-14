@@ -1,7 +1,7 @@
 {
   "name": "abc",
   "version": "1.0.0",
-  "description": "Activity Based Control REST API",
+  "description": "CBI REST API Service",
   "main": "index.js",
   "scripts": {
     "prestart": "npm install",
