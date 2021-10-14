@@ -56,17 +56,17 @@ pipeline {
             git branch: 'feature/1884-cbigold-admin-react', credentialsId: '38f1358e-7a55-488b-b1ee-40eb0cc6b3f4', url: 'https://github.com/cbiglobal/dev_ops.git'
             script {
               switch(JOB_NAME) {
-                case 'cbigold-admin-develop':
-                  sh("cd cbigold-admin/overlays/develop && kustomize edit set image registry.digitalocean.com/cbiglobal/cbigold-admin-develop:${developmentTag}");
+                case 'cbigold-api-develop':
+                  sh("cd cbigold/overlays/develop && kustomize edit set image registry.digitalocean.com/cbiglobal/cbigold-api-develop:${developmentTag}");
                   break;
-                case 'cbigold-admin-production':
-                  sh("cd cbigold-admin/overlays/develop && kustomize edit set image registry.digitalocean.com/cbiglobal/cbigold-admin-production:${developmentTag}");
+                case 'cbigold-api-production':
+                  sh("cd cbigold/overlays/develop && kustomize edit set image registry.digitalocean.com/cbiglobal/cbigold-api-production:${developmentTag}");
                   break;
-                case 'cbigold-admin-qa':
-                  sh("cd cbigold-admin/overlays/develop && kustomize edit set image registry.digitalocean.com/cbiglobal/cbigold-admin-qa:${developmentTag}");
+                case 'cbigold-api-qa':
+                  sh("cd cbigold/overlays/develop && kustomize edit set image registry.digitalocean.com/cbiglobal/cbigold-api-qa:${developmentTag}");
                   break;
-                case 'cbigold-admin-staging':
-                  sh("cd cbigold-admin/overlays/develop && kustomize edit set image registry.digitalocean.com/cbiglobal/cbigold-admin-staging:${developmentTag}");
+                case 'cbigold-api-staging':
+                  sh("cd cbigold/overlays/develop && kustomize edit set image registry.digitalocean.com/cbiglobal/cbigold-api-staging:${developmentTag}");
                   break;
                 default:
                   echo 'No Kustomize application found';
@@ -87,8 +87,8 @@ pipeline {
         ARGOCD_AUTH_TOKEN = credentials('14eb5095-973d-43a0-8889-5ed02b31b432')
       }
       steps {
-        sh("argocd app sync ${JOB_NAME}")
-        sh("argocd app wait ${JOB_NAME}")
+        sh("argocd app sync cbigold-develop")
+        sh("argocd app wait cbigold-develop")
       }
     }
     stage('Error') {
