@@ -57,6 +57,7 @@ pipeline {
             script {
               switch(JOB_NAME) {
                 case 'cbigold-api-develop':
+                  sh('ls')
                   sh("cd cbigold/overlays/develop && kustomize edit set image registry.digitalocean.com/cbiglobal/cbigold-api-develop:${developmentTag}");
                   break;
                 case 'cbigold-api-production':
