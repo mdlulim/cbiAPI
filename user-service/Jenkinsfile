@@ -37,7 +37,7 @@ pipeline {
           developmentTag = "${branchName}-${gitCommit}-${unixTime}"
           developmentImage = "${dockerRepoHost}/${JOB_NAME}:${developmentTag}"
         }
-        sh "docker build -t ${developmentImage} ./"
+        sh "docker build -t ${developmentImage} ./user-service"
       }
     }
     stage('Publish Release Tag') {
