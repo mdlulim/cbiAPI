@@ -51,25 +51,24 @@ async function login(req, res) {
             login: sequelize.fn('NOW'),
             expires,
         });
-    
-        // update user's last login status
-        await userService.update(user.id, {
-            last_login: sequelize.fn('NOW'),
-            blocked: false,
-            login_attempts: 0,
-        })
-        .then(() => {
-            /**
-             * if user group is "admin",
-             * allow user to log in, otherwise perform verify login
-             */
-            if (group.name === 'admin') {
-                return res.send({
-                    success: true,
-                    data: { token },
-                });
-            }
-        });
+
+        /**
+         * if user group is "admin",
+         * allow user to log in, otherwise perform verify login
+         */
+         if (group.name === 'admin') {
+            // update user's last login status
+            await userService.update(user.id, {
+                last_login: sequelize.fn('NOW'),
+                blocked: false,
+                login_attempts: 0,
+            });
+
+            return res.send({
+                success: true,
+                data: { token },
+            });
+        }
     } catch (err) {
         return errorHandler.error(err, res);
     }
