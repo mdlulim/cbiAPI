@@ -212,25 +212,25 @@ pipeline {
             script {
                 switch(JOB_NAME) {
                     case 'cbigold-api-develop':
-                        sh("argocd app sync cbigold-develop");
-                        sh("argocd app wait cbigold-develop");
+                        application = "develop";
                         break;
                     case 'cbigold-api-production':
-                        sh("argocd app sync cbigold-production");
-                        sh("argocd app wait cbigold-production");
+                        application = "production";
                         break;
                     case 'cbigold-api-qa':
-                        sh("argocd app sync cbigold-qa");
-                        sh("argocd app wait cbigold-qa");
+                        application = "qa";
                         break;
                     case 'cbigold-api-staging':
-                        sh("argocd app sync cbigold-staging");
-                        sh("argocd app wait cbigold-staging");
+                        application = "staging";
                         break;
                     default:
                         echo 'No ArgoCD application found';
                         break;
                 }
+            }
+            steps {
+                sh("argocd app sync cbigold-${application}");
+                sh("argocd app wait cbigold-${application}");
             }
         }
         stage('Error') {
