@@ -31,7 +31,7 @@ pipeline {
       agent any
       steps {
           script {
-              array=($(ls -d */))
+            //   array=($(ls -d */))
           }
           sh("echo $array")
       }
