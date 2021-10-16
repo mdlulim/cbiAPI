@@ -30,17 +30,23 @@ pipeline {
     stage('Docker Build for Microservices') {
       agent any
       steps {
-        script {
-          array = ($(ls -d */))       
-          gitCommit = env.GIT_COMMIT.substring(0,8)
-          unixTime = (new Date().time / 1000) as Integer
-          branchName = env.GIT_BRANCH.replace('/', '-').substring(7)
-          developmentTag = "${branchName}-${gitCommit}-${unixTime}"
-          developmentImage = "${dockerRepoHost}/${JOB_NAME}:${developmentTag}"
-        }
-        sh "echo $array"
-        // sh "docker build -t ${developmentImage} ./"
+          script {
+              array = ($(ls -d */)) 
+          }
+          sh("echo $array")
       }
+    //   steps {
+    //     script {
+    //       array = ($(ls -d */))       
+    //       gitCommit = env.GIT_COMMIT.substring(0,8)
+    //       unixTime = (new Date().time / 1000) as Integer
+    //       branchName = env.GIT_BRANCH.replace('/', '-').substring(7)
+    //       developmentTag = "${branchName}-${gitCommit}-${unixTime}"
+    //       developmentImage = "${dockerRepoHost}/${JOB_NAME}:${developmentTag}"
+    //     }
+    //     sh "echo $array"
+    //     sh "docker build -t ${developmentImage} ./"
+    //   }
     }
     // stage('Publish Release Tag Microservices') {
     //   steps {
