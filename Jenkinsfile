@@ -30,9 +30,9 @@ pipeline {
     stage('Docker Build') {
       agent any
       steps {
-          script {
-              array=($(ls -d */))
-          }
+        //   script {
+        //       array=($(ls -d */))
+        //   }
           sh("echo $array")
       }
     //   steps {
