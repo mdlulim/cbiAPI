@@ -9,6 +9,11 @@ const errorHandler = require('../helpers/errorHandler');
 const activityService = require('../services/Activity');
 const sessionService = require('../services/Session');
 
+const {
+    tokenExpireHours,
+    tokenExpireTime,
+} = config;
+
 /**
  * Login
  * Login a user with the credentials provided. A successful login will return the user’s details 
@@ -25,38 +30,40 @@ async function login(req, res) {
         const { device, geoinfo } = req.body;
         const { token, user } = data;
         const { group } = user;
+
         delete req.body.password;
-        const expires = new Date();
-        expires.setHours(expires.getHours() + config.tokenExpireHours);
-    
-        // log user activity
-        await activityService.addActivity({
-            user_id: user.id,
-            action: `${group.name}.login`,
-            description: `${group.label} login`,
-            data: req.body,
-            ip: (geoinfo && geoinfo.IPv4) ? geoinfo.IPv4 : null,
-            section: 'Auth',
-            subsection: 'Login',
-            data: { device },
-        });
-        
-        // add user session to database
-        await sessionService.addSession({
-            token,
-            user_id: user.id,
-            duration: config.tokenExpireTime,
-            ip: (geoinfo && geoinfo.IPv4) ? geoinfo.IPv4 : null,
-            user_agent: (device && device.browser) ? `${device.browser} on ${device.os_name} ${device.os_version}` : null,
-            login: sequelize.fn('NOW'),
-            expires,
-        });
 
         /**
-         * if user group is "admin",
+         * If user group is "admin",
          * allow user to log in, otherwise perform verify login
          */
          if (group.name === 'admin') {
+            const expires = new Date();
+            expires.setHours(expires.getHours() + tokenExpireHours);
+    
+            // log user activity
+            await activityService.addActivity({
+                user_id: user.id,
+                action: `${group.name}.login`,
+                description: `${group.label} login`,
+                data: req.body,
+                ip: (geoinfo && geoinfo.IPv4) ? geoinfo.IPv4 : null,
+                section: 'Auth',
+                subsection: 'Login',
+                data: { device },
+            });
+            
+            // add user session to database
+            await sessionService.addSession({
+                token,
+                user_id: user.id,
+                duration: tokenExpireTime,
+                ip: (geoinfo && geoinfo.IPv4) ? geoinfo.IPv4 : null,
+                user_agent: (device && device.browser) ? `${device.browser} on ${device.os_name} ${device.os_version}` : null,
+                login: sequelize.fn('NOW'),
+                expires,
+            });
+
             // update user's last login status
             await userService.update(user.id, {
                 last_login: sequelize.fn('NOW'),
@@ -69,6 +76,20 @@ async function login(req, res) {
                 data: { token },
             });
         }
+    
+        // log user activity
+        await activityService.addActivity({
+            user_id: user.id,
+            action: `${group.name}.login.verify`,
+            description: `${group.label} verify login`,
+            data: req.body,
+            ip: (geoinfo && geoinfo.IPv4) ? geoinfo.IPv4 : null,
+            section: 'Auth',
+            subsection: 'Verify Login',
+            data: { device },
+        });
+
+        
     } catch (err) {
         return errorHandler.error(err, res);
     }
