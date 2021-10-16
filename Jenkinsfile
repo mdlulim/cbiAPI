@@ -110,8 +110,7 @@ pipeline {
                         echo "${userImage}"
                     }                    
                 }
-            }
-          
+            }  
         }
     }
 }
