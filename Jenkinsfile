@@ -194,5 +194,47 @@ pipeline {
                 }
             }
         }
+        stage('Apply Sync with ArgoCD') {
+            environment {
+                ARGOCD_SERVER='argocd.cbiglobal.io'
+                ARGOCD_AUTH_TOKEN = credentials('14eb5095-973d-43a0-8889-5ed02b31b432')
+            }
+            steps {
+                sh("argocd app sync cbigold-develop")
+                sh("argocd app wait cbigold-develop")
+            }
+        }
+        stage('Error') {
+            // when doError is equal to 1, return an error
+            when {
+                expression { doError == '1' }
+            }
+            steps {
+                echo "Failure :("
+                error "Test failed on purpose, doError == str(1)"
+            }
+        }
+        stage('Success') {
+            // when doError is equal to 0, just print a simple message
+            when {
+                expression { doError == '0' }
+            }
+            steps {
+                echo "Success :)"
+            }
+        }      
+    }
+    post {
+        always {
+            script {
+                BUILD_TRIGGER_BY = "${currentBuild.getBuildCauses()[0].shortDescription}".substring(26)
+            }
+            echo 'I will always say hello in the console.'
+            echo "${currentBuild.getBuildCauses()}"
+            slackSend channel: '#proj-new-website',
+                color: COLOR_MAP[currentBuild.currentResult],
+                message: "*${currentBuild.currentResult}:* Job ${env.JOB_NAME} build ${env.BUILD_NUMBER} by ${BUILD_TRIGGER_BY}\n More info at: ${env.BUILD_URL}"
+            cleanWs()
+        }
     }
 }
