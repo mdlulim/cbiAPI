@@ -1,28 +1,30 @@
-module.exports = (sequelize, type) => {
-    return sequelize.define(
-        'bank_account',
-        {
-            id: {
-                type: type.UUID,
-                defaultValue: type.UUIDV4,
-                primaryKey: true,
-            },
-            user_id: type.UUID,
-            name: type.STRING,
-            number: type.STRING,
-            type: type.STRING,
-            bank_name: type.STRING,
-            bank_code: type.STRING,
-            branch_code: type.STRING,
-            currency_code: type.STRING,
-            swift: type.STRING,
-            iban: type.STRING,
-            bic: type.STRING,
-            archived: type.BOOLEAN,
-            created: type.DATE,
-            updated: type.DATE,
-        }, {
-            timestamps: false,
-        }
-    )
-};
+const Sequelize = require('sequelize');
+const sequelize = require('../config/db');
+
+const BankAccount = sequelize.define('bank_account', {
+    id: {
+        type: Sequelize.UUID,
+        defaultValue: Sequelize.UUIDV4,
+        primaryKey: true,
+    },
+    user_id: Sequelize.UUID,
+    name: Sequelize.STRING,
+    number: Sequelize.STRING,
+    type: Sequelize.STRING,
+    bank_name: Sequelize.STRING,
+    bank_code: Sequelize.STRING,
+    branch_code: Sequelize.STRING,
+    currency_code: Sequelize.STRING,
+    swift: Sequelize.STRING,
+    iban: Sequelize.STRING,
+    bic: Sequelize.STRING,
+    archived: Sequelize.BOOLEAN,
+    created: Sequelize.DATE,
+    updated: Sequelize.DATE,
+}, {
+    timestamps: false
+});
+
+module.exports = {
+    BankAccount,
+}

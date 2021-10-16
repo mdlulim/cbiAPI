@@ -1,22 +1,24 @@
-module.exports = (sequelize, type) => {
-    return sequelize.define(
-        'currency',
-        {
-            code: {
-                type: type.STRING,
-                primaryKey: true,
-            },
-            description: type.STRING,
-            symbol: type.STRING,
-            unit: type.STRING,
-            divisibility: type.INTEGER,
-            company_id: type.UUID,
-            type: type.STRING,
-            archived: type.BOOLEAN,
-            created: type.DATE,
-            updated: type.DATE,
-        }, {
-            timestamps: false
-        }
-    )
-};
+const Sequelize = require('sequelize');
+const sequelize = require('../config/db');
+
+const Currency = sequelize.define('currency', {
+    code: {
+        type: Sequelize.STRING,
+        primaryKey: true,
+    },
+    description: Sequelize.STRING,
+    symbol: Sequelize.STRING,
+    unit: Sequelize.STRING,
+    divisibility: Sequelize.INTEGER,
+    company_id: Sequelize.UUID,
+    type: Sequelize.STRING,
+    archived: Sequelize.BOOLEAN,
+    created: Sequelize.DATE,
+    updated: Sequelize.DATE,
+}, {
+    timestamps: false
+});
+
+module.exports = {
+    Currency,
+}
