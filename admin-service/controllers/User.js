@@ -22,7 +22,19 @@ async function index(req, res){
     });
 };
 
+async function show(req, res){
+    return userService.show(req.params.id)
+    .then(data => res.send(data))
+    .catch(err => {
+        res.send({
+            success: false,
+            message: err.message,
+        });
+    });
+};
+
 module.exports = {
     create,
     index,
+    show,
 };
