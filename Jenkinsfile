@@ -34,8 +34,8 @@ pipeline {
                            branchName = env.GIT_BRANCH.replace('/', '-').substring(7)
                            developmentTag = "admin-service-${branchName}-${gitCommit}-${unixTime}"
                            adminImage = "${dockerRepoHost}/${JOB_NAME}:${developmentTag}"
-                        } 
-                        echo "${adminImage}"
+                        }
+                        sh "docker build -t ${adminImage} ./admin-service"
                     }
                 }
                 stage('auth-service') {
@@ -47,7 +47,7 @@ pipeline {
                            developmentTag = "auth-service-${branchName}-${gitCommit}-${unixTime}"
                            authImage = "${dockerRepoHost}/${JOB_NAME}:${developmentTag}"
                         }
-                        echo "${authImage}"
+                        sh "docker build -t ${authImage} ./auth-service"
                     }                    
                 }
                 stage('company-service') {
@@ -59,7 +59,7 @@ pipeline {
                            developmentTag = "company-service-${branchName}-${gitCommit}-${unixTime}"
                            companyImage = "${dockerRepoHost}/${JOB_NAME}:${developmentTag}"
                         }
-                        echo "${companyImage}"
+                        sh "docker build -t ${companyImage} ./company-service"
                     }                      
                 }
                 stage('content-service') {
@@ -71,7 +71,7 @@ pipeline {
                            developmentTag = "content-service-${branchName}-${gitCommit}-${unixTime}"
                            contentImage = "${dockerRepoHost}/${JOB_NAME}:${developmentTag}"
                         }
-                        echo "${contentImage}"
+                        sh "docker build -t ${contentImage} ./content-service"
                     }                      
                 }
                 stage('product-service') {
@@ -83,7 +83,7 @@ pipeline {
                            developmentTag = "product-service-${branchName}-${gitCommit}-${unixTime}"
                            productImage = "${dockerRepoHost}/${JOB_NAME}:${developmentTag}"
                         }
-                        echo "${productImage}"
+                        sh "docker build -t ${productImage} ./product-service"
                     }                      
                 }
                 stage('transaction-service') {
@@ -95,7 +95,7 @@ pipeline {
                            developmentTag = "transaction-service-${branchName}-${gitCommit}-${unixTime}"
                            transactionImage = "${dockerRepoHost}/${JOB_NAME}:${developmentTag}"
                         }
-                        echo "${transactionImage}"
+                        sh "docker build -t ${transactionImage} ./transaction-service"
                     }                      
                 }
                 stage('user-service') {
@@ -107,7 +107,7 @@ pipeline {
                            developmentTag = "user-service-${branchName}-${gitCommit}-${unixTime}"
                            userImage = "${dockerRepoHost}/${JOB_NAME}:${developmentTag}"
                         }
-                        echo "${userImage}"
+                        sh "docker build -t ${userImage} ./user-service"
                     }                    
                 }
             }  
