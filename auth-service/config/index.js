@@ -13,7 +13,7 @@ if (stage === 'dev') {
         mail: {
             smtp: {
                 host: 'mail.cbiglobal.io',
-                port: 587,
+                port: 465,
                 user: 'no-reply@cbiglobal.io',
                 pass: 'ocJ~$m[NTj#N',
             }

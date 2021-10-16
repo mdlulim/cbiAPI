@@ -1,4 +1,4 @@
-const companyService = require('../services/company');
+const companyService = require('../services/Company');
 
 function getCompanies(req, res){
     companyService.getAll(req.query || {})

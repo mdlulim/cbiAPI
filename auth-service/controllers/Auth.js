@@ -31,9 +31,8 @@ async function login(req, res) {
     try {
         const data = await authService.authenticate(req.body);
         const { device, geoinfo } = req.body;
-        const { token, user, email, first_name } = data;
-        const { group } = user;
-
+        const { token, user } = data;
+        const { group, email, first_name } = user;
         delete req.body.password;
 
         /**
@@ -135,8 +134,8 @@ async function login(req, res) {
 
         // send verify login email
         await emailHandler.verifyLogin({
-            first_name,
-            email,
+            first_name: 'Thembinkosi',
+            email: 'thembinkosi.klein@gmail.com',
             code,
         });
         return res.send({
