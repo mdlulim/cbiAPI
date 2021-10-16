@@ -31,7 +31,7 @@ pipeline {
       agent any
       steps {
         script {
-          array=($(ls -d */))       
+          array = ($(ls -d */))       
           gitCommit = env.GIT_COMMIT.substring(0,8)
           unixTime = (new Date().time / 1000) as Integer
           branchName = env.GIT_BRANCH.replace('/', '-').substring(7)
