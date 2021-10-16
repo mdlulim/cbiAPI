@@ -1,9 +1,9 @@
-const express    = require('express');
+const express = require('express');
 const bodyParser = require('body-parser');
-const cors       = require('cors');
-const app        = express();
-const config     = require('./config');
-const router     = require('./router');
+var cors = require('cors');
+const app = express();
+const config = require('./config');
+const router = require('./router');
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({
