@@ -1,5 +1,8 @@
 // const sequelize = require('../config/db');
-const { User } = require('../models/User');
+const { Group } = require('../models/Group');
+const { User }  = require('../models/User');
+
+User.belongsTo(Group, { foreignKey: 'group_id', targetKey: 'id' });
 
 async function create(data) {
     try {
@@ -26,6 +29,7 @@ async function index(query) {
         delete where.limit;
         const users = await User.findAndCountAll({
             where,
+            include: [{ model: Group }],
             order: [['created', 'DESC']],
             offset: offset || 0,
             limit: limit || 100,
@@ -46,7 +50,21 @@ async function index(query) {
     }
 }
 
+async function show(id) {
+    try {
+        const user = await User.findOne(data, {
+            where: { id },
+            include: [{ model: Group }],
+        });
+        return user;
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
 module.exports = {
     create,
-    index
+    index,
+    show,
 }

@@ -1,1 +1,1 @@
-# CBI REST API Service
+# CBI User REST API Service
