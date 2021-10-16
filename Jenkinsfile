@@ -232,6 +232,7 @@ pipeline {
                         break;
                 }
             }
+        }
         stage('Error') {
             // when doError is equal to 1, return an error
             when {
