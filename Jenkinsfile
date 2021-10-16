@@ -7,7 +7,7 @@ pipeline {
                     microservicesArray = "ls -d */"
                     microservicesArray.split(' ')
                 }
-                sh "echo $microservices"
+                sh "echo $microservicesArray"
             }            
         }
     }
