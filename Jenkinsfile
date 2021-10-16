@@ -13,6 +13,7 @@ developmentTag = ''
 releaseTag = ''
 
 // Microservices Docker Images 
+// blank values that are filled in by pipeline steps below:
 adminImage = ''
 authImage = ''
 companyImage = ''
@@ -20,6 +21,16 @@ contentImage = ''
 productImage = ''
 transactionImage = ''
 userImage = ''
+
+// Microservices Docker Images
+// blank values that are filled in by pipeline steps below: 
+adminTag = ''
+authTag = ''
+companyTag = ''
+contentTag = ''
+productTag = ''
+transactionTag = ''
+userTag = ''
 
 pipeline {
     agent any
@@ -32,8 +43,8 @@ pipeline {
                            gitCommit = env.GIT_COMMIT.substring(0,8)
                            unixTime = (new Date().time / 1000) as Integer
                            branchName = env.GIT_BRANCH.replace('/', '-').substring(7)
-                           developmentTag = "admin-service-${branchName}-${gitCommit}-${unixTime}"
-                           adminImage = "${dockerRepoHost}/${JOB_NAME}:${developmentTag}"
+                           adminTag = "${branchName}-${gitCommit}-${unixTime}"
+                           adminImage = "${dockerRepoHost}/admin-service:${adminTag}"
                         }
                         sh "docker build -t ${adminImage} ./admin-service"
                     }
@@ -44,8 +55,8 @@ pipeline {
                            gitCommit = env.GIT_COMMIT.substring(0,8)
                            unixTime = (new Date().time / 1000) as Integer
                            branchName = env.GIT_BRANCH.replace('/', '-').substring(7)
-                           developmentTag = "auth-service-${branchName}-${gitCommit}-${unixTime}"
-                           authImage = "${dockerRepoHost}/${JOB_NAME}:${developmentTag}"
+                           authTag = "${branchName}-${gitCommit}-${unixTime}"
+                           authImage = "${dockerRepoHost}/auth-service:${authTag}"
                         }
                         sh "docker build -t ${authImage} ./auth-service"
                     }                    
@@ -56,8 +67,8 @@ pipeline {
                            gitCommit = env.GIT_COMMIT.substring(0,8)
                            unixTime = (new Date().time / 1000) as Integer
                            branchName = env.GIT_BRANCH.replace('/', '-').substring(7)
-                           developmentTag = "company-service-${branchName}-${gitCommit}-${unixTime}"
-                           companyImage = "${dockerRepoHost}/${JOB_NAME}:${developmentTag}"
+                           companyTag = "${branchName}-${gitCommit}-${unixTime}"
+                           companyImage = "${dockerRepoHost}/company-service:${companyTag}"
                         }
                         sh "docker build -t ${companyImage} ./company-service"
                     }                      
@@ -68,8 +79,8 @@ pipeline {
                            gitCommit = env.GIT_COMMIT.substring(0,8)
                            unixTime = (new Date().time / 1000) as Integer
                            branchName = env.GIT_BRANCH.replace('/', '-').substring(7)
-                           developmentTag = "content-service-${branchName}-${gitCommit}-${unixTime}"
-                           contentImage = "${dockerRepoHost}/${JOB_NAME}:${developmentTag}"
+                           contentTag = "${branchName}-${gitCommit}-${unixTime}"
+                           contentImage = "${dockerRepoHost}/content-service:${contentTag}"
                         }
                         sh "docker build -t ${contentImage} ./content-service"
                     }                      
@@ -80,8 +91,8 @@ pipeline {
                            gitCommit = env.GIT_COMMIT.substring(0,8)
                            unixTime = (new Date().time / 1000) as Integer
                            branchName = env.GIT_BRANCH.replace('/', '-').substring(7)
-                           developmentTag = "product-service-${branchName}-${gitCommit}-${unixTime}"
-                           productImage = "${dockerRepoHost}/${JOB_NAME}:${developmentTag}"
+                           productTag = "${branchName}-${gitCommit}-${unixTime}"
+                           productImage = "${dockerRepoHost}/product-service:${productTag}"
                         }
                         sh "docker build -t ${productImage} ./product-service"
                     }                      
@@ -92,8 +103,8 @@ pipeline {
                            gitCommit = env.GIT_COMMIT.substring(0,8)
                            unixTime = (new Date().time / 1000) as Integer
                            branchName = env.GIT_BRANCH.replace('/', '-').substring(7)
-                           developmentTag = "transaction-service-${branchName}-${gitCommit}-${unixTime}"
-                           transactionImage = "${dockerRepoHost}/${JOB_NAME}:${developmentTag}"
+                           transactionTag = "${branchName}-${gitCommit}-${unixTime}"
+                           transactionImage = "${dockerRepoHost}/transaction-service:${transactionTag}"
                         }
                         sh "docker build -t ${transactionImage} ./transaction-service"
                     }                      
@@ -104,8 +115,8 @@ pipeline {
                            gitCommit = env.GIT_COMMIT.substring(0,8)
                            unixTime = (new Date().time / 1000) as Integer
                            branchName = env.GIT_BRANCH.replace('/', '-').substring(7)
-                           developmentTag = "user-service-${branchName}-${gitCommit}-${unixTime}"
-                           userImage = "${dockerRepoHost}/${JOB_NAME}:${developmentTag}"
+                           userTag = "${branchName}-${gitCommit}-${unixTime}"
+                           userImage = "${dockerRepoHost}/user-service:${userTag}"
                         }
                         sh "docker build -t ${userImage} ./user-service"
                     }                    
@@ -126,6 +137,43 @@ pipeline {
         stage('Remove Local Docker Image') {
             steps {
                 sh "docker rmi ${adminImage} ${authImage} ${companyImage} ${contentImage} ${productImage} ${transactionImage} ${userImage}"
+            }
+        }
+        stage('Update GitOps repo for ArgoCD') {
+            steps {
+                script {
+                    git branch: 'feature/1884-cbigold-react', credentialsId: '38f1358e-7a55-488b-b1ee-40eb0cc6b3f4', url: 'https://github.com/cbiglobal/dev_ops.git'
+                    script {
+                        switch(JOB_NAME) {
+                            case 'cbigold-api-develop':
+                                sh("cd cbigold/overlays/develop && kustomize edit set image registry.digitalocean.com/cbiglobal/admin-service:${adminTag}");
+                                sh("cd cbigold/overlays/develop && kustomize edit set image registry.digitalocean.com/cbiglobal/auth-service:${authTag}");
+                                sh("cd cbigold/overlays/develop && kustomize edit set image registry.digitalocean.com/cbiglobal/company-service:${companyTag}");
+                                sh("cd cbigold/overlays/develop && kustomize edit set image registry.digitalocean.com/cbiglobal/content:${contentTag}");
+                                sh("cd cbigold/overlays/develop && kustomize edit set image registry.digitalocean.com/cbiglobal/product-service:${productTag}");
+                                sh("cd cbigold/overlays/develop && kustomize edit set image registry.digitalocean.com/cbiglobal/transaction-service:${transactionTag}");
+                                sh("cd cbigold/overlays/develop && kustomize edit set image registry.digitalocean.com/cbiglobal/user-service:${userTag}");
+                                break;
+                            case 'cbigold-api-production':
+                                sh("cd cbigold/overlays/develop && kustomize edit set image registry.digitalocean.com/cbiglobal/cbigold-production:${developmentTag}");
+                                break;
+                            case 'cbigold-api-qa':
+                                sh("cd cbigold/overlays/develop && kustomize edit set image registry.digitalocean.com/cbiglobal/cbigold-qa:${developmentTag}");
+                                break;
+                            case 'cbigold-api-staging':
+                                sh("cd cbigold/overlays/develop && kustomize edit set image registry.digitalocean.com/cbiglobal/cbigold-staging:${developmentTag}");
+                                break;
+                            default:
+                                echo 'No Kustomize application found';
+                                break;
+                        }
+                    }
+                }
+                sh('git add .')
+                sh("git commit -m \"Update ${JOB_NAME} to v-${developmentTag}\"")
+                withCredentials([usernamePassword(credentialsId: '38f1358e-7a55-488b-b1ee-40eb0cc6b3f4', passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
+                    sh('git push https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/cbiglobal/dev_ops.git')
+                }
             }
         }
     }
