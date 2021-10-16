@@ -3,12 +3,21 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 
 const config = require('../config');
-const mail = require('../helpers/mailHandler');
 
 const { User } = require('../models/User');
 const { Group } = require('../models/Group');
+const { OTPAuth } = require('../models/OTPAuth');
 
 User.belongsTo(Group, { foreignKey: 'group_id', targetKey: 'id' });
+OTPAuth.belongsTo(User, { foreignKey: 'user_id', targetKey: 'id' });
+
+async function createOtp(data) {
+    return OTPAuth.create(data);
+}
+
+async function deleteOtp(user_id) {
+    return OTPAuth.destroy({ where: { user_id } });
+}
 
 async function authenticate(data) {
     const { user, password } = data;
@@ -37,17 +46,6 @@ async function authenticate(data) {
             if (blocked) {
                 throw new Error('Authentication failed. Account blocked, please contact support.');
             }
-            // send login notification/alert email
-            // const from = { name: 'Crypto Based Innovation', email: config.mail.smtp.user };
-            // const recipient = record.email;
-            // {
-            //     datetime: moment().format('MMM DD, YYYY hh:mm a'),
-            //     ipaddress: (data.geoinfo) ? `${data.geoinfo.IPv4} (${data.geoinfo.country_name})` : 'Could not be detected',
-            //     browser: data.device.browser || '',
-            //     os: data.device.os_name ? `${data.device.os_name} ${data.device.os_version}` : '',
-            //     first_name: user.first_name,
-            // }
-            // await mail.send(from, recipient, 'Authentication failed');
             throw new Error(`Authentication failed. Wrong username and/or password. You have ${3 - loginAttemps} login attemp(s) remaining.`);
         }
         if (record.blocked)
@@ -454,6 +452,8 @@ async function mfaVerify() {
 }
 
 module.exports = {
+    createOtp,
+    deleteOtp,
     authenticate,
     verify,
     logout,

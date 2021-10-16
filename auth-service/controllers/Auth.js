@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+const moment = require('moment');
 const generator = require('generate-password');
 const config = require('../config');
 const sequelize = require('../config/db');
@@ -8,8 +9,10 @@ const userService = require('../services/User');
 const errorHandler = require('../helpers/errorHandler');
 const activityService = require('../services/Activity');
 const sessionService = require('../services/Session');
+const emailHandler = require('../helpers/emailHandler');
 
 const {
+    jwtSecret,
     tokenExpireHours,
     tokenExpireTime,
 } = config;
@@ -28,7 +31,7 @@ async function login(req, res) {
     try {
         const data = await authService.authenticate(req.body);
         const { device, geoinfo } = req.body;
-        const { token, user } = data;
+        const { token, user, email, first_name } = data;
         const { group } = user;
 
         delete req.body.password;
@@ -37,7 +40,9 @@ async function login(req, res) {
          * If user group is "admin",
          * allow user to log in, otherwise perform verify login
          */
-         if (group.name === 'admin') {
+        const isAdmin = group.name === 'admin';
+
+         if (isAdmin) {
             const expires = new Date();
             expires.setHours(expires.getHours() + tokenExpireHours);
     
@@ -73,11 +78,15 @@ async function login(req, res) {
 
             return res.send({
                 success: true,
-                data: { token },
+                data: {
+                    token,
+                    admin: true,
+                },
             });
         }
     
         // log user activity
+        const transaction = `${group.name}.login.verify`;
         await activityService.addActivity({
             user_id: user.id,
             action: `${group.name}.login.verify`,
@@ -89,7 +98,55 @@ async function login(req, res) {
             data: { device },
         });
 
-        
+        // auth (jwt) token
+        const payload = {
+            id: user.id,
+            time: new Date(),
+        };
+        const verifyToken = jwt.sign(payload, jwtSecret, {
+            expiresIn: '15m',
+        });
+
+        // generate otp code
+        const code = generator.generate({ length: 4 }).toUpperCase();
+        const authRecord = {
+            user_id: user.id,
+            device: device || {},
+            geoinfo: geoinfo || {},
+            type: 'OTP',
+            description: `${group.label} verify login`,
+            expiry: moment().add(15, 'minutes').format('YYYY-MM-DD HH:mm:ss'),
+            transaction,
+            code,
+            verifyToken,
+        };
+
+        // delete previous otp login attemps/records
+        // and insert a new record
+        await authService.deleteOtp(user.id);
+        await authService.createOtp(authRecord);
+
+        // update user's last login status
+        await userService.update(user.id, {
+            last_login: sequelize.fn('NOW'),
+            blocked: false,
+            login_attempts: 0,
+        });
+
+        // send verify login email
+        await emailHandler.verifyLogin({
+            first_name,
+            email,
+            code,
+        });
+        return res.send({
+            success: true,
+            data: {
+                token,
+                admin: group.name === 'admin'
+            },
+        });
+
     } catch (err) {
         return errorHandler.error(err, res);
     }
@@ -118,7 +175,7 @@ async function register(req, res) {
             const key  = jwt.sign({
                 code,
                 email,
-            }, config.jwtSecret);
+            }, jwtSecret);
             const salt = bcrypt.genSaltSync();
             const password = bcrypt.hashSync(req.body.password, salt);
             const user = {
@@ -146,7 +203,7 @@ async function register(req, res) {
                 message: err.message || null,
             });
         });
-};
+}
 
 /**
  * Logout

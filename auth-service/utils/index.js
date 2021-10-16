@@ -11,7 +11,7 @@ const config     = require('../config');
  * @param {function} callback    callback function <optional>
  * @param {function} error       error callback function <optional>
  */
-const send = async (from, recipients, subject, body, callback = null, error = null) => {
+const sendMail = async (from, recipients, subject, body, callback = null, error = null) => {
     try {
         var message = {
             from : `${from.name} <${from.email}>`, // sender address
@@ -52,5 +52,5 @@ const send = async (from, recipients, subject, body, callback = null, error = nu
 };
 
 module.exports = {
-    send,
+    sendMail,
 };
