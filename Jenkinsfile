@@ -3,7 +3,7 @@ pipeline {
     stages {
         stage('Docker Build Microservices') {
             steps {
-                sh "ls -d */"
+                sh "ls -d */ | cut -f1 -d'/'"
             }            
         }
     }
