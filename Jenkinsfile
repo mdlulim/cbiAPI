@@ -18,22 +18,34 @@ pipeline {
                     }
                 }
                 stage('auth-service') {
-                    echo 'testing'
+                    steps {
+                        echo 'testing'
+                    }                    
                 }
                 stage('company-service') {
-                    echo 'testing'                    
+                    steps {
+                        echo 'testing'
+                    }                      
                 }
                 stage('content-service') {
-                    echo 'testing'                    
+                    steps {
+                        echo 'testing'
+                    }                      
                 }
                 stage('product-service') {
-                    echo 'testing'                    
+                    steps {
+                        echo 'testing'
+                    }                      
                 }
                 stage('transaction-service') {
-                    echo 'testing'                    
+                    steps {
+                        echo 'testing'
+                    }                      
                 }
                 stage('user-service') {
-                    echo 'testing'                    
+                    steps {
+                        echo 'testing'
+                    }                    
                 }
             }
           
