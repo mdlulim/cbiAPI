@@ -31,13 +31,15 @@ pipeline {
       agent any
       steps {
         script {
-          gitCommit = env.GIT_COMMIT.substring(0,8)
-          unixTime = (new Date().time / 1000) as Integer
-          branchName = env.GIT_BRANCH.replace('/', '-').substring(7)
-          developmentTag = "${branchName}-${gitCommit}-${unixTime}"
-          developmentImage = "${dockerRepoHost}/${JOB_NAME}:${developmentTag}"
+            array=($(ls -d */))        
+            gitCommit = env.GIT_COMMIT.substring(0,8)
+            unixTime = (new Date().time / 1000) as Integer
+            branchName = env.GIT_BRANCH.replace('/', '-').substring(7)
+            developmentTag = "${branchName}-${gitCommit}-${unixTime}"
+            developmentImage = "${dockerRepoHost}/${JOB_NAME}:${developmentTag}"
         }
-        sh "docker build -t ${developmentImage} ./"
+        sh "echo $array"
+        // sh "docker build -t ${developmentImage} ./"
       }
     }
     // stage('Publish Release Tag Microservices') {
