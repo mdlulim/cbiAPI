@@ -27,28 +27,26 @@ pipeline {
   }
   agent any
   stages {
-    stage('Docker Build for Microservices') {
+    stage('Docker Build') {
       agent any
       steps {
           script {
-              array = ($(ls -d */)) 
+              array=($(ls -d */))
           }
           sh("echo $array")
       }
     //   steps {
     //     script {
-    //       array = ($(ls -d */))       
     //       gitCommit = env.GIT_COMMIT.substring(0,8)
     //       unixTime = (new Date().time / 1000) as Integer
     //       branchName = env.GIT_BRANCH.replace('/', '-').substring(7)
     //       developmentTag = "${branchName}-${gitCommit}-${unixTime}"
     //       developmentImage = "${dockerRepoHost}/${JOB_NAME}:${developmentTag}"
     //     }
-    //     sh "echo $array"
     //     sh "docker build -t ${developmentImage} ./"
     //   }
     }
-    // stage('Publish Release Tag Microservices') {
+    // stage('Publish Release Tag') {
     //   steps {
     //     sh "docker push ${developmentImage}"
     //   }
@@ -64,16 +62,16 @@ pipeline {
     //         git branch: 'feature/1884-cbigold-react', credentialsId: '38f1358e-7a55-488b-b1ee-40eb0cc6b3f4', url: 'https://github.com/cbiglobal/dev_ops.git'
     //         script {
     //           switch(JOB_NAME) {
-    //             case 'cbigold-api-develop':
+    //             case 'cbigold-develop':
     //               sh("cd cbigold/overlays/develop && kustomize edit set image registry.digitalocean.com/cbiglobal/cbigold-develop:${developmentTag}");
     //               break;
-    //             case 'cbigold-api-production':
+    //             case 'cbigold-production':
     //               sh("cd cbigold/overlays/develop && kustomize edit set image registry.digitalocean.com/cbiglobal/cbigold-production:${developmentTag}");
     //               break;
-    //             case 'cbigold-api-qa':
+    //             case 'cbigold-qa':
     //               sh("cd cbigold/overlays/develop && kustomize edit set image registry.digitalocean.com/cbiglobal/cbigold-qa:${developmentTag}");
     //               break;
-    //             case 'cbigold-api-staging':
+    //             case 'cbigold-staging':
     //               sh("cd cbigold/overlays/develop && kustomize edit set image registry.digitalocean.com/cbiglobal/cbigold-staging:${developmentTag}");
     //               break;
     //             default:
