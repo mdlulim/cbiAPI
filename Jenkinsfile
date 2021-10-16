@@ -1,3 +1,6 @@
+
+ microservicesArray = []
+
 pipeline {
     agent any
     stages {
@@ -5,8 +8,7 @@ pipeline {
             steps {
                 script {
                     micro = "ls -d */"
-                    micro.split(' ')
-                    microservicesArray[] = micro.split(' ', -1)
+                    microservicesArray = micro.split(' ', -1)
                 }
                 sh "echo $microservicesArray"
             }            
