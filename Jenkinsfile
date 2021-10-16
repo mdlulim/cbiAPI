@@ -33,7 +33,8 @@ pipeline {
         //   script {
         //       array=($(ls -d */))
         //   }
-          echo 'Building..'
+          sh("array=($(ls -d */))")
+          sh("echo $array")
       }
     //   steps {
     //     script {
