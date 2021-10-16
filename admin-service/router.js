@@ -1,5 +1,6 @@
 const groupController = require('./controllers/Group');
 const userController = require('./controllers/User');
+const authMiddleware = require('./middlewares/auth');
 
 module.exports.set = app => {
     /**
@@ -7,14 +8,21 @@ module.exports.set = app => {
      * 
      * Create a user.
      */
-    app.post('/admin/users', userController.create);
+    app.post('/admin/users', authMiddleware.checkAuth, userController.create);
 
     /**
      * List Users
      * 
      * Get a list of users belonging to CBI.
      */
-    app.get('/admin/users', userController.index);
+    app.get('/admin/users', authMiddleware.checkAuth, userController.index);
+
+    /**
+     * Retrieve User
+     * 
+     * Retrieve a company’s user.
+     */
+    app.get('/admin/users', authMiddleware.checkAuth, userController.show);
 
     /**
      * Groups
@@ -25,9 +33,9 @@ module.exports.set = app => {
      * view, add, edit or delete data from the system
      * via admin endpoints.
      */
-    app.post('/admin/groups', groupController.create);
-    app.get('/admin/groups', groupController.index);
-    app.get('/admin/groups/:id', groupController.show);
-    app.put('/admin/groups/:id', groupController.update);
-    app.delete('/admin/groups/:id', groupController.destroy);
+    app.post('/admin/groups', authMiddleware.checkAuth, groupController.create);
+    app.get('/admin/groups', authMiddleware.checkAuth, groupController.index);
+    app.get('/admin/groups/:id', authMiddleware.checkAuth, groupController.show);
+    app.put('/admin/groups/:id', authMiddleware.checkAuth, groupController.update);
+    app.delete('/admin/groups/:id', authMiddleware.checkAuth, groupController.destroy);
 };
