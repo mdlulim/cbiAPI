@@ -112,5 +112,21 @@ pipeline {
                 }
             }  
         }
+        stage('Publish Release Tag All Microservices') {
+            steps {
+                sh "docker push ${adminImage}"
+                sh "docker push ${authImage}"
+                sh "docker push ${companyImage}"
+                sh "docker push ${contentImage}"
+                sh "docker push ${productImage}"
+                sh "docker push ${transactionImage}"
+                sh "docker push ${userImage}"
+            }
+        }
+        stage('Remove Local Docker Image') {
+            steps {
+                sh "docker rmi ${adminImage} ${authImage} ${companyImage} ${contentImage} ${productImage} ${transactionImage} ${userImage}"
+            }
+        }
     }
 }
