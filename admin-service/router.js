@@ -1,4 +1,5 @@
 const groupController = require('./controllers/Group');
+const productController = require('./controllers/Product');
 const userController = require('./controllers/User');
 const authMiddleware = require('./middlewares/auth');
 
@@ -22,7 +23,14 @@ module.exports.set = app => {
      * 
      * Retrieve a company’s user.
      */
-    app.get('/admin/users', authMiddleware.checkAuth, userController.show);
+    app.get('/admin/users/:id', authMiddleware.checkAuth, userController.show);
+
+    /**
+     * List User Products
+     * 
+     * Get a list of products belonging to CBI's user.
+     */
+    // app.get('/admin/users/:id/products', authMiddleware.checkAuth, userController.products);
 
     /**
      * Groups
@@ -38,4 +46,25 @@ module.exports.set = app => {
     app.get('/admin/groups/:id', authMiddleware.checkAuth, groupController.show);
     app.put('/admin/groups/:id', authMiddleware.checkAuth, groupController.update);
     app.delete('/admin/groups/:id', authMiddleware.checkAuth, groupController.destroy);
+
+    /**
+     * List Products
+     * 
+     * Get a list of products belonging to CBI.
+     */
+    app.get('/admin/products', authMiddleware.checkAuth, productController.index);
+
+    /**
+     * Retrieve Product
+     * 
+     * Retrieve a company’s product.
+     */
+    app.get('/admin/products/:id', authMiddleware.checkAuth, productController.show);
+
+    /**
+     * Retrieve Product
+     * 
+     * Retrieve a company’s product.
+     */
+    // app.get('/admin/products/search/:prop/:value', authMiddleware.checkAuth, productController.search);
 };

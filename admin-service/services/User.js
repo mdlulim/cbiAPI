@@ -1,6 +1,7 @@
 // const sequelize = require('../config/db');
 const { User } = require('../models/User');
 const { Group } = require('../models/Group');
+const { Product } = require('../models/Product');
 
 User.belongsTo(Group, { foreignKey: 'group_id', targetKey: 'id' });
 
@@ -141,8 +142,32 @@ async function show(id) {
     }
 }
 
+/**
+ * List User Products
+ * 
+ * Get a list of products belonging to CBI's user.
+ * 
+ * @param {string} id 
+ * @returns 
+ */
+async function products(id) {
+    try {
+        const products = await Product.findAll({
+            include: [{ model: Group }],
+        });
+        return {
+            success: true,
+            data: products,
+        };
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
 module.exports = {
     create,
     index,
     show,
+    products,
 }

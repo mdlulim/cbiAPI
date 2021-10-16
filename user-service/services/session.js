@@ -1,4 +1,4 @@
-const Session = require('../models/session').Session;
+const Session = require('../models/Session').Session;
 
 const addSession = session => Session.create(session);
 

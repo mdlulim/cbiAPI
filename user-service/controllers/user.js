@@ -1,21 +1,20 @@
 const userService = require('../services/user');
 
-function index(req, res){
+async function profile(req, res) {
     try {
-        return userService.index(req.query)
-        .then(data => res.send(data))
-        .catch(err => {
-            res.send({
-                success: false,
-                message: err.message,
-            });
+        const user = await userService.show(req.user.id);
+        return res.send({
+            success: true,
+            data: user,
         });
-    } catch (err) {
-        console.log(err);
-        res.send(err);
+    } catch (error) {
+        return res.send({
+            success: false,
+            message: 'Could not process request'
+        });
     }
-};
+}
 
 module.exports = {
-    index,
+    profile,
 };

@@ -1,20 +1,19 @@
 const Sequelize = require('sequelize');
 const sequelize = require('../config/db');
 
-const Product = sequelize.define('product', {
+const Group = sequelize.define('group', {
     id: {
         type: Sequelize.UUID,
         defaultValue: Sequelize.UUIDV4,
         primaryKey: true,
     },
-    type: Sequelize.STRING,
-    permakey: Sequelize.STRING,
-    title: Sequelize.STRING,
-    body: Sequelize.STRING,
-    price: Sequelize.FLOAT,
-    currency_code: Sequelize.STRING,
+    name: Sequelize.STRING,
+    label: Sequelize.STRING,
+    description: Sequelize.STRING,
+    is_default: Sequelize.BOOLEAN,
+    is_public: Sequelize.BOOLEAN,
+    settings: Sequelize.JSONB,
     archived: Sequelize.BOOLEAN,
-    status: Sequelize.STRING,
     created: Sequelize.DATE,
     updated: Sequelize.DATE,
 }, {
@@ -22,5 +21,5 @@ const Product = sequelize.define('product', {
 });
 
 module.exports = {
-    Product,
+    Group,
 }
