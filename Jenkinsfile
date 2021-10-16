@@ -209,26 +209,26 @@ pipeline {
                 ARGOCD_SERVER='argocd.cbiglobal.io'
                 ARGOCD_AUTH_TOKEN = credentials('14eb5095-973d-43a0-8889-5ed02b31b432')
             }
-            script {
-                switch(JOB_NAME) {
-                    case 'cbigold-api-develop':
-                        application = "develop";
-                        break;
-                    case 'cbigold-api-production':
-                        application = "production";
-                        break;
-                    case 'cbigold-api-qa':
-                        application = "qa";
-                        break;
-                    case 'cbigold-api-staging':
-                        application = "staging";
-                        break;
-                    default:
-                        echo 'No ArgoCD application found';
-                        break;
-                }
-            }
             steps {
+                script {
+                    switch(JOB_NAME) {
+                        case 'cbigold-api-develop':
+                            application = "develop";
+                            break;
+                        case 'cbigold-api-production':
+                            application = "production";
+                            break;
+                        case 'cbigold-api-qa':
+                            application = "qa";
+                            break;
+                        case 'cbigold-api-staging':
+                            application = "staging";
+                            break;
+                        default:
+                            echo 'No ArgoCD application found';
+                            break;
+                    }
+                }
                 sh("argocd app sync cbigold-${application}");
                 sh("argocd app wait cbigold-${application}");
             }
