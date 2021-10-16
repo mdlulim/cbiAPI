@@ -32,7 +32,17 @@ productTag = ''
 transactionTag = ''
 userTag = ''
 
+def COLOR_MAP = [
+    'SUCCESS': 'good',
+    'FAILURE': 'danger',
+]
+
 pipeline {
+    environment {
+        // test variable: 0=success, 1=fail; must be string
+        doError = '0'
+        BUILD_USER = ''
+    }
     agent any
     stages {
         stage('Docker Build Microservices') {
