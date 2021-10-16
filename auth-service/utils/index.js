@@ -13,7 +13,6 @@ const config     = require('../config');
  */
 const sendMail = async (from, recipients, subject, body, callback = null, error = null) => {
     try {
-        console.log(from, recipients, subject, body);
         var message = {
             from : `${from.name} <${from.email}>`, // sender address
             to   : recipients,                     // list of receivers (comma separated)

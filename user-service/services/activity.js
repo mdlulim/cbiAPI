@@ -1,5 +1,5 @@
-const Activity = require('../models/activity').Activity;
-const User = require('../models/user').User;
+const { Activity } = require('../models/Activity');
+const { User } = require('../models/User');
 
 Activity.belongsTo(User, { foreignKey: 'user_id', targetKey: 'id' });
 

@@ -1,19 +1,20 @@
 const Sequelize = require('sequelize');
 const sequelize = require('../config/db');
 
-const Role = sequelize.define('user_role', {
+const Product = sequelize.define('product', {
     id: {
         type: Sequelize.UUID,
         defaultValue: Sequelize.UUIDV4,
         primaryKey: true,
     },
-    name: Sequelize.STRING,
-    label: Sequelize.STRING,
-    description: Sequelize.STRING,
-    is_default: Sequelize.BOOLEAN,
-    is_public: Sequelize.BOOLEAN,
-    settings: Sequelize.JSONB,
+    type: Sequelize.STRING,
+    permakey: Sequelize.STRING,
+    title: Sequelize.STRING,
+    body: Sequelize.STRING,
+    price: Sequelize.FLOAT,
+    currency_code: Sequelize.STRING,
     archived: Sequelize.BOOLEAN,
+    status: Sequelize.STRING,
     created: Sequelize.DATE,
     updated: Sequelize.DATE,
 }, {
@@ -21,5 +22,5 @@ const Role = sequelize.define('user_role', {
 });
 
 module.exports = {
-    Role,
+    Product,
 }

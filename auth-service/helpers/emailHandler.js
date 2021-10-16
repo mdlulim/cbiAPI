@@ -8,7 +8,7 @@ async function verifyLogin(data) {
     const template = emailTemplates.verifyLogin(data);
     const from = {
         name: 'CBI',
-        email: smtp.user,
+        email: smtp.auth.user,
     };
     return sendMail(from, email, 'Crypto Based Innovation - Verify Login', template);
 };
