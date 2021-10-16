@@ -7,7 +7,7 @@ pipeline {
         stage('Docker Build Microservices') {
             steps {
                 script {
-                    micro = "ls -d */"
+                    micro = $(ls -d */)
                     microservicesArray = micro.split(' ', -1)
                 }
                 sh "echo $microservicesArray"
