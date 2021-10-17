@@ -1,6 +1,7 @@
 const sequelize = require('../config/db');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+const moment = require('moment');
 
 const config = require('../config');
 
@@ -129,6 +130,35 @@ async function verify(data) {
         throw new Error('Authentication failed. Wrong password.');
 
     return { success: true };
+}
+
+async function tokensVerify(data) {
+    const { email, type } = data;
+    const user = await User.findOne({
+        where: { email }
+    });
+
+    if (!user)
+        throw new Error('Invalid token specified');
+
+    if (user.verified)
+        throw new Error('Account already verified');
+
+    if (type === 'activation') {
+        await User.update({
+            updated: sequelize.fn('NOW'),
+            status: 'Active',
+            verified: true,
+            verification: {
+                email: true,
+                mobile: false,
+            }
+        }, { where: { email } });
+    }
+
+    return {
+        success: true,
+    };
 }
 
 /**
@@ -456,6 +486,7 @@ module.exports = {
     deleteOtp,
     authenticate,
     verify,
+    tokensVerify,
     logout,
     logoutAll,
     passwordChange,

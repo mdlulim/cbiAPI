@@ -33,6 +33,21 @@ async function validate(req, res) {
     }
 }
 
+async function tokensVerify(req, res) {
+    try {
+        const { type } = req.body;
+        const params = req.user;
+        params.type = type;
+        const data = await authService.tokensVerify(params);
+        return res.send(data);
+    } catch (error) {
+        return res.send({
+            success: false,
+            message: error.message || 'Could not process request'
+        });
+    }
+}
+
 /**
  * Login
  * Login a user with the credentials provided. A successful login will return the user’s details 
@@ -165,7 +180,6 @@ async function login(req, res) {
     } catch (err) {
         return errorHandler.error(err, res);
     }
-
 };
 
 /**
@@ -176,48 +190,54 @@ async function login(req, res) {
  * @param {object} res 
  */
 async function register(req, res) {
-    const { email, first_name, last_name, mobile, username } = req.body;
-    return userService.findByEmail(email)
-        .then(exists => {
-            if (exists) {
-                return res.send({
-                    success: false,
-                    message: 'Registration failed. User with this email address already registered.'
-                });
-            }
-
-            const code = generator.generate({ length: 4, numbers: true }).toUpperCase();
-            const key = jwt.sign({
-                code,
-                email,
-            }, jwtSecret);
-            const salt = bcrypt.genSaltSync();
-            const password = bcrypt.hashSync(req.body.password, salt);
-            const user = {
-                email,
-                mobile: mobile || null,
-                first_name: first_name || null,
-                last_name: last_name || null,
-                username: username || email,
-                password,
-                salt,
-                verification_token: key,
-            };
-            return userService.create(user)
-                .then(() => res.send({ success: true }))
-                .catch(err => {
-                    return res.send({
-                        success: false,
-                        message: err.message,
-                    });
-                });
-        })
-        .catch(err => {
-            res.send({
+    try {
+        const { email, first_name, last_name, mobile, username } = req.body;
+        const exists = await userService.findByEmail(email);
+        if (exists) {
+            return res.status(403).send({
                 success: false,
-                message: err.message || null,
+                message: 'Registration failed. User with this email address already registered.'
             });
+        }
+
+        const code  = generator.generate({ length: 4, numbers: true }).toUpperCase();
+        const token = jwt.sign({
+            code,
+            email,
+        }, jwtSecret, {
+            expiresIn: '30m'
         });
+        const salt = bcrypt.genSaltSync();
+        const password = bcrypt.hashSync(req.body.password, salt);
+        const user = {
+            email,
+            mobile: mobile || null,
+            first_name: first_name || null,
+            last_name: last_name || null,
+            username: username || email,
+            password,
+            salt,
+            verification: {
+                token,
+                email: false,
+                mobile: false,
+            },
+        };
+        await userService.create(user);
+
+        // send activation email
+        await emailHandler.confirmEmail({
+            first_name,
+            email,
+            token,
+        });
+
+        return res.send({
+            success: true,
+        });
+    } catch (err) {
+        return errorHandler.error(err, res);
+    }
 }
 
 /**
@@ -626,6 +646,7 @@ async function mfaVerify(req, res) {
 
 module.exports = {
     validate,
+    tokensVerify,
     login,
     register,
     logout,
