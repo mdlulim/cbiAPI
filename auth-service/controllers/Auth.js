@@ -17,6 +17,22 @@ const {
     tokenExpireTime,
 } = config;
 
+async function validate(req, res) {
+    try {
+        const { prop, value } = req.params;
+        const user = await userService.findByPropertyValue(prop, value);
+        return res.send({
+            success: true,
+            exists: (user && user.id) ? true : false,
+        });
+    } catch (error) {
+        return res.send({
+            success: false,
+            message: 'Could not process request'
+        });
+    }
+}
+
 /**
  * Login
  * Login a user with the credentials provided. A successful login will return the user’s details 
@@ -41,10 +57,10 @@ async function login(req, res) {
          */
         const isAdmin = group.name === 'admin';
 
-         if (isAdmin) {
+        if (isAdmin) {
             const expires = new Date();
             expires.setHours(expires.getHours() + tokenExpireHours);
-    
+
             // log user activity
             await activityService.addActivity({
                 user_id: user.id,
@@ -56,7 +72,7 @@ async function login(req, res) {
                 subsection: 'Login',
                 data: { device },
             });
-            
+
             // add user session to database
             await sessionService.addSession({
                 token,
@@ -83,7 +99,7 @@ async function login(req, res) {
                 },
             });
         }
-    
+
         // log user activity
         const transaction = `${group.name}.login.verify`;
         await activityService.addActivity({
@@ -149,7 +165,7 @@ async function login(req, res) {
     } catch (err) {
         return errorHandler.error(err, res);
     }
-    
+
 };
 
 /**
@@ -163,7 +179,7 @@ async function register(req, res) {
     const { email, first_name, last_name, mobile, username } = req.body;
     return userService.findByEmail(email)
         .then(exists => {
-            if (exists){
+            if (exists) {
                 return res.send({
                     success: false,
                     message: 'Registration failed. User with this email address already registered.'
@@ -171,7 +187,7 @@ async function register(req, res) {
             }
 
             const code = generator.generate({ length: 4, numbers: true }).toUpperCase();
-            const key  = jwt.sign({
+            const key = jwt.sign({
                 code,
                 email,
             }, jwtSecret);
@@ -305,7 +321,7 @@ async function passwordReset(req, res) {
             });
         }
 
-        const code  = generator.generate({ length: 4, numbers: true }).toUpperCase();
+        const code = generator.generate({ length: 4, numbers: true }).toUpperCase();
         const token = jwt.sign({
             code,
             email,
@@ -609,24 +625,25 @@ async function mfaVerify(req, res) {
 }
 
 module.exports = {
-   login,
-   register,
-   logout,
-   logoutAll,
-   passwordChange,
-   passwordReset,
-   passwordResetConfirm,
-   emailVerify,
-   emailVerifyResend,
-   mobileVerify,
-   mobileVerifyResend,
-   mfa,
-   createMfaSms,
-   mfaSms,
-   mfaSmsSend,
-   disableMfaSms,
-   createMfaToken,
-   mfaToken,
-   destroyMfaToken,
-   mfaVerify,
+    validate,
+    login,
+    register,
+    logout,
+    logoutAll,
+    passwordChange,
+    passwordReset,
+    passwordResetConfirm,
+    emailVerify,
+    emailVerifyResend,
+    mobileVerify,
+    mobileVerifyResend,
+    mfa,
+    createMfaSms,
+    mfaSms,
+    mfaSmsSend,
+    disableMfaSms,
+    createMfaToken,
+    mfaToken,
+    destroyMfaToken,
+    mfaVerify,
 }

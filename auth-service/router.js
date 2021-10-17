@@ -24,6 +24,11 @@ const authMiddleware = require('./middlewares/auth');
 module.exports.set = app => {
 
     /**
+     * Validate
+     */
+    app.post('/validate/:prop/:value', authController.validate);
+
+    /**
      * Login
      * 
      * Login a user with the credentials provided.
