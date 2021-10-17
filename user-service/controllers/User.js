@@ -1,4 +1,4 @@
-const userService = require('../services/user');
+const userService = require('../services/User');
 
 async function profile(req, res) {
     try {
