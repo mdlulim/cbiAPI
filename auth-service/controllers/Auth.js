@@ -6,6 +6,7 @@ const config = require('../config');
 const sequelize = require('../config/db');
 const authService = require('../services/Auth');
 const userService = require('../services/User');
+const groupService = require('../services/Group');
 const errorHandler = require('../helpers/errorHandler');
 const activityService = require('../services/Activity');
 const sessionService = require('../services/Session');
@@ -191,13 +192,32 @@ async function login(req, res) {
  */
 async function register(req, res) {
     try {
-        const { email, first_name, last_name, mobile, username } = req.body;
+        const {
+            email,
+            mobile,
+            username,
+            last_name,
+            first_name,
+            referral_id,
+        } = req.body;
         const exists = await userService.findByEmail(email);
         if (exists) {
             return res.status(403).send({
                 success: false,
                 message: 'Registration failed. User with this email address already registered.'
             });
+        }
+
+        let sponsorId = null;
+        let groupId = null;
+        if (referral_id) {
+            const sponsor = await userService.findByReferralId(referral_id);
+            if (sponsor.id) {
+                sponsorId = sponsor.id;
+            } else {
+                const role = await groupService.findByPropertyValue('name', 'lead');
+                groupId = role.id;
+            }
         }
 
         const code  = generator.generate({ length: 4, numbers: true }).toUpperCase();
@@ -215,6 +235,8 @@ async function register(req, res) {
             first_name: first_name || null,
             last_name: last_name || null,
             username: username || email,
+            sponsor: sponsorId,
+            group_id: groupId,
             password,
             salt,
             verification: {
@@ -311,6 +333,7 @@ async function passwordChange(req, res) {
         await userService.update(user.id, {
             salt,
             password,
+            updated: sequelize.fn('NOW'),
         });
 
         return res.send({
@@ -341,14 +364,28 @@ async function passwordReset(req, res) {
             });
         }
 
-        const code = generator.generate({ length: 4, numbers: true }).toUpperCase();
+        const code = generator.generate({ length: 4, numbers: true });
         const token = jwt.sign({
             code,
             email,
         }, config.jwtSecret);
 
+        const verification = {
+            ...user.verification,
+            token,
+        };
+
         await userService.update(user.id, {
-            verification_token: token,
+            verification,
+            updated: sequelize.fn('NOW'),
+        });
+
+        // send reset password email
+        const { first_name } = user;
+        await emailHandler.resetPassword({
+            first_name,
+            email,
+            token,
         });
 
         return res.send({

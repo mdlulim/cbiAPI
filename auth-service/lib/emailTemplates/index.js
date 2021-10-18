@@ -1,4 +1,4 @@
-const Welcome = data => {
+const welcome = data => {
     const {
         url,
         password,
@@ -36,26 +36,28 @@ const Welcome = data => {
     }
 };
 
-const PasswordReset = data => {
+const resetPassword = data => {
     const {
-        url,
-        password,
+        link,
         first_name,
     } = data;
     const html = `
         <p>Hi ${first_name},</p>
-        <p>
-            You have requested your password to be reset.
-        <p>
+        <p>You have requested your password to be reset.<p>
         <p>
             In order to reset your password, click 
-            <a href="${url}">
+            <a href="${link}">
                 here 
             </a> 
             or you can copy and paste this link in your browser:<br/>
-            <a href="${url}" target="_blank">
-                ${url}
+            <a href="${link}" target="_blank">
+                ${link}
             </a>
+        </p>
+        <p>
+            This link will be active for 30 minutes.
+            If you don't click on it within that time frame, you can resend it later by
+            selecting forgot password option from the login screen.
         </p>
         <p>If this request wasn't made by you, contact support urgently.</p>
         <p style="padding-top:15px"><strong>Regards</strong>,<br />CBI Support</p>
@@ -63,8 +65,10 @@ const PasswordReset = data => {
     const text = `
         Hi ${first_name}, 
         You have requested your password to be reset.
-        New Password: ${password}.
-        In order to reset your password, you can copy and paste this link in your browser: ${url} 
+        In order to reset your password, you can copy and paste this link in your browser: ${link}.
+        This link will be active for 30 minutes.
+        If you don't click on it within that time frame, you can resend it later by
+        selecting forgot password option from the login screen.
         If this request wasn't made by you, contact support urgently.
         Regards, CBI Support
     `;
@@ -74,7 +78,7 @@ const PasswordReset = data => {
     }
 };
 
-const PasswordChange = data => {
+const changePassword = data => {
     const {
         first_name,
     } = data;
@@ -178,21 +182,12 @@ const confirmEmail = data => {
         <h3>Verify your email address</h3>
         <p>Click the button below to verify your email and continue the sign up process.</p>
         <p><strong>${link}</strong></p>
-        <p>
-            This link will be active for 30 minutes.
-            If you don't click on it within that time frame, you can resend it later by
-            logging in to your account.
-        </p>
         <p style="padding-top:15px"><strong>Regards</strong>,<br />CBI Support</p>
     `;
     const text = `
         Hi ${first_name}, 
         Verify your email address.
-        Click the button below to verify your email and continue the sign up process: ${link}
-
-        This link will be active for 30 minutes.
-        If you don't click on it within that time frame, you can resend it later by
-        logging in to your account.
+        Click the button below to verify your email and continue the sign up process: ${link}.
 
         Regards, CBI Support
     `;
@@ -203,9 +198,9 @@ const confirmEmail = data => {
 };
 
 module.exports = {
-    Welcome,
-    PasswordReset,
-    PasswordChange,
+    welcome,
+    resetPassword,
+    changePassword,
     verifyLogin,
     loginNotify,
     confirmEmail,

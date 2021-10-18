@@ -141,10 +141,11 @@ async function tokensVerify(data) {
     if (!user)
         throw new Error('Invalid token specified');
 
-    if (user.verified)
-        throw new Error('Account already verified');
-
     if (type === 'activation') {
+        if (user.verified) {
+            throw new Error('Account already verified');
+        }
+
         await User.update({
             updated: sequelize.fn('NOW'),
             status: 'Active',
