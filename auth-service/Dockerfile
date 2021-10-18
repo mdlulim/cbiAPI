@@ -1,5 +1,6 @@
 FROM node:12-alpine
 
+ENV NODE_EXTRA_CA_CERTS=/usr/src/app/cacert.pem
 # Create app directory
 WORKDIR /usr/src/app
 
