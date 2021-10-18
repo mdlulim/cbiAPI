@@ -5,13 +5,24 @@ const { smtp } = config.mail;
 
 async function confirmEmail(data) {
     const { email, token } = data;
-    data.link = `http://demo@cbiglobal.io/activate/${token}`;
+    data.link = `http://demo.cbiglobal.io/activate/${token}`;
     const template = emailTemplates.confirmEmail(data);
     const from = {
         name: 'CBI',
         email: smtp.auth.user,
     };
     return sendMail(from, email, 'CBI - Confirm your email address', template);
+};
+
+async function resetPassword(data) {
+    const { email, token } = data;
+    data.link = `http://demo.cbiglobal.io/reset-password/${token}`;
+    const template = emailTemplates.resetPassword(data);
+    const from = {
+        name: 'CBI',
+        email: smtp.auth.user,
+    };
+    return sendMail(from, email, 'CBI - Reset password', template);
 };
 
 async function verifyLogin(data) {
@@ -26,5 +37,6 @@ async function verifyLogin(data) {
 
 module.exports = {
     confirmEmail,
+    resetPassword,
     verifyLogin,
 };

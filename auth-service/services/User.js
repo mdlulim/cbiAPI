@@ -43,6 +43,18 @@ async function findByEmail(email) {
     }
 }
 
+async function findByReferralId(referral_id) {
+    try {
+        return User.findOne({
+            where: { referral_id },
+            include: [{ model: Group }],
+        });
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
 async function update(id, data) {
     try {
         data.updated = sequelize.fn('NOW');
@@ -73,4 +85,5 @@ module.exports = {
     update,
     findByEmail,
     findByPropertyValue,
+    findByReferralId,
 }
