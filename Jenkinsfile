@@ -152,7 +152,7 @@ pipeline {
         stage('Update GitOps repo for ArgoCD') {
             steps {
                 script {
-                    git branch: 'feature/1884-cbigold-react', credentialsId: '38f1358e-7a55-488b-b1ee-40eb0cc6b3f4', url: 'https://github.com/cbiglobal/dev_ops.git'
+                    git branch: 'develop', credentialsId: '38f1358e-7a55-488b-b1ee-40eb0cc6b3f4', url: 'https://github.com/cbiglobal/dev_ops.git'
                     script {
                         switch(JOB_NAME) {
                             case 'cbigold-api-develop':
