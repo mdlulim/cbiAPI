@@ -168,10 +168,45 @@ const loginNotify = data => {
     }
 };
 
+const confirmEmail = data => {
+    const {
+        link,
+        first_name,
+    } = data;
+    const html = `
+        <p>Hi ${first_name},</p>
+        <h3>Verify your email address</h3>
+        <p>Click the button below to verify your email and continue the sign up process.</p>
+        <p><strong>${link}</strong></p>
+        <p>
+            This link will be active for 30 minutes.
+            If you don't click on it within that time frame, you can resend it later by
+            logging in to your account.
+        </p>
+        <p style="padding-top:15px"><strong>Regards</strong>,<br />CBI Support</p>
+    `;
+    const text = `
+        Hi ${first_name}, 
+        Verify your email address.
+        Click the button below to verify your email and continue the sign up process: ${link}
+
+        This link will be active for 30 minutes.
+        If you don't click on it within that time frame, you can resend it later by
+        logging in to your account.
+
+        Regards, CBI Support
+    `;
+    return {
+        html,
+        text
+    }
+};
+
 module.exports = {
     Welcome,
     PasswordReset,
     PasswordChange,
     verifyLogin,
     loginNotify,
+    confirmEmail,
 };
