@@ -11,7 +11,6 @@ COPY package*.json ./
 
 RUN npm install
 
-RUN export NODE_TLS_REJECT_UNAUTHORIZED=0
 # If you are building your code for production
 # RUN npm ci --only=production
 
