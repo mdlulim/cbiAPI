@@ -198,7 +198,7 @@ pipeline {
                     }
                 }
                 sh('git add .')
-                sh("git commit -m \"Update ${JOB_NAME} to v-${developmentTag}\"")
+                sh("git commit -m \"Update ${JOB_NAME} to v-${gitCommit}\"")
                 withCredentials([usernamePassword(credentialsId: '38f1358e-7a55-488b-b1ee-40eb0cc6b3f4', passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
                     sh('git push https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/cbiglobal/dev_ops.git')
                 }
