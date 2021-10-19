@@ -43,10 +43,36 @@ async function findByEmail(email) {
     }
 }
 
+async function findByReferralId(referral_id) {
+    try {
+        return User.findOne({
+            where: { referral_id },
+            include: [{ model: Group }],
+        });
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
 async function update(id, data) {
     try {
         data.updated = sequelize.fn('NOW');
         return User.update(data, { where: { id } });
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
+async function findByPropertyValue(prop, value) {
+    try {
+        const { Op } = sequelize;
+        return User.findOne({
+            where: {
+                [prop]: { [Op.iLike]: value }
+            }
+        });
     } catch (error) {
         console.error(error.message || null);
         throw new Error('Could not process your request');
@@ -58,4 +84,6 @@ module.exports = {
     show,
     update,
     findByEmail,
+    findByPropertyValue,
+    findByReferralId,
 }

@@ -1,11 +1,13 @@
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const moment = require('moment');
+const rn = require('random-number');
 const generator = require('generate-password');
 const config = require('../config');
 const sequelize = require('../config/db');
 const authService = require('../services/Auth');
 const userService = require('../services/User');
+const groupService = require('../services/Group');
 const errorHandler = require('../helpers/errorHandler');
 const activityService = require('../services/Activity');
 const sessionService = require('../services/Session');
@@ -16,6 +18,44 @@ const {
     tokenExpireHours,
     tokenExpireTime,
 } = config;
+
+async function validate(req, res) {
+    try {
+        const { prop, value } = req.params;
+        const user = await userService.findByPropertyValue(prop, value);
+        return res.send({
+            success: true,
+            exists: (user && user.id) ? true : false,
+        });
+    } catch (error) {
+        return res.send({
+            success: false,
+            message: 'Could not process request'
+        });
+    }
+}
+
+async function tokensVerify(req, res) {
+    try {
+        const { type } = req.body;
+        const params = req.user;
+        params.type = type;
+        if (type === 'login') {
+            const data = await authService.verifyLogin({
+                ...req.user,
+                ...req.body
+            });
+            return res.send(data);
+        }
+        const data = await authService.tokensVerify(params);
+        return res.send(data);
+    } catch (error) {
+        return res.send({
+            success: false,
+            message: error.message || 'Could not process request'
+        });
+    }
+}
 
 /**
  * Login
@@ -41,10 +81,10 @@ async function login(req, res) {
          */
         const isAdmin = group.name === 'admin';
 
-         if (isAdmin) {
+        if (isAdmin) {
             const expires = new Date();
             expires.setHours(expires.getHours() + tokenExpireHours);
-    
+
             // log user activity
             await activityService.addActivity({
                 user_id: user.id,
@@ -56,7 +96,7 @@ async function login(req, res) {
                 subsection: 'Login',
                 data: { device },
             });
-            
+
             // add user session to database
             await sessionService.addSession({
                 token,
@@ -83,7 +123,7 @@ async function login(req, res) {
                 },
             });
         }
-    
+
         // log user activity
         const transaction = `${group.name}.login.verify`;
         await activityService.addActivity({
@@ -107,7 +147,11 @@ async function login(req, res) {
         });
 
         // generate otp code
-        const code = generator.generate({ length: 4 }).toUpperCase();
+        const code = rn({
+            min: 1000,
+            max: 9999,
+            integer: true,
+        });
         const authRecord = {
             user_id: user.id,
             device: device || {},
@@ -134,22 +178,21 @@ async function login(req, res) {
 
         // send verify login email
         await emailHandler.verifyLogin({
-            first_name: 'Thembinkosi',
-            email: 'thembinkosi.klein@gmail.com',
+            first_name,
+            email,
             code,
         });
         return res.send({
             success: true,
             data: {
-                token,
-                admin: group.name === 'admin'
+                admin: group.name === 'admin',
+                token: verifyToken,
             },
         });
 
     } catch (err) {
         return errorHandler.error(err, res);
     }
-    
 };
 
 /**
@@ -160,48 +203,75 @@ async function login(req, res) {
  * @param {object} res 
  */
 async function register(req, res) {
-    const { email, first_name, last_name, mobile, username } = req.body;
-    return userService.findByEmail(email)
-        .then(exists => {
-            if (exists){
-                return res.send({
-                    success: false,
-                    message: 'Registration failed. User with this email address already registered.'
-                });
-            }
-
-            const code = generator.generate({ length: 4, numbers: true }).toUpperCase();
-            const key  = jwt.sign({
-                code,
-                email,
-            }, jwtSecret);
-            const salt = bcrypt.genSaltSync();
-            const password = bcrypt.hashSync(req.body.password, salt);
-            const user = {
-                email,
-                mobile: mobile || null,
-                first_name: first_name || null,
-                last_name: last_name || null,
-                username: username || email,
-                password,
-                salt,
-                verification_token: key,
-            };
-            return userService.create(user)
-                .then(() => res.send({ success: true }))
-                .catch(err => {
-                    return res.send({
-                        success: false,
-                        message: err.message,
-                    });
-                });
-        })
-        .catch(err => {
-            res.send({
+    try {
+        const {
+            email,
+            mobile,
+            username,
+            last_name,
+            first_name,
+            referral_id,
+        } = req.body;
+        const exists = await userService.findByEmail(email);
+        if (exists) {
+            return res.status(403).send({
                 success: false,
-                message: err.message || null,
+                message: 'Registration failed. User with this email address already registered.'
             });
+        }
+
+        let sponsorId = null;
+        let groupId = null;
+        if (referral_id) {
+            const sponsor = await userService.findByReferralId(referral_id);
+            if (sponsor.id) {
+                sponsorId = sponsor.id;
+            } else {
+                const role = await groupService.findByPropertyValue('name', 'lead');
+                groupId = role.id;
+            }
+        }
+
+        const code  = generator.generate({ length: 4, numbers: true }).toUpperCase();
+        const token = jwt.sign({
+            code,
+            email,
+        }, jwtSecret, {
+            expiresIn: '30m'
         });
+        const salt = bcrypt.genSaltSync();
+        const password = bcrypt.hashSync(req.body.password, salt);
+        const user = {
+            email,
+            mobile: mobile || null,
+            first_name: first_name || null,
+            last_name: last_name || null,
+            username: username || email,
+            sponsor: sponsorId,
+            group_id: groupId,
+            password,
+            salt,
+            verification: {
+                token,
+                email: false,
+                mobile: false,
+            },
+        };
+        await userService.create(user);
+
+        // send activation email
+        await emailHandler.confirmEmail({
+            first_name,
+            email,
+            token,
+        });
+
+        return res.send({
+            success: true,
+        });
+    } catch (err) {
+        return errorHandler.error(err, res);
+    }
 }
 
 /**
@@ -275,6 +345,7 @@ async function passwordChange(req, res) {
         await userService.update(user.id, {
             salt,
             password,
+            updated: sequelize.fn('NOW'),
         });
 
         return res.send({
@@ -305,14 +376,28 @@ async function passwordReset(req, res) {
             });
         }
 
-        const code  = generator.generate({ length: 4, numbers: true }).toUpperCase();
+        const code = generator.generate({ length: 4, numbers: true });
         const token = jwt.sign({
             code,
             email,
         }, config.jwtSecret);
 
+        const verification = {
+            ...user.verification,
+            token,
+        };
+
         await userService.update(user.id, {
-            verification_token: token,
+            verification,
+            updated: sequelize.fn('NOW'),
+        });
+
+        // send reset password email
+        const { first_name } = user;
+        await emailHandler.resetPassword({
+            first_name,
+            email,
+            token,
         });
 
         return res.send({
@@ -609,24 +694,26 @@ async function mfaVerify(req, res) {
 }
 
 module.exports = {
-   login,
-   register,
-   logout,
-   logoutAll,
-   passwordChange,
-   passwordReset,
-   passwordResetConfirm,
-   emailVerify,
-   emailVerifyResend,
-   mobileVerify,
-   mobileVerifyResend,
-   mfa,
-   createMfaSms,
-   mfaSms,
-   mfaSmsSend,
-   disableMfaSms,
-   createMfaToken,
-   mfaToken,
-   destroyMfaToken,
-   mfaVerify,
+    validate,
+    tokensVerify,
+    login,
+    register,
+    logout,
+    logoutAll,
+    passwordChange,
+    passwordReset,
+    passwordResetConfirm,
+    emailVerify,
+    emailVerifyResend,
+    mobileVerify,
+    mobileVerifyResend,
+    mfa,
+    createMfaSms,
+    mfaSms,
+    mfaSmsSend,
+    disableMfaSms,
+    createMfaToken,
+    mfaToken,
+    destroyMfaToken,
+    mfaVerify,
 }
