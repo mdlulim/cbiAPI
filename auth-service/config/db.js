@@ -9,7 +9,7 @@ var sequelize = new Sequelize(config.dbConnectionString, {
         typeCast: true,
         ssl: {
             require: true,
-            rejectUnauthorized: false
+            ca: 'ca-certificate.crt'
         },
     },
     timezone: 'Africa/Johannesburg',
