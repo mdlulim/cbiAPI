@@ -7,7 +7,10 @@ var sequelize = new Sequelize(config.dbConnectionString, {
         // connectTimeout: 120000,
         dateStrings: true,
         typeCast: true,
-        ssl: true,
+        ssl: {
+            require: true,
+            rejectUnauthorized: false
+        },
     },
     timezone: 'Africa/Johannesburg',
     pool: {
