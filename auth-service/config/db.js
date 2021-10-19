@@ -1,5 +1,7 @@
 const config = require('../config');
 const Sequelize = require('sequelize');
+const fs = require('fs');
+const doCA = fs.readFileSync(__dirname + '/ca-certificate.crt');
 var sequelize = new Sequelize(config.dbConnectionString, {
     ssl: true,
     dialect: 'postgres',
@@ -8,8 +10,8 @@ var sequelize = new Sequelize(config.dbConnectionString, {
         dateStrings: true,
         typeCast: true,
         ssl: {
-            require: true,
-            ca: 'ca-certificate.crt'
+            rejectUnauthorized: true,
+            ca: doCA
         },
     },
     timezone: 'Africa/Johannesburg',
