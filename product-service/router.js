@@ -7,5 +7,12 @@ module.exports.set = app => {
      * 
      * Retrieve current user’s products.
      */
-    app.get('/products', authMiddleware.checkAuth, productController.index);
+    app.get('/overview', authMiddleware.checkAuth, productController.overview);
+    
+    /**
+     * Retrieve User's Products
+     * 
+     * Retrieve current user’s products.
+     */
+    app.get('/', authMiddleware.checkAuth, productController.index);
 };

@@ -2,12 +2,20 @@ const sequelize = require('../config/db');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const moment = require('moment');
-
-const config = require('../config');
-
 const { User } = require('../models/User');
 const { Group } = require('../models/Group');
 const { OTPAuth } = require('../models/OTPAuth');
+
+const config = require('../config');
+const {
+    jwtSecret,
+    tokenExpireHours,
+    tokenExpireTime,
+} = config;
+
+const activityService = require('../services/Activity');
+const sessionService = require('../services/Session');
+const userService = require('../services/Session');
 
 User.belongsTo(Group, { foreignKey: 'group_id', targetKey: 'id' });
 OTPAuth.belongsTo(User, { foreignKey: 'user_id', targetKey: 'id' });
@@ -160,6 +168,88 @@ async function tokensVerify(data) {
     return {
         success: true,
     };
+}
+
+async function verifyLogin(data) {
+    const { code, id, geoinfo, device } = data;
+    const otpAuth = await OTPAuth.findOne({
+        where: { code, user_id: id }
+    });
+
+    if (otpAuth) {
+        const user = await User.findOne({
+            where: { id },
+            include: [{ model: Group }],
+        });
+        
+        const {
+            username,
+            group_id,
+            last_name,
+            first_name,
+            group,
+        } = user;
+        const payload = {
+            id,
+            username,
+            group_id,
+            last_name,
+            first_name,
+            group_name: group.name,
+            time: new Date()
+        };
+        const token = jwt.sign(payload, jwtSecret, {
+            expiresIn: tokenExpireTime
+        });
+
+        const expires = new Date();
+        expires.setHours(expires.getHours() + tokenExpireHours);
+
+        // log user activity
+        await activityService.addActivity({
+            user_id: id,
+            action: `${group.name}.login`,
+            description: `${group.label} login`,
+            data,
+            ip: (geoinfo && geoinfo.IPv4) ? geoinfo.IPv4 : null,
+            section: 'Auth',
+            subsection: 'Login',
+            data: { device },
+        });
+
+        // add user session to database
+        await sessionService.addSession({
+            token,
+            user_id: id,
+            duration: tokenExpireTime,
+            ip: (geoinfo && geoinfo.IPv4) ? geoinfo.IPv4 : null,
+            user_agent: (device && device.browser) ? `${device.browser} on ${device.os_name} ${device.os_version}` : null,
+            login: sequelize.fn('NOW'),
+            expires,
+        });
+
+        // update user's last login status
+        await User.update(id, {
+            where: {
+                last_login: sequelize.fn('NOW'),
+                blocked: false,
+                login_attempts: 0,
+            }
+        });
+
+        // delete otp record
+        await OTPAuth.destroy({ where: { id: otpAuth.id } });
+
+        return {
+            auth: true,
+            success: true,
+            data: {
+                token,
+                admin: group.name === 'admin',
+            },
+        };
+    }
+    throw new Error('Invalid code specified');
 }
 
 /**
@@ -505,4 +595,5 @@ module.exports = {
     mfaToken,
     destroyMfaToken,
     mfaVerify,
+    verifyLogin,
 }

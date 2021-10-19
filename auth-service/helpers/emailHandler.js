@@ -2,10 +2,11 @@ const { sendMail } = require('../utils');
 const emailTemplates = require('../lib/emailTemplates');
 const config = require('../config');
 const { smtp } = config.mail;
+const { baseurl } = config;
 
 async function confirmEmail(data) {
     const { email, token } = data;
-    data.link = `http://demo.cbiglobal.io/activate/${token}`;
+    data.link = `${baseurl}/activate/${token}`;
     const template = emailTemplates.confirmEmail(data);
     const from = {
         name: 'CBI',
@@ -16,7 +17,7 @@ async function confirmEmail(data) {
 
 async function resetPassword(data) {
     const { email, token } = data;
-    data.link = `http://demo.cbiglobal.io/reset-password/${token}`;
+    data.link = `${baseurl}/reset-password/${token}`;
     const template = emailTemplates.resetPassword(data);
     const from = {
         name: 'CBI',

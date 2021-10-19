@@ -1,4 +1,4 @@
-// const sequelize = require('../config/db');
+const sequelize = require('../config/db');
 const { Product }  = require('../models/Product');
 const { UserProduct }  = require('../models/UserProduct');
 const { User }  = require('../models/User');
@@ -16,10 +16,40 @@ async function index(user_id) {
         });
         const { count, rows } = products;
         return {
-            count,
-            next: null,
-            previous: null,
-            results: rows,
+            success: true,
+            data: {
+                count,
+                next: null,
+                previous: null,
+                results: rows,
+            }
+        };
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
+async function overview() {
+    try {
+        const { Op } = sequelize;
+        const products = await Product.findAndCountAll({
+            where: {
+                archived: false,
+                status: {
+                    [Op.iLike]: 'Published'
+                }
+            }
+        });
+        const { count, rows } = products;
+        return {
+            success: true,
+            data: {
+                count,
+                next: null,
+                previous: null,
+                results: rows,
+            }
         };
     } catch (error) {
         console.error(error.message || null);
@@ -29,4 +59,5 @@ async function index(user_id) {
 
 module.exports = {
     index,
+    overview,
 }

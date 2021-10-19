@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const moment = require('moment');
+const rn = require('random-number');
 const generator = require('generate-password');
 const config = require('../config');
 const sequelize = require('../config/db');
@@ -39,6 +40,13 @@ async function tokensVerify(req, res) {
         const { type } = req.body;
         const params = req.user;
         params.type = type;
+        if (type === 'login') {
+            const data = await authService.verifyLogin({
+                ...req.user,
+                ...req.body
+            });
+            return res.send(data);
+        }
         const data = await authService.tokensVerify(params);
         return res.send(data);
     } catch (error) {
@@ -139,7 +147,11 @@ async function login(req, res) {
         });
 
         // generate otp code
-        const code = generator.generate({ length: 4 }).toUpperCase();
+        const code = rn({
+            min: 1000,
+            max: 9999,
+            integer: true,
+        });
         const authRecord = {
             user_id: user.id,
             device: device || {},
@@ -166,15 +178,15 @@ async function login(req, res) {
 
         // send verify login email
         await emailHandler.verifyLogin({
-            first_name: 'Thembinkosi',
-            email: 'thembinkosi.klein@gmail.com',
+            first_name,
+            email,
             code,
         });
         return res.send({
             success: true,
             data: {
-                token,
-                admin: group.name === 'admin'
+                admin: group.name === 'admin',
+                token: verifyToken,
             },
         });
 
