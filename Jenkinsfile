@@ -259,7 +259,6 @@ pipeline {
                 BUILD_TRIGGER_BY = "${currentBuild.getBuildCauses()[0].shortDescription}".substring(26)
             }
             echo 'I will always say hello in the console.'
-            echo "${currentBuild.getBuildCauses()}"
             slackSend channel: '#proj-new-website',
                 color: COLOR_MAP[currentBuild.currentResult],
                 message: "*${currentBuild.currentResult}:* Job ${env.JOB_NAME} build ${env.BUILD_NUMBER} by ${BUILD_TRIGGER_BY}\n More info at: ${env.BUILD_URL}"
