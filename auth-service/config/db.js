@@ -1,7 +1,7 @@
 const config = require('../config');
 const Sequelize = require('sequelize');
 const fs = require('fs');
-const doCA = fs.readFileSync(__dirname + '/ca-certificate.crt');
+const doCA = fs.readFileSync(__dirname + '/../' + 'ca-certificate.crt');
 var sequelize = new Sequelize(config.dbConnectionString, {
     ssl: true,
     dialect: 'postgres',
