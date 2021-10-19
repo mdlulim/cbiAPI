@@ -10,6 +10,10 @@ if (stage === 'dev') {
         jwtSecret: 'BbZJjyoXAdr8BUZuiKKARWimKfrSmQ6fv8kZ7OFfc',
         tokenExpireTime: '6h',
         tokenExpireHours: 6,
+        baseurl: {
+            admin: 'http://admin.cbiglobal.io',
+            frontend: 'http://demo.cbiglobal.io',
+        },
         mail: {
             smtp: {
                 host: 'mail.cbiglobal.io',

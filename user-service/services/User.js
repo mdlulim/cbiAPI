@@ -45,6 +45,8 @@ async function show(id) {
                 'created',
                 'updated',
                 'getstarted',
+                'referral_id',
+                'sponsor',
             ],
             where: { id },
             include: [{ model: Group }],
@@ -83,9 +85,55 @@ async function update(id, data) {
     }
 }
 
+async function referrals(id) {
+    try {
+        const users = await User.findAndCountAll({
+            attributes: [
+                'id',
+                'username',
+                'last_name',
+                'first_name',
+                'mfa',
+                'kyc',
+                'last_login',
+                'profile',
+                'id_number',
+                'email',
+                'blocked',
+                'login_attempts',
+                'settings',
+                'permissions',
+                'group_id',
+                'verified',
+                'timezone',
+                'mobile',
+                'metadata',
+                'nationality',
+                'language',
+                'birth_date',
+                'currency_code',
+                'status',
+                'archived',
+                'created',
+                'updated',
+                'getstarted',
+                'referral_id',
+                'sponsor',
+            ],
+            where: { sponsor: id },
+            include: [{ model: Group }],
+        });
+        return users;
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
 module.exports = {
     create,
     show,
     update,
     findByEmail,
+    referrals,
 }
