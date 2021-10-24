@@ -1,3 +1,4 @@
+const countryController = require('./controllers/Country');
 const currencyController = require('./controllers/Currency');
 const groupController = require('./controllers/Group');
 const productController = require('./controllers/Product');
@@ -167,4 +168,13 @@ module.exports.set = app => {
      * Delete company’s currency.
      */
     app.delete('/admin/currencies/:code', authMiddleware.checkAuth, currencyController.destroy);
+
+    /**
+     * List Countries
+     * 
+     * Get a list of countries belonging to CBI.
+     */
+    app.get('/admin/countries', authMiddleware.checkAuth, countryController.index);
+    app.put('/admin/countries/:id/blacklist', authMiddleware.checkAuth, countryController.blacklist);
+    app.put('/admin/countries/:id/unblacklist', authMiddleware.checkAuth, countryController.unblacklist);
 };
