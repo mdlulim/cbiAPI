@@ -1,9 +1,9 @@
 const sequelize = require('../config/db');
-const { Product } = require('../models/Product');
+const { Currency } = require('../models/Currency');
 
 async function create(data) {
     try {
-        return Product.create(data);
+        return Currency.create(data);
     } catch (error) {
         console.error(error.message || null);
         throw new Error('Could not process your request');
@@ -18,7 +18,7 @@ async function index(query) {
         delete where.offset;
         delete where.limit;
 
-        return Product.findAndCountAll({
+        return Currency.findAndCountAll({
             where,
             order: [['created', 'DESC']],
             offset: offset || 0,
@@ -30,10 +30,10 @@ async function index(query) {
     }
 }
 
-async function show(id) {
+async function show(code) {
     try {
-        return Product.findOne({
-            where: { id },
+        return Currency.findOne({
+            where: { code },
         });
     } catch (error) {
         console.error(error.message || null);
@@ -43,26 +43,26 @@ async function show(id) {
 
 /**
  * 
- * Update Product
+ * Update Currency
  * 
- * Update company’s product details.
+ * Update company’s currency details.
  * 
- * @param {string} id
+ * @param {string} code
  * @param {string} data 
  * @returns 
  */
-async function update(id, data) {
+async function update(code, data) {
     try {
-        return Product.update(data, { where: { id } });
+        return Currency.update(data, { where: { code } });
     } catch (error) {
         console.error(error.message || null);
         throw new Error('Could not process your request');
     }
 }
 
-async function destroy(id) {
+async function destroy(code) {
     try {
-        return Product.destroy(id);
+        return Currency.destroy(code);
     } catch (error) {
         console.error(error.message || null);
         throw new Error('Could not process your request');

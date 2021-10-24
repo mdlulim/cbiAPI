@@ -693,6 +693,25 @@ async function mfaVerify(req, res) {
     }
 }
 
+/**
+ * Multi-factor Verify OTP
+ * 
+ * Authenticate Token
+ */
+async function refresh(req, res) {
+    try {
+        return res.send({
+            auth: true,
+            data: req.user,
+        });
+    } catch (error) {
+        return res.send({
+            auth: false,
+            message: 'Could not process request. Authentication failed'
+        });
+    }
+}
+
 module.exports = {
     validate,
     tokensVerify,
@@ -716,4 +735,5 @@ module.exports = {
     mfaToken,
     destroyMfaToken,
     mfaVerify,
+    refresh,
 }

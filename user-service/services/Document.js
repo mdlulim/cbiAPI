@@ -1,28 +1,20 @@
 const sequelize = require('../config/db');
-const { Product } = require('../models/Product');
+const { Document } = require('../models/Document');
 
 async function create(data) {
     try {
-        return Product.create(data);
+        return Document.create(data);
     } catch (error) {
         console.error(error.message || null);
         throw new Error('Could not process your request');
     }
 }
 
-async function index(query) {
+async function index(user_id) {
     try {
-        const { offset, limit } = query;
-        const where = query || {};
-
-        delete where.offset;
-        delete where.limit;
-
-        return Product.findAndCountAll({
-            where,
+        return Document.findAndCountAll({
+            where: { user_id },
             order: [['created', 'DESC']],
-            offset: offset || 0,
-            limit: limit || 100,
         });
     } catch (error) {
         console.error(error.message || null);
@@ -32,7 +24,7 @@ async function index(query) {
 
 async function show(id) {
     try {
-        return Product.findOne({
+        return Document.findOne({
             where: { id },
         });
     } catch (error) {
@@ -41,19 +33,9 @@ async function show(id) {
     }
 }
 
-/**
- * 
- * Update Product
- * 
- * Update company’s product details.
- * 
- * @param {string} id
- * @param {string} data 
- * @returns 
- */
 async function update(id, data) {
     try {
-        return Product.update(data, { where: { id } });
+        return Document.update(data, { where: { id } });
     } catch (error) {
         console.error(error.message || null);
         throw new Error('Could not process your request');
@@ -62,7 +44,7 @@ async function update(id, data) {
 
 async function destroy(id) {
     try {
-        return Product.destroy(id);
+        return Document.destroy(id);
     } catch (error) {
         console.error(error.message || null);
         throw new Error('Could not process your request');

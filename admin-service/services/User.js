@@ -1,9 +1,14 @@
-// const sequelize = require('../config/db');
+const sequelize = require('../config/db');
 const { User } = require('../models/User');
 const { Group } = require('../models/Group');
 const { Product } = require('../models/Product');
+const { UserProduct }  = require('../models/UserProduct');
+const { Transaction }  = require('../models/Transaction');
 
+Transaction.belongsTo(User, { foreignKey: 'user_id', targetKey: 'id' });
 User.belongsTo(Group, { foreignKey: 'group_id', targetKey: 'id' });
+Product.belongsTo(UserProduct, { foreignKey: 'id', targetKey: 'product_id' });
+User.belongsTo(UserProduct, { foreignKey: 'id', targetKey: 'user_id' });
 
 async function create(data) {
     try {
@@ -143,21 +148,159 @@ async function show(id) {
 }
 
 /**
+ * 
+ * Update User
+ * 
+ * Update company’s user details.
+ * 
+ * @param {string} id
+ * @param {string} data 
+ * @returns 
+ */
+async function update(id, data) {
+    try {
+        return User.update(data, { where: { id } });
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
+/**
+ * 
+ * Archived User
+ * 
+ * Archived company’s user.
+ * 
+ * @param {string} id
+ * @returns 
+ */
+async function archive(id) {
+    try {
+        return User.update({
+            status: 'Archived',
+            archived: true,
+            updated: sequelize.fn('NOW'),
+        }, { where: { id } });
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
+/**
+ * 
+ * Block User
+ * 
+ * Block company’s user.
+ * 
+ * @param {string} id
+ * @returns 
+ */
+async function block(id) {
+    try {
+        return User.update({
+            status: 'Blocked',
+            blocked: true,
+            updated: sequelize.fn('NOW'),
+        }, { where: { id } });
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
+/**
  * List User Products
  * 
  * Get a list of products belonging to CBI's user.
  * 
- * @param {string} id 
+ * @param {string} user_id 
  * @returns 
  */
-async function products(id) {
+async function products(user_id) {
     try {
-        const products = await Product.findAll({
-            include: [{ model: Group }],
+        const products = await Product.findAndCountAll({
+            include: [{
+                model: UserProduct,
+                where: { user_id }
+            }]
         });
+        const { count, rows } = products;
         return {
             success: true,
-            data: products,
+            data: {
+                count,
+                next: null,
+                previous: null,
+                results: rows,
+            }
+        };
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
+async function referrals(id) {
+    try {
+        const users = await User.findAndCountAll({
+            attributes: [
+                'id',
+                'username',
+                'last_name',
+                'first_name',
+                'mfa',
+                'kyc',
+                'last_login',
+                'profile',
+                'id_number',
+                'email',
+                'blocked',
+                'login_attempts',
+                'settings',
+                'permissions',
+                'group_id',
+                'verified',
+                'timezone',
+                'mobile',
+                'metadata',
+                'nationality',
+                'language',
+                'birth_date',
+                'currency_code',
+                'status',
+                'archived',
+                'created',
+                'updated',
+                'getstarted',
+                'referral_id',
+                'sponsor',
+            ],
+            where: { sponsor: id },
+            include: [{ model: Group }],
+        });
+        return users;
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
+async function transactions(user_id) {
+    try {
+        const transactions = await Transaction.findAndCountAll({
+            where: { user_id }
+        });
+        const { count, rows } = transactions;
+        return {
+            success: true,
+            data: {
+                count,
+                next: null,
+                previous: null,
+                results: rows,
+            }
         };
     } catch (error) {
         console.error(error.message || null);
@@ -169,5 +312,10 @@ module.exports = {
     create,
     index,
     show,
+    update,
+    archive,
+    block,
     products,
+    referrals,
+    transactions,
 }

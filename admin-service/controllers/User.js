@@ -54,6 +54,60 @@ async function show(req, res) {
     }
 }
 
+async function update(req, res) {
+    try {
+        return userService.update(req.params.id, req.body)
+        .then(() => res.send({ success: true }))
+        .catch(err => {
+            res.send({
+                success: false,
+                message: err.message,
+            });
+        });
+    } catch (error) {
+        return res.send({
+            success: false,
+            message: 'Could not process request'
+        });
+    }
+}
+
+async function archive(req, res) {
+    try {
+        return userService.archive(req.params.id)
+        .then(() => res.send({ success: true }))
+        .catch(err => {
+            res.send({
+                success: false,
+                message: err.message,
+            });
+        });
+    } catch (error) {
+        return res.send({
+            success: false,
+            message: 'Could not process request'
+        });
+    }
+}
+
+async function block(req, res) {
+    try {
+        return userService.block(req.params.id)
+        .then(() => res.send({ success: true }))
+        .catch(err => {
+            res.send({
+                success: false,
+                message: err.message,
+            });
+        });
+    } catch (error) {
+        return res.send({
+            success: false,
+            message: 'Could not process request'
+        });
+    }
+}
+
 async function products(req, res) {
     try {
         return userService.products(req.params.id)
@@ -72,9 +126,45 @@ async function products(req, res) {
     }
 }
 
+async function referrals(req, res) {
+    try {
+        const referrals = await userService.referrals(req.params.id);
+        const { count, rows } = referrals;
+        return res.send({
+            success: true,
+            data: {
+                count,
+                results: rows,
+            },
+        });
+    } catch (error) {
+        return res.send({
+            success: false,
+            message: 'Could not process request'
+        });
+    }
+}
+
+async function transactions(req, res){
+    try {
+        return userService.transactions(req.params.id)
+        .then(data => res.send(data));
+    } catch (err) {
+        return res.status(500).send({
+            success: false,
+            message: 'Could not process your request'
+        });
+    }
+};
+
 module.exports = {
     create,
     index,
     show,
+    update,
+    archive,
+    block,
     products,
+    referrals,
+    transactions,
 };

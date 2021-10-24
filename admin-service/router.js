@@ -1,5 +1,7 @@
+const currencyController = require('./controllers/Currency');
 const groupController = require('./controllers/Group');
 const productController = require('./controllers/Product');
+const transactionController = require('./controllers/Transaction');
 const userController = require('./controllers/User');
 const authMiddleware = require('./middlewares/auth');
 
@@ -21,9 +23,51 @@ module.exports.set = app => {
     /**
      * Retrieve User
      * 
-     * Retrieve a company’s user.
+     * Retrieve a company’s user (profile).
      */
     app.get('/admin/users/:id', authMiddleware.checkAuth, userController.show);
+
+    /**
+     * Update User
+     * 
+     * Update user details.
+     */
+    app.put('/admin/users/:id', authMiddleware.checkAuth, userController.update);
+
+    /**
+     * Archive User
+     * 
+     * Archived company's user.
+     */
+    app.put('/admin/users/:id/archive', authMiddleware.checkAuth, userController.archive);
+
+    /**
+     * Block User
+     * 
+     * Block company's user.
+     */
+    app.put('/admin/users/:id/block', authMiddleware.checkAuth, userController.block);
+
+    /**
+     * Retrieve User' Referrals
+     * 
+     * Retrieve a company’s user referrals.
+     */
+    app.get('/admin/users/:id/referrals', authMiddleware.checkAuth, userController.referrals);
+
+    /**
+     * Retrieve User' Products
+     * 
+     * Retrieve a company’s user products.
+     */
+    app.get('/admin/users/:id/products', authMiddleware.checkAuth, userController.products);
+
+    /**
+     * Retrieve User' Transactions
+     * 
+     * Retrieve a company’s user transactions.
+     */
+    app.get('/admin/users/:id/transactions', authMiddleware.checkAuth, userController.transactions);
 
     /**
      * List User Products
@@ -48,6 +92,13 @@ module.exports.set = app => {
     app.delete('/admin/groups/:id', authMiddleware.checkAuth, groupController.destroy);
 
     /**
+     * Create Product
+     * 
+     * Create a single product belonging to CBI.
+     */
+    app.post('/admin/products', authMiddleware.checkAuth, productController.create);
+
+    /**
      * List Products
      * 
      * Get a list of products belonging to CBI.
@@ -62,9 +113,58 @@ module.exports.set = app => {
     app.get('/admin/products/:id', authMiddleware.checkAuth, productController.show);
 
     /**
-     * Retrieve Product
+     * Update Product
      * 
-     * Retrieve a company’s product.
+     * Update company’s product details.
      */
-    // app.get('/admin/products/search/:prop/:value', authMiddleware.checkAuth, productController.search);
+    app.put('/admin/products/:id', authMiddleware.checkAuth, productController.update);
+
+    /**
+     * Delete Product
+     * 
+     * Delete company’s product.
+     */
+    app.delete('/admin/products/:id', authMiddleware.checkAuth, productController.destroy);
+
+    /**
+     * List Transactions
+     * 
+     * Get a list of transactions belonging to CBI.
+     */
+    app.get('/admin/transactions', authMiddleware.checkAuth, transactionController.index);
+
+    /**
+     * Retrieve Transaction
+     * 
+     * Retrieve a company’s transaction.
+     */
+    app.get('/admin/transactions/:id', authMiddleware.checkAuth, transactionController.show);
+
+    /**
+     * List Currencies
+     * 
+     * Get a list of currencies belonging to CBI.
+     */
+    app.get('/admin/currencies', authMiddleware.checkAuth, currencyController.index);
+
+    /**
+     * Retrieve Currency
+     * 
+     * Retrieve a company’s currency.
+     */
+    app.get('/admin/currencies/:code', authMiddleware.checkAuth, currencyController.show);
+
+    /**
+     * Update Currency
+     * 
+     * Update company’s currency details.
+     */
+    app.put('/admin/currencies/:code', authMiddleware.checkAuth, currencyController.update);
+
+    /**
+     * Delete Currency
+     * 
+     * Delete company’s currency.
+     */
+    app.delete('/admin/currencies/:code', authMiddleware.checkAuth, currencyController.destroy);
 };

@@ -1,8 +1,8 @@
-const productService = require('../services/Product');
+const documentService = require('../services/Document');
 
 async function create(req, res) {
     try {
-        return productService.create(req.body)
+        return documentService.create(req.body)
         .then(() => res.send({ success: true }))
         .catch(err => {
             res.send({
@@ -20,16 +20,14 @@ async function create(req, res) {
 
 async function index(req, res) {
     try {
-        const products = await productService.index(req.query);
-        const { count, rows } = products;
+        const documents = await documentService.index(req.user.id);
+        const { count, rows } = documents;
         return res.send({
             success: true,
             data: {
                 count,
-                next: null,
-                previous: null,
                 results: rows,
-            }
+            },
         });
     } catch (error) {
         return res.send({
@@ -41,10 +39,10 @@ async function index(req, res) {
 
 async function show(req, res) {
     try {
-        const product = await productService.show(req.params.id);
+        const document = await documentService.show(req.params.id);
         return res.send({
             success: true,
-            data: product
+            data: document,
         });
     } catch (error) {
         return res.send({
@@ -56,7 +54,7 @@ async function show(req, res) {
 
 async function update(req, res) {
     try {
-        return productService.update(req.params.id, req.body)
+        return documentService.update(req.params.id, req.body)
         .then(() => res.send({ success: true }))
         .catch(err => {
             res.send({
@@ -74,7 +72,7 @@ async function update(req, res) {
 
 async function destroy(req, res) {
     try {
-        return productService.destroy(req.params.id)
+        return documentService.destroy(req.params.id)
         .then(() => res.send({ success: true }))
         .catch(err => {
             res.send({

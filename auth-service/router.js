@@ -44,6 +44,11 @@ module.exports.set = app => {
     app.post('/login', authController.login);
 
     /**
+     * Authenticate Token
+     */
+    app.post('/refresh', authMiddleware.checkAuth, authController.refresh);
+
+    /**
      * Register
      * 
      * Register a user with the credentials provided.

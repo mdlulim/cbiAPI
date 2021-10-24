@@ -3,30 +3,27 @@ const { User } = require('../models/User');
 
 Activity.belongsTo(User, { foreignKey: 'user_id', targetKey: 'id' });
 
-// log new activity
-const addActivity = activity => Activity.create(activity);
+async function add(data) {
+    try {
+        return Activity.create(data);
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
 
-// get user activities
-const getActivitiesByUser = (userId) => Activity.findAll({
-        attributes: [
-            'id',
-            'name',
-            'description',
-            'data',
-            'ip',
-            'created',
-        ],
-        where: { user_id: userId },
-        order: [['created', 'DESC']],
-    })
-    .then(res => {
-        return {
-            status: "success",
-            data: res,
-        };
-    });
+async function getByUser(user_id) {
+    try {
+        return Activity.findAll({
+            where: { user_id },
+        });
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
 
 module.exports = {
-    addActivity,
-    getActivitiesByUser,
+    add,
+    getByUser,
 };
