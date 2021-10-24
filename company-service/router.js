@@ -1,5 +1,6 @@
 const authMiddleware    = require('./middlewares/auth');
 const companyController = require('./controllers/Company');
+const countryController = require('./controllers/Country');
 
 module.exports.set = app => {
     /**
@@ -7,7 +8,7 @@ module.exports.set = app => {
      * 
      * Retrieve current user’s company details.
      */
-    app.get('/company', authMiddleware.checkAuth, companyController.profile);
+    app.get('/', authMiddleware.checkAuth, companyController.profile);
 
     /**
      * List Company Currencies
@@ -15,7 +16,7 @@ module.exports.set = app => {
      * Get a list of available currencies for the 
      * current user’s company.
      */
-    app.get('/company/currencies', authMiddleware.checkAuth, companyController.currencies);
+    app.get('/currencies', authMiddleware.checkAuth, companyController.currencies);
 
     /**
      * List Company Banks
@@ -23,7 +24,7 @@ module.exports.set = app => {
      * Get a list of company banks for the current
      * user’s company.
      */
-    app.get('/company/bank-accounts', authMiddleware.checkAuth, companyController.bankAccounts);
+    app.get('/bank-accounts', authMiddleware.checkAuth, companyController.bankAccounts);
 
     /**
      * List Company Crypto Accounts
@@ -31,7 +32,7 @@ module.exports.set = app => {
      * Get a list of company crypto accounts for the current
      * user’s company.
      */
-    app.get('/company/bank-accounts', authMiddleware.checkAuth, companyController.cryptoAccounts);
+    app.get('/bank-accounts', authMiddleware.checkAuth, companyController.cryptoAccounts);
 
     /**
      * Retrieve Company Settings
@@ -39,5 +40,11 @@ module.exports.set = app => {
      * Retrieve company settings for the current
      * user’s company.
      */
-    app.get('/company/settings', authMiddleware.checkAuth, companyController.settings);
+    app.get('/settings', authMiddleware.checkAuth, companyController.settings);
+
+    /**
+     * Retrieve Countries
+     * 
+     */
+    app.get('/countries', authMiddleware.checkAuth, countryController.index);
 };

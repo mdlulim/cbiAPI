@@ -240,13 +240,19 @@ async function verifyLogin(data) {
         // delete otp record
         await OTPAuth.destroy({ where: { id: otpAuth.id } });
 
+        const returnData = {
+            token,
+            admin: group.name === 'admin',
+        };
+
+        if (user.getstarted) {
+            returnData.getstarted = user.getstarted;
+        }
+
         return {
             auth: true,
             success: true,
-            data: {
-                token,
-                admin: group.name === 'admin',
-            },
+            data: returnData,
         };
     }
     throw new Error('Invalid code specified');
