@@ -21,6 +21,7 @@ contentImage = ''
 productImage = ''
 transactionImage = ''
 userImage = ''
+fileImage = ''
 
 // Microservices Docker Images
 // blank values that are filled in by pipeline steps below: 
@@ -31,6 +32,7 @@ contentTag = ''
 productTag = ''
 transactionTag = ''
 userTag = ''
+fileTag = ''
 
 def COLOR_MAP = [
     'SUCCESS': 'good',
@@ -131,6 +133,18 @@ pipeline {
                         sh "docker build -t ${userImage} ./user-service"
                     }                    
                 }
+                stage('file-storage-service') {
+                    steps {
+                        script {
+                           gitCommit = env.GIT_COMMIT.substring(0,8)
+                           unixTime = (new Date().time / 1000) as Integer
+                           branchName = env.GIT_BRANCH.replace('/', '-').substring(7)
+                           fileTag = "${branchName}-${gitCommit}-${unixTime}"
+                           fileImage = "${dockerRepoHost}/file-storage-service:${fileTag}"
+                        }
+                        sh "docker build -t ${fileImage} ./file-storage-service"
+                    }                    
+                }
             }  
         }
         stage('Publish Release Tag All Microservices') {
@@ -142,11 +156,12 @@ pipeline {
                 sh "docker push ${productImage}"
                 sh "docker push ${transactionImage}"
                 sh "docker push ${userImage}"
+                sh "docker push ${fileImage}"
             }
         }
         stage('Remove Local Docker Image') {
             steps {
-                sh "docker rmi ${adminImage} ${authImage} ${companyImage} ${contentImage} ${productImage} ${transactionImage} ${userImage}"
+                sh "docker rmi ${adminImage} ${authImage} ${companyImage} ${contentImage} ${productImage} ${transactionImage} ${userImage} ${fileImage}"
             }
         }
         stage('Update GitOps repo for ArgoCD') {
@@ -163,6 +178,7 @@ pipeline {
                                 sh("cd cbigold/overlays/develop && kustomize edit set image registry.digitalocean.com/cbiglobal/product-service:${productTag}");
                                 sh("cd cbigold/overlays/develop && kustomize edit set image registry.digitalocean.com/cbiglobal/transaction-service:${transactionTag}");
                                 sh("cd cbigold/overlays/develop && kustomize edit set image registry.digitalocean.com/cbiglobal/user-service:${userTag}");
+                                sh("cd cbigold/overlays/develop && kustomize edit set image registry.digitalocean.com/cbiglobal/file-storage-service:${fileTag}");
                                 break;
                             case 'cbigold-api-production':
                                 sh("cd cbigold/overlays/production && kustomize edit set image registry.digitalocean.com/cbiglobal/admin-service:${adminTag}");
@@ -172,6 +188,7 @@ pipeline {
                                 sh("cd cbigold/overlays/production && kustomize edit set image registry.digitalocean.com/cbiglobal/product-service:${productTag}");
                                 sh("cd cbigold/overlays/production && kustomize edit set image registry.digitalocean.com/cbiglobal/transaction-service:${transactionTag}");
                                 sh("cd cbigold/overlays/production && kustomize edit set image registry.digitalocean.com/cbiglobal/user-service:${userTag}");
+                                sh("cd cbigold/overlays/develop && kustomize edit set image registry.digitalocean.com/cbiglobal/file-storage-service:${fileTag}");
                                 break;
                             case 'cbigold-api-qa':
                                 sh("cd cbigold/overlays/qa && kustomize edit set image registry.digitalocean.com/cbiglobal/admin-service:${adminTag}");
@@ -181,6 +198,7 @@ pipeline {
                                 sh("cd cbigold/overlays/qa && kustomize edit set image registry.digitalocean.com/cbiglobal/product-service:${productTag}");
                                 sh("cd cbigold/overlays/qa && kustomize edit set image registry.digitalocean.com/cbiglobal/transaction-service:${transactionTag}");
                                 sh("cd cbigold/overlays/qa && kustomize edit set image registry.digitalocean.com/cbiglobal/user-service:${userTag}");
+                                sh("cd cbigold/overlays/develop && kustomize edit set image registry.digitalocean.com/cbiglobal/file-storage-service:${fileTag}");
                                 break;
                             case 'cbigold-api-staging':
                                 sh("cd cbigold/overlays/staging && kustomize edit set image registry.digitalocean.com/cbiglobal/admin-service:${adminTag}");
@@ -190,6 +208,7 @@ pipeline {
                                 sh("cd cbigold/overlays/staging && kustomize edit set image registry.digitalocean.com/cbiglobal/product-service:${productTag}");
                                 sh("cd cbigold/overlays/staging && kustomize edit set image registry.digitalocean.com/cbiglobal/transaction-service:${transactionTag}");
                                 sh("cd cbigold/overlays/staging && kustomize edit set image registry.digitalocean.com/cbiglobal/user-service:${userTag}");
+                                sh("cd cbigold/overlays/develop && kustomize edit set image registry.digitalocean.com/cbiglobal/file-storage-service:${fileTag}");
                                 break;
                             default:
                                 echo 'No Kustomize application found';
