@@ -226,10 +226,15 @@ async function register(req, res) {
             const sponsor = await userService.findByReferralId(referral_id);
             if (sponsor.id) {
                 sponsorId = sponsor.id;
+                const role = await groupService.findByPropertyValue('name', 'member');
+                groupId = role.id;
             } else {
                 const role = await groupService.findByPropertyValue('name', 'lead');
                 groupId = role.id;
             }
+        } else {
+            const role = await groupService.findByPropertyValue('name', 'lead');
+            groupId = role.id;
         }
 
         const code  = generator.generate({ length: 4, numbers: true }).toUpperCase();
