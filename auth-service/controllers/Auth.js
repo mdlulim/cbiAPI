@@ -258,12 +258,18 @@ async function register(req, res) {
             group_id: groupId,
             password,
             salt,
-            verification: {
+            verification: null,
+        };
+
+        if (!isLead) {
+            user.verification = {
                 token,
                 email: false,
                 mobile: false,
-            },
-        };
+            };
+        }
+
+        // create user
         await userService.create(user);
 
         // send activation email (if is not a lead)
