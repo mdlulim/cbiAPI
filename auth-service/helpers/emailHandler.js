@@ -6,7 +6,7 @@ const { baseurl } = config;
 
 async function confirmEmail(data) {
     const { email, token } = data;
-    data.link = `${baseurl}/activate/${token}`;
+    data.link = `${baseurl.frontend}/activate/${token}`;
     const template = emailTemplates.confirmEmail(data);
     const from = {
         name: 'CBI',
@@ -17,7 +17,7 @@ async function confirmEmail(data) {
 
 async function resetPassword(data) {
     const { email, token } = data;
-    data.link = `${baseurl}/reset-password/${token}`;
+    data.link = `${baseurl.frontend}/reset-password/${token}`;
     const template = emailTemplates.resetPassword(data);
     const from = {
         name: 'CBI',
