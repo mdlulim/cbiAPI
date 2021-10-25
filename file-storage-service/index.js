@@ -2,7 +2,7 @@
 var apm = require('elastic-apm-node').start({
     serviceName: '',
     secretToken: 'K1dPeS59y0hO980e9d0ed4pI',
-    serverUrl: 'http://apm-server-apm-http:8200',
+    serverUrl: 'https://apm-server-apm-http.default.svc.cluster.local:8200',
     environment: 'production'
     })
 
