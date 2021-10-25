@@ -212,6 +212,7 @@ async function register(req, res) {
             first_name,
             referral_id,
         } = req.body;
+        let isLead = true;
         const exists = await userService.findByEmail(email);
         if (exists) {
             return res.status(403).send({
@@ -220,20 +221,21 @@ async function register(req, res) {
             });
         }
 
+        let role = null;
         let sponsorId = null;
         let groupId = null;
         if (referral_id) {
             const sponsor = await userService.findByReferralId(referral_id);
             if (sponsor.id) {
+                isLead = false;
                 sponsorId = sponsor.id;
-                const role = await groupService.findByPropertyValue('name', 'member');
-                groupId = role.id;
-            } else {
-                const role = await groupService.findByPropertyValue('name', 'lead');
+                role = await groupService.findByPropertyValue('name', 'member');
                 groupId = role.id;
             }
-        } else {
-            const role = await groupService.findByPropertyValue('name', 'lead');
+        }
+
+        if (isLead) {
+            role = await groupService.findByPropertyValue('name', 'lead');
             groupId = role.id;
         }
 
@@ -264,15 +266,18 @@ async function register(req, res) {
         };
         await userService.create(user);
 
-        // send activation email
-        await emailHandler.confirmEmail({
-            first_name,
-            email,
-            token,
-        });
+        // send activation email (if is not a lead)
+        if (!isLead) {
+            await emailHandler.confirmEmail({
+                first_name,
+                email,
+                token,
+            });
+        }
 
         return res.send({
             success: true,
+            lead: isLead,
         });
     } catch (err) {
         return errorHandler.error(err, res);
