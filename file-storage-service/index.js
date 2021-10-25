@@ -1,3 +1,11 @@
+// add application performance monitoring 
+var apm = require('elastic-apm-node').start({
+    serviceName: '',
+    secretToken: 'K1dPeS59y0hO980e9d0ed4pI',
+    serverUrl: 'http://apm-server-apm-http:8200',
+    environment: 'production'
+    })
+
 const express    = require('express');
 const bodyParser = require('body-parser');
 const cors       = require('cors');
