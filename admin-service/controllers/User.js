@@ -155,7 +155,67 @@ async function transactions(req, res){
             message: 'Could not process your request'
         });
     }
-};
+}
+
+async function addresses(req, res){
+    try {
+        return userService.addresses(req.params.id)
+        .then(data => res.send(data));
+    } catch (err) {
+        return res.status(500).send({
+            success: false,
+            message: 'Could not process your request'
+        });
+    }
+}
+
+async function emails(req, res){
+    try {
+        return userService.emails(req.params.id)
+        .then(data => res.send(data));
+    } catch (err) {
+        return res.status(500).send({
+            success: false,
+            message: 'Could not process your request'
+        });
+    }
+}
+
+async function mobiles(req, res){
+    try {
+        return userService.mobiles(req.params.id)
+        .then(data => res.send(data));
+    } catch (err) {
+        return res.status(500).send({
+            success: false,
+            message: 'Could not process your request'
+        });
+    }
+}
+
+async function bankAccounts(req, res){
+    try {
+        return userService.bankAccounts(req.params.id)
+        .then(data => res.send(data));
+    } catch (err) {
+        return res.status(500).send({
+            success: false,
+            message: 'Could not process your request'
+        });
+    }
+}
+
+async function cryptoAccounts(req, res){
+    try {
+        return userService.cryptoAccounts(req.params.id)
+        .then(data => res.send(data));
+    } catch (err) {
+        return res.status(500).send({
+            success: false,
+            message: 'Could not process your request'
+        });
+    }
+}
 
 module.exports = {
     create,
@@ -167,4 +227,9 @@ module.exports = {
     products,
     referrals,
     transactions,
-};
+    addresses,
+    emails,
+    mobiles,
+    bankAccounts,
+    cryptoAccounts,
+}

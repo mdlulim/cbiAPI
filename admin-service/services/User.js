@@ -1,10 +1,20 @@
 const sequelize = require('../config/db');
-const { User } = require('../models/User');
+const { Address } = require('../models/Address');
+const { EmailAddress } = require('../models/EmailAddress');
+const { MobileNumber } = require('../models/MobileNumber');
+const { BankAccount } = require('../models/BankAccount');
+const { CryptoAccount } = require('../models/CryptoAccount');
 const { Group } = require('../models/Group');
+const { User } = require('../models/User');
 const { Product } = require('../models/Product');
 const { UserProduct }  = require('../models/UserProduct');
 const { Transaction }  = require('../models/Transaction');
 
+Address.belongsTo(User, { foreignKey: 'user_id', targetKey: 'id' });
+EmailAddress.belongsTo(User, { foreignKey: 'user_id', targetKey: 'id' });
+MobileNumber.belongsTo(User, { foreignKey: 'user_id', targetKey: 'id' });
+BankAccount.belongsTo(User, { foreignKey: 'user_id', targetKey: 'id' });
+CryptoAccount.belongsTo(User, { foreignKey: 'user_id', targetKey: 'id' });
 Transaction.belongsTo(User, { foreignKey: 'user_id', targetKey: 'id' });
 User.belongsTo(Group, { foreignKey: 'group_id', targetKey: 'id' });
 Product.belongsTo(UserProduct, { foreignKey: 'id', targetKey: 'product_id' });
@@ -308,6 +318,111 @@ async function transactions(user_id) {
     }
 }
 
+async function addresses(user_id) {
+    try {
+        const addresses = await Address.findAndCountAll({
+            where: { user_id }
+        });
+        const { count, rows } = addresses;
+        return {
+            success: true,
+            data: {
+                count,
+                next: null,
+                previous: null,
+                results: rows,
+            }
+        };
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
+async function emails(user_id) {
+    try {
+        const emails = await EmailAddress.findAndCountAll({
+            where: { user_id }
+        });
+        const { count, rows } = emails;
+        return {
+            success: true,
+            data: {
+                count,
+                next: null,
+                previous: null,
+                results: rows,
+            }
+        };
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
+async function mobiles(user_id) {
+    try {
+        const mobiles = await MobileNumber.findAndCountAll({
+            where: { user_id }
+        });
+        const { count, rows } = mobiles;
+        return {
+            success: true,
+            data: {
+                count,
+                next: null,
+                previous: null,
+                results: rows,
+            }
+        };
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
+async function bankAccounts(user_id) {
+    try {
+        const accounts = await BankAccount.findAndCountAll({
+            where: { user_id }
+        });
+        const { count, rows } = accounts;
+        return {
+            success: true,
+            data: {
+                count,
+                next: null,
+                previous: null,
+                results: rows,
+            }
+        };
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
+async function cryptoAccounts(user_id) {
+    try {
+        const accounts = await CryptoAccount.findAndCountAll({
+            where: { user_id }
+        });
+        const { count, rows } = accounts;
+        return {
+            success: true,
+            data: {
+                count,
+                next: null,
+                previous: null,
+                results: rows,
+            }
+        };
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
 module.exports = {
     create,
     index,
@@ -318,4 +433,9 @@ module.exports = {
     products,
     referrals,
     transactions,
+    addresses,
+    emails,
+    mobiles,
+    bankAccounts,
+    cryptoAccounts,
 }

@@ -36,6 +36,41 @@ module.exports.set = app => {
     app.put('/users/:id', authMiddleware.checkAuth, userController.update);
 
     /**
+     * Retrieve User Addresses
+     * 
+     * Retrieve user addresses.
+     */
+    app.get('/users/:id/addresses', authMiddleware.checkAuth, userController.addresses);
+
+    /**
+     * Retrieve User Emails
+     * 
+     * Retrieve user email addresses.
+     */
+    app.get('/users/:id/emails', authMiddleware.checkAuth, userController.emails);
+
+    /**
+     * Retrieve User Mobiles
+     * 
+     * Retrieve user mobile addresses.
+     */
+    app.get('/users/:id/mobiles', authMiddleware.checkAuth, userController.mobiles);
+
+    /**
+     * Retrieve User Banks
+     * 
+     * Retrieve user bank accounts.
+     */
+    app.get('/users/:id/bank_accounts', authMiddleware.checkAuth, userController.bankAccounts);
+
+    /**
+     * Retrieve User Crypto Accounts
+     * 
+     * Retrieve user crypto accounts.
+     */
+    app.get('/users/:id/crypto_accounts', authMiddleware.checkAuth, userController.cryptoAccounts);
+
+    /**
      * Archive User
      * 
      * Archived company's user.
