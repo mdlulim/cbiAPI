@@ -139,6 +139,7 @@ async function login(req, res) {
 
         // auth (jwt) token
         const payload = {
+            email,
             id: user.id,
             time: new Date(),
         };
