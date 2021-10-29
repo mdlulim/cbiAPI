@@ -1,7 +1,14 @@
 const authMiddleware    = require('./middlewares/auth');
 const companyController = require('./controllers/Company');
+const countryController = require('./controllers/Country');
 
 module.exports.set = app => {
+    /**
+     * Retrieve Countries
+     * 
+     */
+    app.get('/countries', countryController.index);
+
     /**
      * Retrieve Company Details
      * 
