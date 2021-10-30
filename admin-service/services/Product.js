@@ -46,6 +46,18 @@ async function show(id) {
     }
 }
 
+async function findByPermakey(permakey) {
+    try {
+        return Product.findOne({
+            where: { permakey },
+            include: [{ model: Currency }],
+        });
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
 /**
  * 
  * Update Product
@@ -80,4 +92,5 @@ module.exports = {
     show,
     update,
     destroy,
+    findByPermakey,
 }

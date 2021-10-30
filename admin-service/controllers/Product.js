@@ -13,6 +13,16 @@ async function create(req, res) {
         const data = req.body;
         data.captured_by = req.user.id;
         data.permakey = permakey(data.title);
+
+        // check product by unique permakey/code
+        const product = await productService.findByPermakey(data.permakey);
+        if (product.id) {
+            return res.status(403).send({
+                success: false,
+                message: 'Validation error. Same product name already exists'
+            });
+        }
+
         await productService.create(data);
         await activityService.addActivity({
             user_id: req.user.id,
@@ -27,7 +37,8 @@ async function create(req, res) {
             success: true,
         });
     } catch (error) {
-        return res.send({
+        console.log(error)
+        return res.status(500).send({
             success: false,
             message: 'Could not process request'
         });
