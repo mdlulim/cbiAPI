@@ -1,5 +1,8 @@
 const sequelize = require('../config/db');
+const { Currency } = require('../models/Currency');
 const { Product } = require('../models/Product');
+
+Product.belongsTo(Currency, { foreignKey: 'currency_code', targetKey: 'code' });
 
 async function create(data) {
     try {
@@ -20,6 +23,7 @@ async function index(query) {
 
         return Product.findAndCountAll({
             where,
+            include: [{ model: Product }],
             order: [['created', 'DESC']],
             offset: offset || 0,
             limit: limit || 100,
@@ -34,6 +38,7 @@ async function show(id) {
     try {
         return Product.findOne({
             where: { id },
+            include: [{ model: Product }],
         });
     } catch (error) {
         console.error(error.message || null);
