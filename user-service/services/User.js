@@ -47,6 +47,7 @@ async function show(id) {
                 'getstarted',
                 'referral_id',
                 'sponsor',
+                'autorenew',
             ],
             where: { id },
             include: [{ model: Group }],

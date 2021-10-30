@@ -28,6 +28,7 @@ async function validate(req, res) {
             exists: (user && user.id) ? true : false,
         });
     } catch (error) {
+        console.log(error)
         return res.send({
             success: false,
             message: 'Could not process request'

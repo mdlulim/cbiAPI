@@ -68,11 +68,15 @@ async function update(id, data) {
 async function findByPropertyValue(prop, value) {
     try {
         const { Op } = sequelize;
-        return User.findOne({
-            where: {
-                [prop]: { [Op.iLike]: value }
-            }
-        });
+        var where = {};
+        if (prop === 'referral_id') {
+            where[prop] = value;
+        } else {
+            where[prop] = {
+                [Op.iLike]: value
+            };
+        }
+        return User.findOne({ where });
     } catch (error) {
         console.error(error.message || null);
         throw new Error('Could not process your request');
