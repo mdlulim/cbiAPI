@@ -23,7 +23,7 @@ async function index(query) {
 
         return Product.findAndCountAll({
             where,
-            include: [{ model: Product }],
+            include: [{ model: Currency }],
             order: [['created', 'DESC']],
             offset: offset || 0,
             limit: limit || 100,
@@ -38,7 +38,7 @@ async function show(id) {
     try {
         return Product.findOne({
             where: { id },
-            include: [{ model: Product }],
+            include: [{ model: Currency }],
         });
     } catch (error) {
         console.error(error.message || null);

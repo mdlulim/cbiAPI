@@ -15,4 +15,11 @@ module.exports.set = app => {
      * Retrieve current user’s products.
      */
     app.get('/', authMiddleware.checkAuth, productController.index);
+    
+    /**
+     * Subscribe
+     * 
+     * Subscribe a User to a Product
+     */
+    app.post('/subscribe', authMiddleware.checkAuth, productController.subscribe);
 };
