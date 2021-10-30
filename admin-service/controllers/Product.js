@@ -16,7 +16,7 @@ async function create(req, res) {
 
         // check product by unique permakey/code
         const product = await productService.findByPermakey(data.permakey);
-        if (product.id) {
+        if (product && product.id) {
             return res.status(403).send({
                 success: false,
                 message: 'Validation error. Same product name already exists'
