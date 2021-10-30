@@ -1,14 +1,30 @@
 const productService = require('../services/Product');
+const activityService = require('../services/Activity');
+
+function permakey(title) {
+    return title.split(' ')
+        .join('-')
+        .trim()
+        .toLowerCase();
+}
 
 async function create(req, res) {
     try {
-        return productService.create(req.body)
-        .then(() => res.send({ success: true }))
-        .catch(err => {
-            res.send({
-                success: false,
-                message: err.message,
-            });
+        const data = req.body;
+        data.captured_by = req.user.id;
+        data.permakey = permakey(data.title);
+        await productService.create(data);
+        await activityService.addActivity({
+            user_id: req.user.id,
+            action: `${req.user.group_name}.products.add`,
+            description: `${req.user.group_name} added a new product (${data.title})`,
+            section: 'Products',
+            subsection: 'Add',
+            ip: null,
+            data,
+        });
+        return res.send({
+            success: true,
         });
     } catch (error) {
         return res.send({
@@ -56,13 +72,22 @@ async function show(req, res) {
 
 async function update(req, res) {
     try {
-        return productService.update(req.params.id, req.body)
-        .then(() => res.send({ success: true }))
-        .catch(err => {
-            res.send({
-                success: false,
-                message: err.message,
-            });
+        const data = req.body;
+        await productService.update(req.params.id, data);
+        await activityService.addActivity({
+            user_id: req.user.id,
+            action: `${req.user.group_name}.products.update`,
+            description: `${req.user.group_name} updated a product (${data.title})`,
+            section: 'Products',
+            subsection: 'Update',
+            ip: null,
+            data: {
+                ...data,
+                id: req.params.id,
+            },
+        });
+        return res.send({
+            success: true,
         });
     } catch (error) {
         return res.send({
@@ -74,13 +99,19 @@ async function update(req, res) {
 
 async function destroy(req, res) {
     try {
-        return productService.destroy(req.params.id)
-        .then(() => res.send({ success: true }))
-        .catch(err => {
-            res.send({
-                success: false,
-                message: err.message,
-            });
+        const data = await productService.show(req.params.id);
+        await productService.destroy(req.params.id);
+        await activityService.addActivity({
+            user_id: req.user.id,
+            action: `${req.user.group_name}.products.delete`,
+            description: `${req.user.group_name} deleted a product (${data.title})`,
+            section: 'Products',
+            subsection: 'Delete',
+            ip: null,
+            data,
+        });
+        return res.send({
+            success: true,
         });
     } catch (error) {
         return res.send({

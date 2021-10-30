@@ -1,7 +1,6 @@
 const sequelize = require('../config/db');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-const moment = require('moment');
 const { User } = require('../models/User');
 const { Group } = require('../models/Group');
 const { OTPAuth } = require('../models/OTPAuth');
@@ -15,7 +14,6 @@ const {
 
 const activityService = require('../services/Activity');
 const sessionService = require('../services/Session');
-const userService = require('../services/Session');
 
 User.belongsTo(Group, { foreignKey: 'group_id', targetKey: 'id' });
 OTPAuth.belongsTo(User, { foreignKey: 'user_id', targetKey: 'id' });
