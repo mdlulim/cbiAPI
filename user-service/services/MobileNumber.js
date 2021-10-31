@@ -44,7 +44,7 @@ async function update(id, data) {
 
 async function destroy(id) {
     try {
-        return MobileNumber.destroy(id);
+        return MobileNumber.destroy({ where: { id } });
     } catch (error) {
         console.error(error.message || null);
         throw new Error('Could not process your request');

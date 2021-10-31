@@ -43,4 +43,5 @@ module.exports.set = app => {
 
     app.get('/notifications', authMiddleware.checkAuth, notificationController.index);
     app.put('/notifications/:id', authMiddleware.checkAuth, notificationController.update);
+    app.delete('/notifications/:id', authMiddleware.checkAuth, notificationController.destroy);
 };

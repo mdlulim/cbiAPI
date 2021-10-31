@@ -50,7 +50,26 @@ async function update(req, res) {
     }
 }
 
+async function destroy(req, res) {
+    try {
+        return notificationService.destroy(req.params.id)
+        .then(() => res.send({ success: true }))
+        .catch(err => {
+            res.send({
+                success: false,
+                message: err.message,
+            });
+        });
+    } catch (error) {
+        return res.send({
+            success: false,
+            message: 'Could not process request'
+        });
+    }
+}
+
 module.exports = {
     index,
     update,
+    destroy,
 };

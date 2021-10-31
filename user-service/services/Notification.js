@@ -22,7 +22,17 @@ async function update(id, data) {
     }
 }
 
+async function destroy(id) {
+    try {
+        return Notification.destroy({ where: { id } });
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
 module.exports = {
     index,
     update,
+    destroy,
 }
