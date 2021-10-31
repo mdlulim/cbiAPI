@@ -109,15 +109,10 @@ async function destroy(req, res) {
                 ip: null,
             });
             return res.send({ success: true });
-        })
-        .catch(err => {
-            res.send({
-                success: false,
-                message: err.message,
-            });
         });
     } catch (error) {
-        return res.send({
+        console.log(error);
+        return res.status(500).send({
             success: false,
             message: 'Could not process request'
         });
