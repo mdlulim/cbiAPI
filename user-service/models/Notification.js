@@ -7,9 +7,11 @@ const Notification = sequelize.define('notification', {
         defaultValue: Sequelize.UUIDV4,
         primaryKey: true,
     },
-    name: Sequelize.STRING,
+    activity: Sequelize.STRING,
     description: Sequelize.STRING,
-    enabled: Sequelize.BOOLEAN,
+    sms: Sequelize.BOOLEAN,
+    email: Sequelize.BOOLEAN,
+    push: Sequelize.BOOLEAN,
     created: Sequelize.DATE,
     updated: Sequelize.DATE,
 }, {

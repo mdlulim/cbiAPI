@@ -3,6 +3,7 @@ const cryptoAccountController = require('./controllers/CryptoAccount');
 const documentController = require('./controllers/Document');
 const emailAddressController = require('./controllers/EmailAddress');
 const mobileNumberController = require('./controllers/MobileNumber');
+const notificationController = require('./controllers/Notification');
 const userController = require('./controllers/User');
 const authMiddleware = require('./middlewares/auth');
 
@@ -39,4 +40,7 @@ module.exports.set = app => {
     app.get('/mobile_numbers/:id', authMiddleware.checkAuth, mobileNumberController.show);
     app.put('/mobile_numbers/:id', authMiddleware.checkAuth, mobileNumberController.update);
     app.delete('/mobile_numbers/:id', authMiddleware.checkAuth, mobileNumberController.destroy);
+
+    app.get('/notifications', authMiddleware.checkAuth, notificationController.index);
+    app.put('/notifications/:id', authMiddleware.checkAuth, notificationController.update);
 };
