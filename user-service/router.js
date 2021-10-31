@@ -1,4 +1,5 @@
 const bankAccountController = require('./controllers/BankAccount');
+const beneficiaryController = require('./controllers/Beneficiary');
 const cryptoAccountController = require('./controllers/CryptoAccount');
 const documentController = require('./controllers/Document');
 const emailAddressController = require('./controllers/EmailAddress');
@@ -16,6 +17,11 @@ module.exports.set = app => {
     app.get('/bank_accounts/:id', authMiddleware.checkAuth, bankAccountController.show);
     app.put('/bank_accounts/:id', authMiddleware.checkAuth, bankAccountController.update);
     app.delete('/bank_accounts/:id', authMiddleware.checkAuth, bankAccountController.destroy);
+
+    app.post('/beneficiaries', authMiddleware.checkAuth, beneficiaryController.create);
+    app.get('/beneficiaries', authMiddleware.checkAuth, beneficiaryController.index);
+    app.put('/beneficiaries/:id', authMiddleware.checkAuth, beneficiaryController.update);
+    app.delete('/beneficiaries/:id', authMiddleware.checkAuth, beneficiaryController.destroy);
 
     app.post('/crypto_accounts', authMiddleware.checkAuth, cryptoAccountController.create);
     app.get('/crypto_accounts', authMiddleware.checkAuth, cryptoAccountController.index);
