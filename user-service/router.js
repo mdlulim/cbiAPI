@@ -5,6 +5,7 @@ const documentController = require('./controllers/Document');
 const emailAddressController = require('./controllers/EmailAddress');
 const mobileNumberController = require('./controllers/MobileNumber');
 const notificationController = require('./controllers/Notification');
+const statisticsController   = require('./controllers/Statistics');
 const userController = require('./controllers/User');
 const authMiddleware = require('./middlewares/auth');
 
