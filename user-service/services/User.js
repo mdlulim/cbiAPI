@@ -131,10 +131,24 @@ async function referrals(id) {
     }
 }
 
+async function countReferrals(id) {
+    try {
+        const count = await User.count({
+            where: { sponsor: id },
+            include: [{ model: Group }],
+        });
+        return count;
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
 module.exports = {
     create,
     show,
     update,
     findByEmail,
     referrals,
+    countReferrals,
 }
