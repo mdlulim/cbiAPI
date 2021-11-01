@@ -85,6 +85,20 @@ module.exports.set = app => {
     app.put('/users/:id/block', authMiddleware.checkAuth, userController.block);
 
     /**
+     * Archive User
+     * 
+     * Archived company's user.
+     */
+    app.put('/users/:id/unarchive', authMiddleware.checkAuth, userController.unarchive);
+
+    /**
+     * Block User
+     * 
+     * Block company's user.
+     */
+    app.put('/users/:id/unblock', authMiddleware.checkAuth, userController.unblock);
+
+    /**
      * Retrieve User' Referrals
      * 
      * Retrieve a company’s user referrals.

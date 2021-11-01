@@ -225,6 +225,51 @@ async function block(id) {
 }
 
 /**
+ * 
+ * Archived User
+ * 
+ * Archived company’s user.
+ * 
+ * @param {string} id
+ * @returns 
+ */
+async function unarchive(id) {
+    try {
+        return User.update({
+            status: 'Active',
+            archived: false,
+            updated: sequelize.fn('NOW'),
+        }, { where: { id } });
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
+/**
+ * 
+ * Block User
+ * 
+ * Block company’s user.
+ * 
+ * @param {string} id
+ * @returns 
+ */
+async function unblock(id) {
+    try {
+        return User.update({
+            status: 'Active',
+            blocked: false,
+            archived: false,
+            updated: sequelize.fn('NOW'),
+        }, { where: { id } });
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
+/**
  * List User Products
  * 
  * Get a list of products belonging to CBI's user.
@@ -435,6 +480,8 @@ module.exports = {
     update,
     archive,
     block,
+    unarchive,
+    unblock,
     products,
     referrals,
     transactions,

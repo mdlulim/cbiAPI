@@ -108,6 +108,42 @@ async function block(req, res) {
     }
 }
 
+async function unarchive(req, res) {
+    try {
+        return userService.unarchive(req.params.id)
+        .then(() => res.send({ success: true }))
+        .catch(err => {
+            res.send({
+                success: false,
+                message: err.message,
+            });
+        });
+    } catch (error) {
+        return res.send({
+            success: false,
+            message: 'Could not process request'
+        });
+    }
+}
+
+async function unblock(req, res) {
+    try {
+        return userService.unblock(req.params.id)
+        .then(() => res.send({ success: true }))
+        .catch(err => {
+            res.send({
+                success: false,
+                message: err.message,
+            });
+        });
+    } catch (error) {
+        return res.send({
+            success: false,
+            message: 'Could not process request'
+        });
+    }
+}
+
 async function products(req, res) {
     try {
         return userService.products(req.params.id)
@@ -224,6 +260,8 @@ module.exports = {
     update,
     archive,
     block,
+    unarchive,
+    unblock,
     products,
     referrals,
     transactions,
