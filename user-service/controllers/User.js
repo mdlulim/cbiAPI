@@ -1,3 +1,4 @@
+const activityService = require('../services/Activity');
 const userService = require('../services/User');
 
 async function profile(req, res) {
@@ -34,7 +35,37 @@ async function referrals(req, res) {
     }
 }
 
+async function update(req, res) {
+    try {
+        return userService.update(req.user.id, req.body)
+        .then(async () => {
+            await activityService.add({
+                user_id: req.user.id,
+                action: `${req.user.group_name.toLowerCase()}.profile.update`,
+                description: `${req.user.first_name} updated profile`,
+                section: 'Account',
+                subsection: 'Profile',
+                data: { id: req.params.id, data: req.body },
+                ip: null,
+            });
+            return res.send({ success: true });
+        })
+        .catch(err => {
+            res.send({
+                success: false,
+                message: err.message,
+            });
+        });
+    } catch (error) {
+        return res.send({
+            success: false,
+            message: 'Could not process request'
+        });
+    }
+}
+
 module.exports = {
     profile,
     referrals,
+    update,
 };

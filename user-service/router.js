@@ -14,6 +14,7 @@ module.exports.set = app => {
 
     app.get('/profile', authMiddleware.checkAuth, userController.profile);
     app.get('/referrals', authMiddleware.checkAuth, userController.referrals);
+    app.put('/profile', authMiddleware.checkAuth, userController.update);
 
     app.post('/bank_accounts', authMiddleware.checkAuth, bankAccountController.create);
     app.get('/bank_accounts', authMiddleware.checkAuth, bankAccountController.index);
