@@ -9,6 +9,9 @@ const UserProduct = sequelize.define('user_product', {
     },
 	user_id: Sequelize.UUID,
 	product_id: Sequelize.UUID,
+	start_date: Sequelize.DATE,
+	end_date: Sequelize.DATE,
+	income: Sequelize.FLOAT,
     created: Sequelize.DATE,
 	status: Sequelize.STRING,
 }, {
