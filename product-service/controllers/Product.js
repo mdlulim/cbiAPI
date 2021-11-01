@@ -63,8 +63,21 @@ async function subscribe(req, res){
     }
 }
 
+async function show(req, res){
+    try {
+        return productService.show(req.params.permakey)
+        .then(data => res.send(data));
+    } catch (err) {
+        return res.status(500).send({
+            success: false,
+            message: 'Could not process your request'
+        });
+    }
+}
+
 module.exports = {
     index,
     overview,
     subscribe,
+    show,
 };

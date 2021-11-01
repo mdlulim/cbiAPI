@@ -17,6 +17,13 @@ module.exports.set = app => {
     app.get('/', authMiddleware.checkAuth, productController.index);
     
     /**
+     * Retrieve Single Product
+     * 
+     * Retrieve current user’s product details.
+     */
+    app.get('/:permakey', authMiddleware.checkAuth, productController.show);
+    
+    /**
      * Subscribe
      * 
      * Subscribe a User to a Product

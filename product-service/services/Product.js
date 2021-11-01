@@ -61,12 +61,16 @@ async function overview() {
     }
 }
 
-async function show(id) {
+async function show(permakey) {
     try {
-        return Product.findOne({
-            where: { id },
+        const product = Product.findOne({
+            where: { permakey },
             include: [{ model: Currency }]
         });
+        return {
+            success: true,
+            data: product,
+        };
     } catch (error) {
         console.error(error.message || null);
         throw new Error('Could not process your request');
