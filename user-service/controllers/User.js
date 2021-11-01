@@ -45,7 +45,7 @@ async function update(req, res) {
                 description: `${req.user.first_name} updated profile`,
                 section: 'Account',
                 subsection: 'Profile',
-                data: { id: req.params.id, data: req.body },
+                data: { id: req.user.id, data: req.body },
                 ip: null,
             });
             return res.send({ success: true });
