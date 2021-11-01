@@ -9,7 +9,7 @@ async function index(req, res) {
             success: true,
             data: {
                 balance: 0,
-                withdrawals,
+                withdrawals: withdrawals || 0,
                 income: 0,
                 referrals,
             },
