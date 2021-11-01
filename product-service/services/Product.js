@@ -63,7 +63,7 @@ async function overview() {
 
 async function show(permakey) {
     try {
-        const product = Product.findOne({
+        const product = await Product.findOne({
             where: { permakey },
             include: [{ model: Currency }]
         });
