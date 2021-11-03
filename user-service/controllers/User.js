@@ -1,4 +1,5 @@
 const activityService = require('../services/Activity');
+const kycService = require('../services/KYC');
 const userService = require('../services/User');
 
 async function profile(req, res) {
@@ -64,8 +65,50 @@ async function update(req, res) {
     }
 }
 
+async function kyc(req, res) {
+    try {
+        const data = await kycService.index(req.user.id);
+        return res.send({
+            success: true,
+            data,
+        });
+    } catch (error) {
+        return res.send({
+            success: false,
+            message: 'Could not process request'
+        });
+    }
+}
+
+async function captureKYC(req, res) {
+    try {
+        const data = {
+            ...req.body,
+            user_id: req.user.id,
+        };
+        await kycService.capture(data);
+        await activityService.add({
+            user_id: req.user.id,
+            action: `${req.user.group_name.toLowerCase()}.kyc.capture`,
+            description: `${req.user.first_name} captured kyc information`,
+            section: 'Account',
+            subsection: 'KYC',
+            data: { id: req.user.id, data: req.body },
+            ip: null,
+        });
+        return res.send({ success: true });
+    } catch (error) {
+        return res.send({
+            success: false,
+            message: 'Could not process request'
+        });
+    }
+}
+
 module.exports = {
     profile,
     referrals,
     update,
+    kyc,
+    captureKYC,
 };
