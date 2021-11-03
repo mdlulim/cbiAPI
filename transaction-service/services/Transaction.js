@@ -4,6 +4,19 @@ const { User }  = require('../models/User');
 
 Transaction.belongsTo(User, { foreignKey: 'user_id', targetKey: 'id' });
 
+async function create(data) {
+    try {
+        const transaction = await Transaction.create(data);
+        return {
+            success: true,
+            data: transaction,
+        };
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
 async function index(user_id) {
     try {
         const transactions = await Transaction.findAndCountAll({
@@ -26,5 +39,6 @@ async function index(user_id) {
 }
 
 module.exports = {
+    create,
     index,
 }
