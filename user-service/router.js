@@ -1,3 +1,4 @@
+const accountController = require('./controllers/Account');
 const bankAccountController = require('./controllers/BankAccount');
 const beneficiaryController = require('./controllers/Beneficiary');
 const cryptoAccountController = require('./controllers/CryptoAccount');
@@ -54,4 +55,6 @@ module.exports.set = app => {
     app.get('/notifications', authMiddleware.checkAuth, notificationController.index);
     app.put('/notifications/:id', authMiddleware.checkAuth, notificationController.update);
     app.delete('/notifications/:id', authMiddleware.checkAuth, notificationController.destroy);
+
+    app.get('/wallet', authMiddleware.checkAuth, accountController.wallet);
 };

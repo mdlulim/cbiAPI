@@ -1,3 +1,4 @@
+const accountController = require('./controllers/Account');
 const countryController = require('./controllers/Country');
 const currencyController = require('./controllers/Currency');
 const groupController = require('./controllers/Group');
@@ -118,6 +119,13 @@ module.exports.set = app => {
      * Retrieve a company’s user transactions.
      */
     app.get('/users/:id/transactions', authMiddleware.checkAuth, userController.transactions);
+
+    /**
+     * Retrieve User's CBI Account/Wallet
+     * 
+     * Retrieve a company’s user account/wallet.
+     */
+    app.get('/users/:id/wallet', authMiddleware.checkAuth, accountController.wallet);
 
     /**
      * List User Products
