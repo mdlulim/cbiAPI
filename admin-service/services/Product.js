@@ -1,8 +1,10 @@
 const sequelize = require('../config/db');
 const { Currency } = require('../models/Currency');
 const { Product } = require('../models/Product');
+const { ProductCategory } = require('../models/ProductCategory');
 
 Product.belongsTo(Currency, { foreignKey: 'currency_code', targetKey: 'code' });
+Product.belongsTo(ProductCategory, { foreignKey: 'category_id', targetKey: 'code' });
 
 async function create(data) {
     try {
@@ -23,7 +25,7 @@ async function index(query) {
 
         return Product.findAndCountAll({
             where,
-            include: [{ model: Currency }],
+            include: [{ model: Currency }, { model: ProductCategory }],
             order: [['created', 'DESC']],
             offset: offset || 0,
             limit: limit || 100,
@@ -38,7 +40,7 @@ async function show(id) {
     try {
         return Product.findOne({
             where: { id },
-            include: [{ model: Currency }],
+            include: [{ model: Currency }, { model: ProductCategory }],
         });
     } catch (error) {
         console.error(error.message || null);
@@ -50,7 +52,7 @@ async function findByPermakey(permakey) {
     try {
         return Product.findOne({
             where: { permakey },
-            include: [{ model: Currency }],
+            include: [{ model: Currency }, { model: ProductCategory }],
         });
     } catch (error) {
         console.error(error.message || null);

@@ -1,7 +1,7 @@
 const sequelize = require('../config/db');
 const { KYC } = require('../models/KYC');
 
-async function create(data) {
+async function capture(data) {
     try {
         return KYC.create(data);
     } catch (error) {
@@ -23,6 +23,6 @@ async function index(user_id) {
 }
 
 module.exports = {
-    create,
+    capture,
     index,
 }

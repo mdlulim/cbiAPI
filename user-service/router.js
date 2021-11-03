@@ -13,6 +13,8 @@ const authMiddleware = require('./middlewares/auth');
 module.exports.set = app => {
     app.get('/statistics', authMiddleware.checkAuth, statisticsController.index);
 
+    app.post('/autorenew', authMiddleware.checkAuth, userController.autorenew);
+
     app.get('/profile', authMiddleware.checkAuth, userController.profile);
     app.get('/referrals', authMiddleware.checkAuth, userController.referrals);
     app.put('/profile', authMiddleware.checkAuth, userController.update);

@@ -1,11 +1,13 @@
 const sequelize = require('../config/db');
 const { Currency }  = require('../models/Currency');
 const { Product }  = require('../models/Product');
+const { ProductCategory }  = require('../models/ProductCategory');
 const { UserProduct }  = require('../models/UserProduct');
 const { User }  = require('../models/User');
 
 Product.belongsTo(UserProduct, { foreignKey: 'id', targetKey: 'product_id' });
 User.belongsTo(UserProduct, { foreignKey: 'id', targetKey: 'user_id' });
+Product.belongsTo(ProductCategory, { foreignKey: 'category_id', targetKey: 'code' });
 
 Product.belongsTo(Currency, { foreignKey: 'currency_code', targetKey: 'code' });
 
@@ -15,7 +17,11 @@ async function index(user_id) {
             include: [{
                 model: UserProduct,
                 where: { user_id }
-            }, { model: Currency }]
+            },{
+                model: Currency
+            }, {
+                model: ProductCategory
+            }]
         });
         const { count, rows } = products;
         return {
@@ -37,7 +43,7 @@ async function overview() {
     try {
         const { Op } = sequelize;
         const products = await Product.findAndCountAll({
-            include: [{ model: Currency }],
+            include: [{ model: Currency }, { model: ProductCategory }],
             where: {
                 archived: false,
                 status: {
@@ -65,7 +71,7 @@ async function show(permakey) {
     try {
         const product = await Product.findOne({
             where: { permakey },
-            include: [{ model: Currency }]
+            include: [{ model: Currency }, { model: ProductCategory }]
         });
         return {
             success: true,

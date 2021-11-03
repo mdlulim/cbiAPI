@@ -68,9 +68,13 @@ async function update(req, res) {
 async function kyc(req, res) {
     try {
         const data = await kycService.index(req.user.id);
+        const { count, rows } = data;
         return res.send({
             success: true,
-            data,
+            data: {
+                count,
+                results: rows,
+            },
         });
     } catch (error) {
         return res.send({
@@ -100,6 +104,36 @@ async function captureKYC(req, res) {
     } catch (error) {
         return res.send({
             success: false,
+            message: 'Could not process request' + error.message
+        });
+    }
+}
+
+async function autorenew(req, res) {
+    try {
+        const data = req.body;
+        return userService.update(req.user.id, data)
+        .then(async () => {
+            await activityService.add({
+                user_id: req.user.id,
+                action: `${req.user.group_name.toLowerCase()}.account_wc-autorenew.update`,
+                description: `${req.user.first_name} switched autorenew status to ${data.autorenew ? 'on' : 'off'}`,
+                section: 'Account',
+                subsection: 'Wealth Creator - Auto Renewal Status Update',
+                data: { id: req.user.id, data: req.body },
+                ip: null,
+            });
+            return res.send({ success: true });
+        })
+        .catch(err => {
+            res.send({
+                success: false,
+                message: err.message,
+            });
+        });
+    } catch (error) {
+        return res.send({
+            success: false,
             message: 'Could not process request'
         });
     }
@@ -111,4 +145,5 @@ module.exports = {
     update,
     kyc,
     captureKYC,
+    autorenew,
 };
