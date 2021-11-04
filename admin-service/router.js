@@ -121,6 +121,13 @@ module.exports.set = app => {
     app.get('/users/:id/transactions', authMiddleware.checkAuth, userController.transactions);
 
     /**
+     * Retrieve User' Transactions
+     * 
+     * Retrieve a company’s user transactions.
+     */
+    app.put('/users/:id/transactions', authMiddleware.checkAuth, userController.updateTransaction);
+
+    /**
      * Retrieve User's CBI Account/Wallet
      * 
      * Retrieve a company’s user account/wallet.

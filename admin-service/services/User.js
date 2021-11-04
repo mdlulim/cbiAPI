@@ -371,6 +371,18 @@ async function transactions(user_id) {
     }
 }
 
+async function updateTransaction(user_id, data) {
+    try {
+        await Transaction.update(data, {
+            where: { user_id }
+        });
+        return { success: true };
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
 async function addresses(user_id) {
     try {
         const addresses = await Address.findAndCountAll({
@@ -493,4 +505,5 @@ module.exports = {
     mobiles,
     bankAccounts,
     cryptoAccounts,
+    updateTransaction,
 }

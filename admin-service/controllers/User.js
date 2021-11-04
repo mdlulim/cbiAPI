@@ -193,6 +193,18 @@ async function transactions(req, res){
     }
 }
 
+async function updateTransaction(req, res){
+    try {
+        return userService.updateTransaction(req.params.id, req.body)
+        .then(data => res.send(data));
+    } catch (err) {
+        return res.status(500).send({
+            success: false,
+            message: 'Could not process your request'
+        });
+    }
+}
+
 async function addresses(req, res){
     try {
         return userService.addresses(req.params.id)
@@ -265,6 +277,7 @@ module.exports = {
     products,
     referrals,
     transactions,
+    updateTransaction,
     addresses,
     emails,
     mobiles,

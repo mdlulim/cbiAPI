@@ -4,7 +4,7 @@ const { Product } = require('../models/Product');
 const { ProductCategory } = require('../models/ProductCategory');
 
 Product.belongsTo(Currency, { foreignKey: 'currency_code', targetKey: 'code' });
-Product.belongsTo(ProductCategory, { foreignKey: 'category_id', targetKey: 'code' });
+Product.belongsTo(ProductCategory, { foreignKey: 'category_id', targetKey: 'id' });
 
 async function create(data) {
     try {

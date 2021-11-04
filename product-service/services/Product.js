@@ -7,7 +7,7 @@ const { User }  = require('../models/User');
 
 Product.belongsTo(UserProduct, { foreignKey: 'id', targetKey: 'product_id' });
 User.belongsTo(UserProduct, { foreignKey: 'id', targetKey: 'user_id' });
-Product.belongsTo(ProductCategory, { foreignKey: 'category_id', targetKey: 'code' });
+Product.belongsTo(ProductCategory, { foreignKey: 'category_id', targetKey: 'id' });
 
 Product.belongsTo(Currency, { foreignKey: 'currency_code', targetKey: 'code' });
 

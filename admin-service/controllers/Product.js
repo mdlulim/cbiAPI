@@ -59,6 +59,7 @@ async function index(req, res) {
             }
         });
     } catch (error) {
+        console.log(error.message)
         return res.send({
             success: false,
             message: 'Could not process request'
