@@ -8,6 +8,31 @@ function permakey(title) {
         .toLowerCase();
 }
 
+async function createCategory(req, res) {
+    try {
+        const data = req.body;
+        await productService.createCategory(data);
+        await activityService.addActivity({
+            user_id: req.user.id,
+            action: `${req.user.group_name}.products.add-category`,
+            description: `${req.user.group_name} added a new product category (${data.title})`,
+            section: 'Products',
+            subsection: 'Add Category',
+            ip: null,
+            data,
+        });
+        return res.send({
+            success: true,
+        });
+    } catch (error) {
+        console.log(error)
+        return res.status(500).send({
+            success: false,
+            message: 'Could not process request'
+        });
+    }
+}
+
 async function create(req, res) {
     try {
         const data = req.body;
@@ -133,10 +158,34 @@ async function destroy(req, res) {
     }
 }
 
+async function categories(req, res) {
+    try {
+        const categories = await productService.categories(req.query);
+        const { count, rows } = categories;
+        return res.send({
+            success: true,
+            data: {
+                count,
+                next: null,
+                previous: null,
+                results: rows,
+            }
+        });
+    } catch (error) {
+        console.log(error.message)
+        return res.send({
+            success: false,
+            message: 'Could not process request'
+        });
+    }
+}
+
 module.exports = {
+    createCategory,
     create,
     index,
     show,
     update,
     destroy,
+    categories,
 };

@@ -6,6 +6,15 @@ const { ProductCategory } = require('../models/ProductCategory');
 Product.belongsTo(Currency, { foreignKey: 'currency_code', targetKey: 'code' });
 Product.belongsTo(ProductCategory, { foreignKey: 'category_id', targetKey: 'id' });
 
+async function createCategory(data) {
+    try {
+        return ProductCategory.create(data);
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
 async function create(data) {
     try {
         return Product.create(data);
@@ -27,6 +36,26 @@ async function index(query) {
             where,
             include: [{ model: Currency }, { model: ProductCategory }],
             order: [['created', 'DESC']],
+            offset: offset || 0,
+            limit: limit || 100,
+        });
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
+async function categories(query) {
+    try {
+        const { offset, limit } = query;
+        const where = query || {};
+
+        delete where.offset;
+        delete where.limit;
+
+        return ProductCategory.findAndCountAll({
+            where,
+            order: [['title', 'ASC']],
             offset: offset || 0,
             limit: limit || 100,
         });
@@ -95,4 +124,6 @@ module.exports = {
     update,
     destroy,
     findByPermakey,
+    categories,
+    createCategory,
 }

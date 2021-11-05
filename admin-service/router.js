@@ -157,6 +157,20 @@ module.exports.set = app => {
     app.delete('/groups/:id', authMiddleware.checkAuth, groupController.destroy);
 
     /**
+     * Create Product Category
+     * 
+     * Create a product category belonging to CBI.
+     */
+    app.post('/products/categories', authMiddleware.checkAuth, productController.createCategory);
+
+    /**
+     * List Product Categories
+     * 
+     * Get a list of products belonging to CBI.
+     */
+    app.get('/products/categories', authMiddleware.checkAuth, productController.categories);
+
+    /**
      * Create Product
      * 
      * Create a single product belonging to CBI.
