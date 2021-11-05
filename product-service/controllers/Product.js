@@ -28,14 +28,17 @@ async function index(req, res){
 
 async function subscribe(req, res){
     try {
-        const product = await productService.show(req.body.id);
-        if (!product.id) {
+        const product = req.body;
+
+        // validate product
+        if (!product || !product.id) {
             return res.status(403)
             .send({
                 success: false,
                 message: 'Failed to process request.'
             });
         }
+
         const data = {
             user_id: req.user.id,
             product_id: req.body.id,
@@ -71,6 +74,7 @@ async function subscribe(req, res){
             success: true,
         });
     } catch (err) {
+        console.log(err.message)
         return res.status(500).send({
             success: false,
             message: 'Could not process your request'
