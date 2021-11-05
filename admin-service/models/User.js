@@ -38,6 +38,8 @@ const User = sequelize.define('user', {
 	created: Sequelize.DATE,
 	updated: Sequelize.DATE,
 	getstarted: Sequelize.BOOLEAN,
+	terms_agree: Sequelize.BOOLEAN,
+	stars: Sequelize.INTEGER,
 	sponsor: Sequelize.UUID,
 	referral_id: Sequelize.INTEGER,
 	expiry: Sequelize.DATE,
