@@ -44,7 +44,7 @@ async function subscribe(req, res){
         // subscribe
         await productService.subscribe(data);
 
-        let description = `${req.user.first_name} bought a product (${product.title})`;
+        let description = `${req.user.first_name} bought a product (${req.body.title})`;
         if (req.body.wc) {
             description = `${req.user.first_name} became a Wealth Creator`;
         }
@@ -57,10 +57,7 @@ async function subscribe(req, res){
             subsection: 'Buy',
             description,
             ip: null,
-            data: {
-                ...data,
-                product,
-            },
+            data,
         });
 
         // update user group (if wealth-creator subscription)

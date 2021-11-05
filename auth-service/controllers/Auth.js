@@ -233,7 +233,6 @@ function cleanEmail(email) {
 async function register(req, res) {
     try {
         const {
-            password,
             username,
             last_name,
             first_name,
