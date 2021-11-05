@@ -1,6 +1,7 @@
 const activityService = require('../services/Activity');
 const kycService = require('../services/KYC');
 const userService = require('../services/User');
+const emailHandler = require('../helpers/emailHandler');
 
 async function profile(req, res) {
     try {
@@ -112,25 +113,34 @@ async function captureKYC(req, res) {
 async function autorenew(req, res) {
     try {
         const data = req.body;
-        return userService.update(req.user.id, data)
-        .then(async () => {
-            await activityService.add({
-                user_id: req.user.id,
-                action: `${req.user.group_name.toLowerCase()}.account_wc-autorenew.update`,
-                description: `${req.user.first_name} switched autorenew status to ${data.autorenew ? 'on' : 'off'}`,
-                section: 'Account',
-                subsection: 'Wealth Creator - Auto Renewal Status Update',
-                data: { id: req.user.id, data: req.body },
-                ip: null,
-            });
-            return res.send({ success: true });
-        })
-        .catch(err => {
-            res.send({
-                success: false,
-                message: err.message,
-            });
+
+        // fetch user record
+        const user = await userService.show(req.user.id);
+
+        // update user record
+        await userService.update(req.user.id, data);
+
+        // activity log
+        await activityService.add({
+            user_id: req.user.id,
+            action: `${req.user.group_name.toLowerCase()}.account_wc-autorenew.update`,
+            description: `${req.user.first_name} switched autorenew status to ${data.autorenew ? 'on' : 'off'}`,
+            section: 'Account',
+            subsection: 'Wealth Creator - Auto Renewal Status Update',
+            data: { id: req.user.id, data: req.body },
+            ip: null,
         });
+
+        // send email notification for AUTO-RENEW
+        await emailHandler.autoRenewStatusChange({
+            email: user.email,
+            first_name: req.user.first_name,
+            status: data.autorenew ? 'ON' : 'OFF',
+        });
+
+        // return response
+        return res.send({ success: true });
+
     } catch (error) {
         return res.send({
             success: false,

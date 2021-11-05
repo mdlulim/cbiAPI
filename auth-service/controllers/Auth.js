@@ -8,6 +8,10 @@ const sequelize = require('../config/db');
 const authService = require('../services/Auth');
 const userService = require('../services/User');
 const groupService = require('../services/Group');
+const accountService = require('../services/Account');
+const emailAddressService = require('../services/EmailAddress');
+const mobileNumberService = require('../services/MobileNumber');
+const notificationService = require('../services/Notification');
 const errorHandler = require('../helpers/errorHandler');
 const activityService = require('../services/Activity');
 const sessionService = require('../services/Session');
@@ -197,6 +201,28 @@ async function login(req, res) {
     }
 };
 
+function cleanMobile(data) {
+    const { mobile, country } = data;
+    if (mobile) {
+        if (country.iso === 'ZA') {
+            if (mobile.indexOf('0') === 0) {
+                return country.phone_code + mobile.substr(1);
+            }
+            if (mobile.indexOf('+27') === 0) {
+                return country.phone_code + mobile.substr(3);
+            }
+            if (mobile.indexOf('27') === 0) {
+                return country.phone_code + mobile.substr(2);
+            }
+        }
+    }
+    return mobile;
+}
+
+function cleanEmail(email) {
+    return email ? email.trim() : email;
+}
+
 /**
  * Register
  * Register a user with the credentials provided. A successful registration will return 
@@ -207,13 +233,75 @@ async function login(req, res) {
 async function register(req, res) {
     try {
         const {
-            email,
-            mobile,
+            password,
             username,
             last_name,
             first_name,
             referral_id,
+            nationality,
+            timezone,
+            marketing,
         } = req.body;
+
+        // validate terms check
+        if (!req.body.terms_agree) {
+            return res.status(403).send({
+                success: false,
+                message: 'Registration failed. Please accept CBI Terms and Conditions.'
+            });
+        }
+
+        // validate email address
+        if (!req.body.email) {
+            return res.status(403).send({
+                success: false,
+                message: 'Registration failed. Email address is required.'
+            });
+        }
+
+        // validate nationality
+        if (!req.body.nationality) {
+            return res.status(403).send({
+                success: false,
+                message: 'Registration failed. Nationality is required.'
+            });
+        }
+
+        // validate mobile number
+        if (!req.body.mobile) {
+            return res.status(403).send({
+                success: false,
+                message: 'Registration failed. Mobile number is required.'
+            });
+        }
+
+        // validate password
+        if (!req.body.password) {
+            return res.status(403).send({
+                success: false,
+                message: 'Registration failed. Password is required.'
+            });
+        }
+
+        // validate confirm password
+        if (!req.body.confirm_password) {
+            return res.status(403).send({
+                success: false,
+                message: 'Registration failed. Confirm Password is required.'
+            });
+        }
+
+        // validate if passwords match
+        if (req.body.confirm_password !== req.body.password) {
+            return res.status(403).send({
+                success: false,
+                message: 'Registration failed. Password do not match.'
+            });
+        }
+
+        const mobile = (mobile) ? cleanMobile(req.body) : null;
+        const email = cleanEmail(req.body.email);
+
         let isLead = true;
         const exists = await userService.findByEmail(email);
         if (exists) {
@@ -236,6 +324,7 @@ async function register(req, res) {
             }
         }
 
+        // lead check and assign respective role
         if (isLead) {
             role = await groupService.findByPropertyValue('name', 'lead');
             groupId = role.id;
@@ -261,6 +350,8 @@ async function register(req, res) {
             password,
             salt,
             verification: null,
+            nationality: nationality || null,
+            timezone: timezone || null,
         };
 
         if (!isLead) {
@@ -272,21 +363,62 @@ async function register(req, res) {
         }
 
         // create user
-        await userService.create(user);
+        const newUser = await userService.create(user);
 
-        // send activation email (if is not a lead)
-        if (!isLead) {
-            await emailHandler.confirmEmail({
-                first_name,
-                email,
+        if (newUser && newUser.id) {
+
+            // send activation email (if is not a lead)
+            if (!isLead) {
+                await emailHandler.confirmEmail({
+                    first_name,
+                    email,
+                    token,
+                });
+            }
+            
+            // create user cbi wallet
+            await accountService.create({
+                name: 'cbi-wallet',
+                label: 'CBI Wallet',
+                reference: referral_id,
+                is_primary: true,
+                user_id: newUser.id,
+            });
+
+            // create primary email address record
+            await emailAddressService.create({
+                user_id: newUser.id,
+                email: email,
+                is_primary: true,
+                verification: user.verification,
                 token,
             });
-        }
 
-        return res.send({
-            success: true,
-            lead: isLead,
-        });
+            // create primary mobile number record
+            await mobileNumberService.create({
+                user_id: newUser.id,
+                number: mobile,
+                is_primary: true,
+            });
+
+            // create (default) notification record for the user
+            await notificationService.create({
+                user_id: newUser.id,
+                activity: 'Marketing & Communication',
+                description: 'Get the latest promotions, updates and tips',
+                sms: marketing || false,
+                email: marketing || false,
+                push: marketing || false,
+            });
+
+            // response
+            return res.send({
+                success: true,
+                lead: isLead,
+            });
+        } else {
+            throw new Error('Request could not be processed, please try again or contact support.');
+        }
     } catch (err) {
         return errorHandler.error(err, res);
     }
@@ -340,7 +472,7 @@ async function logoutAll(req, res) {
  */
 async function passwordChange(req, res) {
     try {
-        const { old_password, new_password1, new_password2 } = req.body;
+        const { old_password, new_password1, new_password2, geoinfo } = req.body;
         const user = await userService.show(req.user.id);
 
         if (!bcrypt.compareSync(old_password, user.password)) {
@@ -364,6 +496,18 @@ async function passwordChange(req, res) {
             salt,
             password,
             updated: sequelize.fn('NOW'),
+        });
+
+        // audit trail / activity logging
+        await activityService.addActivity({
+            user_id: user.id,
+            action: `${user.group.name}.password.change`,
+            description: `${user.group.label} changed password`,
+            data: null,
+            ip: (geoinfo && geoinfo.IPv4) ? geoinfo.IPv4 : null,
+            section: 'Account',
+            subsection: 'Change password',
+            data: { device },
         });
 
         return res.send({

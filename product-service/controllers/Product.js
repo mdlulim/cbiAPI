@@ -42,10 +42,10 @@ async function subscribe(req, res){
         await productService.subscribe(data);
         await activityService.addActivity({
             user_id: req.user.id,
-            action: `${req.user.group_name}.products.subscribe`,
-            description: `${req.user.group_name} subscribed to a product (${product.title})`,
+            action: `${req.user.group_name}.products.buy`,
+            description: `${req.user.first_name} bought a product (${product.title})`,
             section: 'Products',
-            subsection: 'Subscribe',
+            subsection: 'Buy',
             ip: null,
             data: {
                 ...data,
