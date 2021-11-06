@@ -6,7 +6,6 @@ const kycController = require('./controllers/KYC');
 const productController = require('./controllers/Product');
 const transactionController = require('./controllers/Transaction');
 const userController = require('./controllers/User');
-const kycController = require('./controllers/KYC');
 const authMiddleware = require('./middlewares/auth');
 
 module.exports.set = app => {
