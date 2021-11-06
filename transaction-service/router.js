@@ -69,9 +69,9 @@ module.exports.set = app => {
         try {
             const response = await axios('https://staging.buddy.na/api/v2/services/cbi/lookup/balance', {
                 reference: req.body.reference,
-                identifier: req.body.reference,
+                identifier: req.body.identifier,
                 amount: req.body.amount,
-                currency = req.body.currency,
+                currency: req.body.currency,
                 headers: {
                     'authenticationToken': 'NmIwNWUwNmEtY2RjYi00MWRkLThlMDEtOGRjZjU1MWU3MjZk'
                 }
