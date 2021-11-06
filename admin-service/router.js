@@ -1,6 +1,7 @@
 const groupController = require('./controllers/Group');
 const productController = require('./controllers/Product');
 const userController = require('./controllers/User');
+const kycController = require('./controllers/KYC');
 const authMiddleware = require('./middlewares/auth');
 
 module.exports.set = app => {
@@ -67,4 +68,6 @@ module.exports.set = app => {
      * Retrieve a company’s product.
      */
     // app.get('/admin/products/search/:prop/:value', authMiddleware.checkAuth, productController.search);
+    app.get('/admin/users/:id/kyc', kycController.show);
+
 };
