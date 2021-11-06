@@ -6,11 +6,16 @@ Transaction.belongsTo(User, { foreignKey: 'user_id', targetKey: 'id' });
 
 async function create(data) {
     try {
-        const transaction = await Transaction.create(data);
-        return {
-            success: true,
-            data: transaction,
-        };
+        return Transaction.create(data);
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
+async function update(data, id) {
+    try {
+        return Transaction.update(data, { where: { id } });
     } catch (error) {
         console.error(error.message || null);
         throw new Error('Could not process your request');
@@ -20,7 +25,8 @@ async function create(data) {
 async function index(user_id) {
     try {
         const transactions = await Transaction.findAndCountAll({
-            where: { user_id }
+            where: { user_id },
+            order: [[ 'created', 'DESC' ]],
         });
         const { count, rows } = transactions;
         return {
@@ -41,4 +47,5 @@ async function index(user_id) {
 module.exports = {
     create,
     index,
+    update,
 }

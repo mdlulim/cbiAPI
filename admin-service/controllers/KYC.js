@@ -29,6 +29,7 @@ async function show(req, res) {
             data: application
         });
     } catch (error) {
+        console.log(error);
         return res.send({
             success: false,
             message: 'Could not process request'
