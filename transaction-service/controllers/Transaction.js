@@ -79,13 +79,13 @@ async function create(req, res) {
             }
 
             // send email to member
-            // await emailHandler.depositRequestNotification({
-            //     first_name: user.first_name,
-            //     email: user.email,
-            //     reference: txid,
-            //     amount: data.amount.toFixed(data.currency.divisibility),
-            //     currency_code: data.currency.code,
-            // });
+            await emailHandler.depositRequestNotification({
+                first_name: user.first_name,
+                email: user.email,
+                reference: txid,
+                amount: data.amount.toFixed(data.currency.divisibility),
+                currency_code: data.currency.code,
+            });
         }
         return res.status(200).send({
             success: true,
