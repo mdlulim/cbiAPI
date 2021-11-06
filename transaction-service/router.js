@@ -67,7 +67,8 @@ module.exports.set = app => {
 
     app.post("/buddy/eventtransfer", async (req, res) => {
         try {
-            const response = await axios('https://staging.buddy.na/api/v2/services/cbi/lookup/balance', {
+            const response = await axios('https://staging.buddy.na/api/v2/services/cbi/event/transfer', {
+                method: "POST",
                 data: {
                     reference: req.body.reference,
                     identifier: req.body.identifier,
