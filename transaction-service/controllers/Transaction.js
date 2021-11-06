@@ -2,7 +2,7 @@ const transactionService    = require('../services/Transaction');
 const activityService = require('../services/Activity');
 const documentService = require('../services/Document');
 const userService = require('../services/User');
-// const emailHandler = require('../helpers/emailHandler');
+const emailHandler = require('../helpers/emailHandler');
 
 const getSubsection = (data) => {
     const {
@@ -13,7 +13,7 @@ const getSubsection = (data) => {
 };
 
 const getTxid = (subtype, autoid) => {
-    return subtype.toUpperCase() + autoid.toString();
+    return subtype.substr(0, 3).toUpperCase() + autoid.toString();
 };
 
 async function create(req, res) {
