@@ -54,7 +54,7 @@ module.exports.set = app => {
             const perPage = req.body.perPage;
             const page = req.body.page;
             const response = await axios('https://staging.buddy.na/api/v2/services/cbi/lookup/transactions', {
-                params: { search, from, to, perPage, page, response },
+                params: { search, from, to, perPage, page },
                 headers:{
                     'authenticationToken': 'NmIwNWUwNmEtY2RjYi00MWRkLThlMDEtOGRjZjU1MWU3MjZk'
                 }
@@ -65,10 +65,14 @@ module.exports.set = app => {
         }
     });
 
-    app.get("/buddy/eventtransfer", async (req, res) => {
+    app.post("/buddy/eventtransfer", async (req, res) => {
         try {
             const response = await axios('https://staging.buddy.na/api/v2/services/cbi/lookup/balance', {
-                headers:{
+                reference: req.body.reference,
+                identifier: req.body.reference,
+                amount: req.body.amount,
+                currency = req.body.currency,
+                headers: {
                     'authenticationToken': 'NmIwNWUwNmEtY2RjYi00MWRkLThlMDEtOGRjZjU1MWU3MjZk'
                 }
             });
