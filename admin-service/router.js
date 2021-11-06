@@ -140,7 +140,7 @@ module.exports.set = app => {
      * 
      * Retrieve a company’s user kyc.
      */
-    app.get('/admin/users/:id/kyc', kycController.show);
+    app.get('/admin/users/:id/kyc', authMiddleware.checkAuth, kycController.show);
 
     /**
      * List User Products
