@@ -76,15 +76,9 @@ async function index(query) {
  */
 async function show(id) {
     try {
-        console.log(id)
-        const kyc = await KYC.findOne({
+        return KYC.findOne({
             where: { user_id: id }
         });
-        console.log(kyc)
-        return {
-            success: true,
-            data: kyc,
-        };
     } catch (error) {
         console.error(error.message || null);
         throw new Error('Could not process your request');

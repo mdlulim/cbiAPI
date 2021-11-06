@@ -23,10 +23,10 @@ async function index(req, res) {
 
 async function show(req, res) {
     try {
-        const application = await kycService.show(req.params.id);
+        const data = await kycService.show(req.params.id);
         return res.send({
             success: true,
-            data: application
+            data,
         });
     } catch (error) {
         console.log(error);
