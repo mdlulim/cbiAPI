@@ -75,7 +75,7 @@ async function show(id) {
  */
 async function update(id, data) {
     try {
-        await Group.findOne(data, {
+        await Group.update(data, {
             where: { id },
         });
         return {
