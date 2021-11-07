@@ -1,8 +1,6 @@
 const authMiddleware = require('./middlewares/auth');
 const transactionController = require('./controllers/Transaction');
 const buddyAPIController = require('./controllers/BuddyAPIController');
-const axios = require('axios');
-const { lookupBalance } = require('./services/BuddyAPI');
 
 module.exports.set = app => {
     
