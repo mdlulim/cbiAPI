@@ -2,10 +2,10 @@ const accountController = require('./controllers/Account');
 const countryController = require('./controllers/Country');
 const currencyController = require('./controllers/Currency');
 const groupController = require('./controllers/Group');
+const kycController = require('./controllers/KYC');
 const productController = require('./controllers/Product');
 const transactionController = require('./controllers/Transaction');
 const userController = require('./controllers/User');
-const kycController = require('./controllers/KYC');
 const authMiddleware = require('./middlewares/auth');
 
 module.exports.set = app => {
@@ -134,6 +134,13 @@ module.exports.set = app => {
      * Retrieve a company’s user account/wallet.
      */
     app.get('/users/:id/wallet', authMiddleware.checkAuth, accountController.wallet);
+
+    /**
+     * Retrieve User's KYC
+     * 
+     * Retrieve a company’s user kyc.
+     */
+    app.get('/users/:id/kyc', authMiddleware.checkAuth, kycController.show);
 
     /**
      * List User Products

@@ -494,6 +494,20 @@ async function cryptoAccounts(user_id) {
     }
 }
 
+async function findByPropertyValue(prop, value) {
+    try {
+        const { Op } = sequelize;
+        var where = {};
+        where[prop] = {
+            [Op.iLike]: value
+        };
+        return User.findOne({ where });
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
 module.exports = {
     create,
     index,
@@ -512,4 +526,5 @@ module.exports = {
     bankAccounts,
     cryptoAccounts,
     updateTransaction,
+    findByPropertyValue,
 }

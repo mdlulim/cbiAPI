@@ -1,26 +1,24 @@
 const Sequelize = require('sequelize');
 const sequelize = require('../config/db');
 
-const Group = sequelize.define('group', {
+const Activity = sequelize.define('activity', {
     id: {
         type: Sequelize.UUID,
         defaultValue: Sequelize.UUIDV4,
         primaryKey: true,
     },
-    name: Sequelize.STRING,
-    label: Sequelize.STRING,
+    user_id: Sequelize.UUID,
+    action: Sequelize.STRING,
     description: Sequelize.STRING,
-    channel: Sequelize.STRING,
-    is_default: Sequelize.BOOLEAN,
-    is_public: Sequelize.BOOLEAN,
-    settings: Sequelize.JSONB,
-    archived: Sequelize.BOOLEAN,
+    section: Sequelize.STRING,
+    subsection: Sequelize.STRING,
+    data: Sequelize.JSONB,
+    ip: Sequelize.STRING,
     created: Sequelize.DATE,
-    updated: Sequelize.DATE,
 }, {
     timestamps: false
 });
 
 module.exports = {
-    Group,
+    Activity,
 }

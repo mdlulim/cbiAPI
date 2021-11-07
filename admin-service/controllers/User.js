@@ -1,16 +1,132 @@
+const bcrypt = require('bcryptjs');
+const generator = require('generate-password');
+const emailHandler = require('../helpers/emailHandler');
+
+const activityService = require('../services/Activity');
+const groupService = require('../services/Group');
 const userService = require('../services/User');
+
+function cleanEmail(email) {
+    return email ? email.trim() : email;
+}
 
 async function create(req, res) {
     try {
-        return userService.create(req.body)
-        .then(() => res.send({ success: true }))
-        .catch(err => {
-            res.send({
+        const {
+            first_name,
+            last_name,
+            group_id,
+            username,
+        } = req.body;
+
+        const email = cleanEmail(req.body.email || null);
+
+        /**
+         * Validations
+         */
+
+        // validate email
+        if (!email) {
+            return res.status(403).send({
                 success: false,
-                message: err.message,
+                message: 'Validation error. Email address is required.'
             });
+        }
+        
+        // validate first name
+        if (!first_name) {
+            return res.status(403).send({
+                success: false,
+                message: 'Validation error. First name is required.'
+            });
+        }
+        
+        // validate last name
+        if (!last_name) {
+            return res.status(403).send({
+                success: false,
+                message: 'Validation error. Last name is required.'
+            });
+        }
+        
+        // validate last name
+        if (!group_id) {
+            return res.status(403).send({
+                success: false,
+                message: 'Validation error. User role is required.'
+            });
+        }
+
+        // check if the email address already exists
+        const emailCheck = await userService.findByPropertyValue('email', email);
+        if (emailCheck && emailCheck.id) {
+            return res.status(403).send({
+                success: false,
+                message: 'Validation error. Email address already exists.'
+            });
+        }
+
+        if (username) {
+            // check if the username already exists
+            const usernameCheck = await userService.findByPropertyValue('username', username);
+            if (usernameCheck && usernameCheck.id) {
+                return res.status(403).send({
+                    success: false,
+                    message: 'Validation error. Username already exists.'
+                });
+            }
+        }
+
+        // generate password
+        const string   = generator.generate({ length: 4 });
+        const numbers  = generator.generate({ length: 4, numbers: true });
+        const password = string.toLowerCase() + numbers.toString();
+        const salt     = bcrypt.genSaltSync();
+        const securePassword = bcrypt.hashSync(password, salt);
+
+        // create user record
+        const data = {
+            ...req.body,
+            username: username || email,
+            password: securePassword,
+            email,
+            salt,
+        };
+        await userService.create(data);
+
+        // log activity
+        await activityService.addActivity({
+            user_id: req.user.id,
+            action: `${req.user.group_name}.users.add`,
+            description: `${req.user.first_name} added a new user (${data.first_name})`,
+            section: 'Admin Users',
+            subsection: 'Add',
+            ip: null,
+            data,
         });
-    } catch (error) {
+
+        if (data.status && data.status === 'Active') {
+            // send email
+            await emailHandler.newUser({
+                password,
+                username,
+                first_name,
+                email,
+            });
+        }
+
+        // response
+        return res.status(200).send({ success: true });
+
+    } catch (err) {
+        console.log(err);
+        if (err.name === 'SequelizeUniqueConstraintError') {
+            console.log(err.errors[0].ValidationErrorItem);
+            return res.status(403).send({
+                success: false,
+                message: `Validation error.`
+            });
+        }
         return res.send({
             success: false,
             message: 'Could not process request'
