@@ -139,11 +139,25 @@ module.exports.set = app => {
     app.get('/users/:id/wallet', authMiddleware.checkAuth, accountController.wallet);
 
     /**
+     * Capture User's KYC Record
+     * 
+     * Capture a company’s user kyc.
+     */
+    app.post('/users/:id/kyc', authMiddleware.checkAuth, kycController.create);
+
+    /**
      * Retrieve User's KYC
      * 
      * Retrieve a company’s user kyc.
      */
     app.get('/users/:id/kyc', authMiddleware.checkAuth, kycController.show);
+
+    /**
+     * Update User's KYC
+     * 
+     * Update a company’s user kyc.
+     */
+    app.put('/users/:id/kyc', authMiddleware.checkAuth, kycController.update);
 
     /**
      * List User Products
