@@ -1,10 +1,11 @@
+const config = require('../config');
 const axios = require('axios');
 
 async function lookupBalance() {
     try {
         const response = await axios('https://staging.buddy.na/api/v2/services/cbi/lookup/balance', {
             headers:{
-                'authenticationToken': 'NmIwNWUwNmEtY2RjYi00MWRkLThlMDEtOGRjZjU1MWU3MjZk'
+                'authenticationToken': config.buddy.authenticationToken
             }
         });
         return response.data;
@@ -19,7 +20,7 @@ async function lookupAccount(data) {
         const response = await axios('https://staging.buddy.na/api/v2/services/cbi/lookup/account', {
             params: { data },
             headers:{
-                'authenticationToken': 'NmIwNWUwNmEtY2RjYi00MWRkLThlMDEtOGRjZjU1MWU3MjZk'
+                'authenticationToken': config.buddy.authenticationToken
             }
         });
         return response.data;
@@ -39,7 +40,7 @@ async function lookupTransaction(data) {
         const response = await axios('https://staging.buddy.na/api/v2/services/cbi/lookup/transactions', {
             params: { search, from, to, perPage, page },
             headers:{
-                'authenticationToken': 'NmIwNWUwNmEtY2RjYi00MWRkLThlMDEtOGRjZjU1MWU3MjZk'
+                'authenticationToken': config.buddy.authenticationToken
             }
         });
         return response.data;
@@ -64,7 +65,7 @@ async function eventTransfer(data) {
                 currency,
             },
             headers: {
-                'authenticationToken': 'NmIwNWUwNmEtY2RjYi00MWRkLThlMDEtOGRjZjU1MWU3MjZk'
+                'authenticationToken': config.buddy.authenticationToken
             }
         });
         return response.data
