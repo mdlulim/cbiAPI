@@ -34,9 +34,12 @@ function show(req, res){
 };
 
 function update(req, res){
+    console.log(req.params.id, req.body)
     return groupService.update(req.params.id, req.body)
+
     .then(data => res.send(data))
     .catch(err => {
+        console.log(err.message)
         res.send({
             success: false,
             message: err.message,
