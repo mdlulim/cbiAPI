@@ -26,6 +26,11 @@ module.exports.set = app => {
     app.get("/buddy/lookup-transactions", authMiddleware.checkAuth, buddyAPIController.lookupTransaction);
     app.post("/buddy/eventtransfer", authMiddleware.checkAuth, buddyAPIController.eventTransfer);
 
-    // buddyAccount Routesd
-    app.post("/buddy", buddyAccountController.store);
+    // buddyAccount Routes
+    app.get("/buddy", authMiddleware.checkAuth, buddyAccountController.index);
+    app.post("/buddy", authMiddleware.checkAuth, buddyAccountController.store);
+    app.get("/buddy/:buddyId", authMiddleware.checkAuth, buddyAccountController.show);
+    app.put("/buddy/:buddyId", authMiddleware.checkAuth, buddyAccountController.updateBuddy);
+    app.delete("/buddy/:buddyId", authMiddleware.checkAuth, buddyAccountController.destroy);
+
 };
