@@ -74,17 +74,28 @@ async function show(id) {
  * @returns 
  */
 async function update(id, data) {
+    
+    console.log('THABIOS '+id);
     try {
-        await Group.findOne(data, {
+        return Group.update(data, {
             where: { id },
         });
-        return {
-            success: true,
-        };
-    } catch (err) {
-        console.log(err);
+        // return Group.update(data, { where: { id } });
+    } catch (error) {
+        console.log(error);
         res.send(err);
     }
+    // try {
+    //     await Group.update(data, {
+    //         where: { id },
+    //     });
+    //     return {
+    //         success: true,
+    //     };
+    // } catch (err) {
+    //     console.log(err);
+    //     res.send(err);
+    // } 
 };
 
 /**
