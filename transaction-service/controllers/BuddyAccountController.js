@@ -6,7 +6,8 @@ async function store(req, res) {
         let data = {
             buddy_identifier: req.body.buddy_identifier,
             created: req.body.created,
-            updated: req.body.updated  
+            updated: req.body.updated,
+            user_id: req.user.id
         }
         const buddyAccount = await buddyAccountService.store(data);
         res.send(buddyAccount);
@@ -53,7 +54,7 @@ async function updateBuddy(req, res) {
         const buddyAccount = await buddyAccountService.update(data);
         res.status(200).send({
             status: 200,
-            message: 'resource updated successfully'
+            message: 'resource update successfully'
         });
     } catch (err) {
         return res.status(500).send({
