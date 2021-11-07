@@ -8,9 +8,9 @@ const Buddy = sequelize.define('buddy_accounts', {
         primaryKey: true,
     },
     buddy_identifier: Sequelize.STRING,
-    user_id: Sequelize.UUID,
     created: Sequelize.DATE,
     updated: Sequelize.DATE,
+    user_id: Sequelize.UUID,
 }, {
     timestamps: false
 });

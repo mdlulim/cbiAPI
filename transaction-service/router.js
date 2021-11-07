@@ -1,6 +1,7 @@
 const authMiddleware = require('./middlewares/auth');
 const transactionController = require('./controllers/Transaction');
 const buddyAPIController = require('./controllers/BuddyAPIController');
+const buddyAccountController = require('./controllers/BuddyAccountController');
 
 module.exports.set = app => {
     
@@ -24,4 +25,7 @@ module.exports.set = app => {
     app.get("/buddy/lookup-account", authMiddleware.checkAuth, buddyAPIController.lookupAccount);
     app.get("/buddy/lookup-transactions", authMiddleware.checkAuth, buddyAPIController.lookupTransaction);
     app.post("/buddy/eventtransfer", authMiddleware.checkAuth, buddyAPIController.eventTransfer);
+
+    // buddyAccount Routesd
+    app.post("/buddy", buddyAccountController.store);
 };
