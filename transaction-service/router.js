@@ -1,6 +1,8 @@
 const authMiddleware = require('./middlewares/auth');
 const transactionController = require('./controllers/Transaction');
+const buddyAPIController = require('./controllers/BuddyAPIController');
 const axios = require('axios');
+const { lookupBalance } = require('./services/BuddyAPI');
 
 module.exports.set = app => {
     
@@ -18,70 +20,11 @@ module.exports.set = app => {
      */
     app.get('/', authMiddleware.checkAuth, transactionController.index);
 
-    app.get("/buddy/lookup-balance", async (req, res) => {
-        try {
-            const response = await axios('https://staging.buddy.na/api/v2/services/cbi/lookup/balance', {
-                headers:{
-                    'authenticationToken': 'NmIwNWUwNmEtY2RjYi00MWRkLThlMDEtOGRjZjU1MWU3MjZk'
-                }
-            });
-            res.send(response.data);
-        } catch (err) {
-            res.status(500).json({ message: err });
-        }
-    });
+    app.get("/buddy/lookup-balance", buddyAPIController.lookupBalance);
 
-    app.get("/buddy/lookup-account", async (req, res) => {
-        try {
-            const identifier = req.body.identifier
-            const response = await axios('https://staging.buddy.na/api/v2/services/cbi/lookup/account', {
-                params: { identifier },
-                headers:{
-                    'authenticationToken': 'NmIwNWUwNmEtY2RjYi00MWRkLThlMDEtOGRjZjU1MWU3MjZk'
-                }
-            });
-            res.send(response.data);
-        } catch (err) {
-            res.status(500).json({ message: err });
-        }
-    });
+    app.get("/buddy/lookup-account", buddyAPIController.lookupAccount);
 
-    app.get("/buddy/lookup-transactions", async (req, res) => {
-        try {
-            const search = req.body.search;
-            const from = req.body.from;
-            const to = req.body.to;
-            const perPage = req.body.perPage;
-            const page = req.body.page;
-            const response = await axios('https://staging.buddy.na/api/v2/services/cbi/lookup/transactions', {
-                params: { search, from, to, perPage, page },
-                headers:{
-                    'authenticationToken': 'NmIwNWUwNmEtY2RjYi00MWRkLThlMDEtOGRjZjU1MWU3MjZk'
-                }
-            });
-            res.send(response.data);
-        } catch (err) {
-            res.status(500).json({ message: err });
-        }
-    });
+    app.get("/buddy/lookup-transactions", buddyAPIController.lookupTransaction);
 
-    app.post("/buddy/eventtransfer", async (req, res) => {
-        try {
-            const response = await axios('https://staging.buddy.na/api/v2/services/cbi/event/transfer', {
-                method: "POST",
-                data: {
-                    reference: req.body.reference,
-                    identifier: req.body.identifier,
-                    amount: req.body.amount,
-                    currency: req.body.currency
-                },
-                headers: {
-                    'authenticationToken': 'NmIwNWUwNmEtY2RjYi00MWRkLThlMDEtOGRjZjU1MWU3MjZk'
-                }
-            });
-            res.send(response.data);
-        } catch (err) {
-            res.status(500).json({ message: err });
-        }
-    });
+    app.post("/buddy/eventtransfer", buddyAPIController.eventTransfer);
 };
