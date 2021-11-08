@@ -30,7 +30,7 @@ if (stage === 'dev') {
                 staging: 'https://staging.buddy.na/api/v2/services',
                 production: 'https://buddy.na/api/v2/services'
             }, 
-            authenticationToken: 'NmIwNWUwNmEtY2RjYi00MWRkLThlMDEtOGRjZjU1MWU3MjZk'
+            authenticationToken: Buffer.from("6b05e06a-cdcb-41dd-8e01-8dcf551e726d").toString('base64')
         }
     }
 } else {
