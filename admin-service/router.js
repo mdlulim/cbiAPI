@@ -6,7 +6,10 @@ const kycController = require('./controllers/KYC');
 const productController = require('./controllers/Product');
 const transactionController = require('./controllers/Transaction');
 const userController = require('./controllers/User');
+const buddyAPIController = require('./controllers/BuddyAPIController');
+const buddyAccountController = require('./controllers/BuddyAccountController');
 const authMiddleware = require('./middlewares/auth');
+
 
 module.exports.set = app => {
     /**
@@ -136,11 +139,25 @@ module.exports.set = app => {
     app.get('/users/:id/wallet', authMiddleware.checkAuth, accountController.wallet);
 
     /**
+     * Capture User's KYC Record
+     * 
+     * Capture a company’s user kyc.
+     */
+    app.post('/users/:id/kyc', authMiddleware.checkAuth, kycController.create);
+
+    /**
      * Retrieve User's KYC
      * 
      * Retrieve a company’s user kyc.
      */
     app.get('/users/:id/kyc', authMiddleware.checkAuth, kycController.show);
+
+    /**
+     * Update User's KYC
+     * 
+     * Update a company’s user kyc.
+     */
+    app.put('/users/:id/kyc', authMiddleware.checkAuth, kycController.update);
 
     /**
      * List User Products
@@ -162,6 +179,7 @@ module.exports.set = app => {
     app.get('/groups', authMiddleware.checkAuth, groupController.index);
     app.get('/groups/:id', authMiddleware.checkAuth, groupController.show);
     app.put('/groups/:id', authMiddleware.checkAuth, groupController.update);
+    app.put('/groups/:id/archive', authMiddleware.checkAuth, groupController.archive);
     app.delete('/groups/:id', authMiddleware.checkAuth, groupController.destroy);
 
     /**
@@ -270,4 +288,17 @@ module.exports.set = app => {
     app.get('/countries', authMiddleware.checkAuth, countryController.index);
     app.put('/countries/:id/blacklist', authMiddleware.checkAuth, countryController.blacklist);
     app.put('/countries/:id/unblacklist', authMiddleware.checkAuth, countryController.unblacklist);
+
+    // buddyAPI Routes
+    app.get("/buddy/lookup-balance", authMiddleware.checkAuth, buddyAPIController.lookupBalance);
+    app.get("/buddy/lookup-account", authMiddleware.checkAuth, buddyAPIController.lookupAccount);
+    app.get("/buddy/lookup-transactions", authMiddleware.checkAuth, buddyAPIController.lookupTransaction);
+    app.post("/buddy/eventtransfer", authMiddleware.checkAuth, buddyAPIController.eventTransfer);
+
+    // buddyAccount Routes
+    app.get("/buddy", authMiddleware.checkAuth, buddyAccountController.index);
+    app.post("/buddy", authMiddleware.checkAuth, buddyAccountController.store);
+    app.get("/buddy/:buddyId", authMiddleware.checkAuth, buddyAccountController.show);
+    app.put("/buddy/:buddyId", authMiddleware.checkAuth, buddyAccountController.update);
+    app.delete("/buddy/:buddyId", authMiddleware.checkAuth, buddyAccountController.destroy);
 };

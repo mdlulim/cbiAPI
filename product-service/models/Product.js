@@ -29,6 +29,7 @@ const Product = sequelize.define('product', {
 	investment_period: Sequelize.INTEGER,
 	minimum_investment: Sequelize.FLOAT,
     product_code: Sequelize.STRING,
+    fees: Sequelize.JSONB,
     category_title: Sequelize.STRING,
     category_id: Sequelize.UUID,
     archived: Sequelize.BOOLEAN,

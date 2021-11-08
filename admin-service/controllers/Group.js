@@ -35,8 +35,10 @@ function show(req, res){
 
 function update(req, res){
     return groupService.update(req.params.id, req.body)
+
     .then(data => res.send(data))
     .catch(err => {
+        console.log(err.message)
         res.send({
             success: false,
             message: err.message,
@@ -55,10 +57,30 @@ function destroy(req, res){
     });
 };
 
+
+async function archive(req, res) {
+    try {
+        return groupService.archive(req.params.id)
+        .then(() => res.send({ success: true }))
+        .catch(err => {
+            res.send({
+                success: false,
+                message: err.message,
+            });
+        });
+    } catch (error) {
+        return res.send({
+            success: false,
+            message: 'Could not process request'
+        });
+    }
+};
+
 module.exports = {
     create,
     index,
     show,
     update,
     destroy,
+    archive,
 };

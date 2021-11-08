@@ -24,6 +24,13 @@ if (stage === 'dev') {
                     pass: 'ocJ~$m[NTj#N',
                 }
             }
+        },
+        buddy: {
+            baseURL: {
+                staging: 'https://staging.buddy.na/api/v2/services',
+                production: 'https://buddy.na/api/v2/services'
+            }, 
+            authenticationToken: Buffer.from("6b05e06a-cdcb-41dd-8e01-8dcf551e726d").toString('base64')
         }
     }
 } else {

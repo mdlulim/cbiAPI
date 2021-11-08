@@ -1,5 +1,31 @@
 const kycService = require('../services/KYC');
 
+async function create(req, res) {
+    try {
+        const data = {
+            ...req.body,
+            user_id: req.params.id,
+        };
+        await kycService.create(data);
+
+        /**
+         * @TODO : 
+         *  - log the activity
+         *  - send email to member
+         */
+
+        return res.send({
+            success: true,
+        });
+    } catch (error) {
+        console.log(error);
+        return res.send({
+            success: false,
+            message: 'Could not process request'
+        });
+    }
+}
+
 async function show(req, res) {
     try {
         const data = await kycService.show(req.params.id);
@@ -16,6 +42,23 @@ async function show(req, res) {
     }
 }
 
+async function update(req, res) {
+    try {
+        await kycService.update(req.params.id);
+        return res.send({
+            success: true
+        });
+    } catch (error) {
+        console.log(error);
+        return res.send({
+            success: false,
+            message: 'Could not process request'
+        });
+    }
+}
+
 module.exports = {
+    create,
     show,
+    update,
 };
