@@ -162,6 +162,7 @@ module.exports.set = app => {
     app.get('/groups', authMiddleware.checkAuth, groupController.index);
     app.get('/groups/:id', authMiddleware.checkAuth, groupController.show);
     app.put('/groups/:id', authMiddleware.checkAuth, groupController.update);
+    app.put('/groups/:id/archive', authMiddleware.checkAuth, groupController.archive);
     app.delete('/groups/:id', authMiddleware.checkAuth, groupController.destroy);
 
     /**
