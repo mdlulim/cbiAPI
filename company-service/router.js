@@ -1,6 +1,7 @@
 const authMiddleware    = require('./middlewares/auth');
 const companyController = require('./controllers/Company');
 const countryController = require('./controllers/Country');
+const settingController = require('./controllers/Setting');
 
 module.exports.set = app => {
     /**
@@ -40,7 +41,7 @@ module.exports.set = app => {
      * Retrieve company settings for the current
      * user’s company.
      */
-    app.get('/settings', authMiddleware.checkAuth, companyController.settings);
+    app.get('/settings', authMiddleware.checkAuth, settingController.index);
 
     /**
      * Retrieve Countries

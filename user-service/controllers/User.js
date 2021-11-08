@@ -101,6 +101,10 @@ async function captureKYC(req, res) {
             data: { id: req.user.id, data: req.body },
             ip: null,
         });
+
+        /**
+         * @TODO : send email to member
+         */
         return res.send({ success: true });
     } catch (error) {
         return res.send({
