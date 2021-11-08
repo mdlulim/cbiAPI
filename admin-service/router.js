@@ -200,6 +200,13 @@ module.exports.set = app => {
     app.get('/products/:id', authMiddleware.checkAuth, productController.show);
 
     /**
+     * Retrieve Users By product Product
+     * 
+     * Retrieve a company’s product.
+     */
+    app.get('/products/:id/users', authMiddleware.checkAuth, productController.getMembersByProductId);
+
+    /**
      * Update Product
      * 
      * Update company’s product details.

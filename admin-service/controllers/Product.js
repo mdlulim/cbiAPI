@@ -38,7 +38,6 @@ async function create(req, res) {
         const data = req.body;
         data.captured_by = req.user.id;
         data.permakey = permakey(data.title);
-
         // check product by unique permakey/code
         const product = await productService.findByPermakey(data.permakey);
         if (product && product.id) {
@@ -47,7 +46,7 @@ async function create(req, res) {
                 message: 'Validation error. Same product name already exists'
             });
         }
-
+       
         await productService.create(data);
         await activityService.addActivity({
             user_id: req.user.id,
@@ -81,6 +80,28 @@ async function index(req, res) {
                 next: null,
                 previous: null,
                 results: rows,
+            }
+        });
+    } catch (error) {
+        console.log(error.message)
+        return res.send({
+            success: false,
+            message: 'Could not process request'
+        });
+    }
+}
+async function getMembersByProductId(req, res) {
+    try {
+        const members = await productService.getMembersByProductId(req.params.id);
+        console.log(members[0]);
+        const { count, rows } = members[0];
+        return res.send({
+            success: true,
+            data: {
+                count,
+                next: null,
+                previous: null,
+                results: members[0],
             }
         });
     } catch (error) {
@@ -188,4 +209,5 @@ module.exports = {
     update,
     destroy,
     categories,
+    getMembersByProductId,
 };
