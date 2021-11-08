@@ -202,6 +202,7 @@ async function archive(id) {
         return User.update({
             status: 'Archived',
             archived: true,
+            deactivation_date:sequelize.fn('NOW'),
             updated: sequelize.fn('NOW'),
         }, { where: { id } });
     } catch (error) {
