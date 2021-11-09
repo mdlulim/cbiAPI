@@ -1,7 +1,7 @@
 const config = require('../config');
 const axios = require('axios');
 const { Account } = require('../models/Account');
-const { Buddy } = requrei('../models/Buddy')
+const { Buddy } = require('../models/Buddy')
 
 async function lookupBalance() {
     try {
