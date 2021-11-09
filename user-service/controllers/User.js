@@ -153,6 +153,25 @@ async function autorenew(req, res) {
     }
 }
 
+async function search(req, res) {
+    try {
+        const users = await userService.search(req.params.prop, req.params.value);
+        const { count, rows } = users;
+        return res.send({
+            success: true,
+            data: {
+                count,
+                results: rows,
+            },
+        });
+    } catch (error) {
+        return res.send({
+            success: false,
+            message: 'Could not process request'
+        });
+    }
+}
+
 module.exports = {
     profile,
     referrals,
@@ -160,4 +179,5 @@ module.exports = {
     kyc,
     captureKYC,
     autorenew,
+    search,
 };

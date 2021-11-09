@@ -21,6 +21,20 @@ module.exports.set = app => {
      * 
      * Retrieve current user’s product details.
      */
+    app.get('/categories', authMiddleware.checkAuth, productController.categories);
+    
+    /**
+     * Retrieve Single Product
+     * 
+     * Retrieve current user’s product details.
+     */
+    app.get('/category/:id/products', authMiddleware.checkAuth, productController.products);
+    
+    /**
+     * Retrieve Single Product
+     * 
+     * Retrieve current user’s product details.
+     */
     app.get('/:permakey', authMiddleware.checkAuth, productController.show);
     
     /**
@@ -29,4 +43,11 @@ module.exports.set = app => {
      * Subscribe a User to a Product
      */
     app.post('/subscribe', authMiddleware.checkAuth, productController.subscribe);
+    
+    /**
+     * Invest
+     * 
+     * Invest to a Product
+     */
+    app.post('/invest', authMiddleware.checkAuth, productController.invest);
 };

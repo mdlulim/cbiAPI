@@ -1,4 +1,5 @@
 const authMiddleware = require('./middlewares/auth');
+const feeController = require('./controllers/Fee');
 const transactionController = require('./controllers/Transaction');
 const buddyAPIController = require('./controllers/BuddyAPIController');
 const buddyAccountController = require('./controllers/BuddyAccountController');
@@ -18,6 +19,13 @@ module.exports.set = app => {
      * Retrieve current user’s transactions.
      */
     app.get('/', authMiddleware.checkAuth, transactionController.index);
+    
+    /**
+     * Retrieve Transaction Fees
+     * 
+     * Retrieve transaction fees by type.
+     */
+    app.get('/fees/:tx_type/:subtype', authMiddleware.checkAuth, feeController.fees);
 
 
     // buddyAPI Routes
