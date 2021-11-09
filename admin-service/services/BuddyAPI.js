@@ -1,7 +1,7 @@
 const config = require('../config');
 const axios = require('axios');
 const { Account } = require('../models/Account');
-const { BuddyAccount } = requrei('../models/Buddy')
+const { Buddy } = requrei('../models/Buddy')
 
 async function lookupBalance() {
     try {
@@ -56,7 +56,7 @@ async function lookupTransaction(data) {
 async function eventTransfer(data) {
     try {
         let reference = data.reference;
-        let identifier = await Buddy.findAll({
+        let identifier = await Buddy.find({
             where: {
                 user_id: data.user_id
             }
