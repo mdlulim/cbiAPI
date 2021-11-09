@@ -1,6 +1,7 @@
 const config = require('../config');
 const axios = require('axios');
 const { Account } = require('../models/Account');
+const { BuddyAccount } = requrei('../models/Buddy')
 
 async function lookupBalance() {
     try {
@@ -55,14 +56,17 @@ async function lookupTransaction(data) {
 async function eventTransfer(data) {
     try {
         let reference = data.reference;
-        let identifier = data.identifier;
+        let identifier = await Buddy.findAll({
+            where: {
+                user_id: data.user_id
+            }
+        });
         let amount = data.amount;
-        let currency = data.currency;
-        // let user_id = data.user_id;
+        let currency = 'NAD';
 
         const getBalance = await Account.find({
             where: {
-                user_id: 'bbf83e4d-b548-43e9-90bd-fd4cd0ccea6b'
+                user_id
             }
         });
 
@@ -73,7 +77,7 @@ async function eventTransfer(data) {
             await Account.update({
                 available_balance: newAmount,
             }, {
-                where: { user_id: 'bbf83e4d-b548-43e9-90bd-fd4cd0ccea6b' }
+                where: { user_id }
             });
 
             const response = await axios('https://staging.buddy.na/api/v2/services/cbi/event/transfer', {
