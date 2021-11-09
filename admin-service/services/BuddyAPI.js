@@ -74,22 +74,6 @@ async function eventTransfer(data) {
             }
         });
 
-        console.log(identifier.buddy_identifier)
-
-        if(getBalance.available_balance >= amount) {
-            let newAvaliable = getBalance.available_balance - amount;
-            await Account.update({
-                available_balance: newAvaliable,
-            }, {
-                where: { user_id: data.user_id }
-            });
-    
-        } else {
-            return {
-                message: 'insufficient funds'
-            }
-        }
-
         const response = await axios(config.buddy.base_url.staging +'/cbi/event/transfer', {
             method: "POST",
             data: {
@@ -117,26 +101,34 @@ async function eventTransfer(data) {
 
         }
 
-        if(response.data.data.data.status == 'APPROVED') {
-            let newBalance = getBalance.balance - amount;
-            await Account.update({
-                balance: newBalance
-            }, {
-                where: { user_id: data.user_id }
-            });
-            await buddyTransaction.update({
-                status: 'COMPLETED'
-            }, {
-                where: { user_id: data.user_id }
-            });
+        if(getBalance.available_balance >= amount) {
+            if(getBalance.available_balance >= amount && response.data.data.data.status == 'APPROVED') {
+                let newAvaliable = getBalance.available_balance - amount;
+                let newBalance = getBalance.balance - amount;
+                await Account.update({
+                    balance: newBalance,
+                    available_balance: newAvaliable
+                }, {
+                    where: { user_id: data.user_id }
+                });
+                await buddyTransaction.update({
+                    status: 'COMPLETED'
+                }, {
+                    where: { user_id: data.user_id }
+                });
+            } else {
+                await buddyTransaction.update({
+                    status: 'PENDING'
+                }, {
+                    where: { reference }
+                });
+            }
         } else {
-            await buddyTransaction.update({
-                status: 'PENDING'
-            }, {
-                where: { reference }
-            });
+            return {
+                message: 'insufficient funds'
+            }
         }
-    
+
         return response.data;
 
     } catch (error) {
