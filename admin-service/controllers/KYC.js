@@ -54,7 +54,7 @@ async function update(req, res) {
         console.log(error);
         return res.send({
             success: false,
-            message: error.message
+            message: 'Could not process request'
         });
     }
 }
