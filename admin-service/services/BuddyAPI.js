@@ -1,7 +1,9 @@
 const config = require('../config');
 const axios = require('axios');
 const { Account } = require('../models/Account');
-const { Buddy } = require('../models/Buddy')
+const { Buddy } = require('../models/Buddy');
+const { customAlphabet } = require('nanoid');
+const buddyTransaction = require('../models/BuddyTransction');
 
 async function lookupBalance() {
     try {
@@ -55,7 +57,9 @@ async function lookupTransaction(data) {
 
 async function eventTransfer(data) {
     try {
-        let reference = data.reference;
+        const nanoid = customAlphabet('1234567890abcdef', 10);
+
+        let reference = 'BUUDY-TRANSFER-' + await nanoid();
         let identifier = await Buddy.find({
             where: {
                 user_id: data.user_id
@@ -77,25 +81,42 @@ async function eventTransfer(data) {
             }, {
                 where: { user_id }
             });
-
-            const response = await axios(config.buddy.base_url.staging + '/cbi/event/transfer', {
-                method: "POST",
-                data: {
-                    reference,
-                    identifier,
-                    amount,
-                    currency,
-                },
-                headers: {
-                    'authenticationToken': config.buddy.authenticationToken
-                }
-            });
-        return response.data;
+    
         } else {
             return {
                 message: 'insufficient funds'
             }
         }
+
+        const response = await axios(config.buddy.base_url.staging + '/cbi/event/transfer', {
+            method: "POST",
+            data: {
+                reference,
+                identifier,
+                amount,
+                currency,
+            },
+            headers: {
+                'authenticationToken': config.buddy.authenticationToken
+            }
+        });
+
+        try {
+            const data = await buddyTransaction.create({
+                user_id: data.user_id,
+                note: response.data.data.data.message,
+                reference,
+                amount,
+                currency
+            })
+        } catch (error) {
+            console.error(error.message || null);
+            throw new Error('Could not process your request');
+        }
+
+        
+        return response.data;
+
     } catch (error) {
         console.error(error.message || null);
         throw new Error('Could not process your request');
