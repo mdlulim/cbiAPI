@@ -111,27 +111,33 @@ async function eventTransfer(data) {
         }
 
         if(getBalance.available_balance >= amount) {
-            if(getBalance.available_balance >= amount && response.data.data.data.status == 'APPROVED') {
-                let newAvaliable = getBalance.available_balance - amount;
-                let newBalance = getBalance.balance - amount;
-                await Account.update({
-                    balance: newBalance,
-                    available_balance: newAvaliable
-                }, {
-                    where: { user_id: data.user_id }
-                });
-                await buddyTransaction.update({
-                    status: 'COMPLETED'
-                }, {
-                    where: { user_id: data.user_id }
-                });
+            if (response.data) {
+                if(response.data.data.data.status == 'APPROVED') {
+                    let newAvaliable = getBalance.available_balance - amount;
+                    let newBalance = getBalance.balance - amount;
+                    await Account.update({
+                        balance: newBalance,
+                        available_balance: newAvaliable
+                    }, {
+                        where: { user_id: data.user_id }
+                    });
+                    await buddyTransaction.update({
+                        status: 'COMPLETED'
+                    }, {
+                        where: { user_id: data.user_id }
+                    });
+                } else {
+                    await buddyTransaction.update({
+                        status: 'PENDING'
+                    }, {
+                        where: { reference }
+                    });
+                }
             } else {
-                await buddyTransaction.update({
-                    status: 'PENDING'
-                }, {
-                    where: { reference }
-                });
-            }
+                return {
+                    message: 'BuddyAPI unreachable'
+                }
+            }            
         } else {
             return {
                 message: 'insufficient funds'
