@@ -44,9 +44,11 @@ async function show(req, res) {
 
 async function update(req, res) {
     try {
-        await kycService.update(req.params.id);
+        const updated = await kycService.update(req.body, req.params.id);
         return res.send({
-            success: true
+            success: true,
+            updated,
+            
         });
     } catch (error) {
         console.log(error);
