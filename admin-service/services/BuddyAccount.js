@@ -1,4 +1,5 @@
 const { Buddy } = require('../models/Buddy');
+const { lookupAccount } = require('../services/BuddyAPI')
 
 async function index() {
     try {
@@ -12,8 +13,16 @@ async function index() {
 
 async function store(data) {
     try {
-        const buddyAccount = await Buddy.create(data);
-        return buddyAccount
+
+        let status = await lookupAccount(data.buddy_identifier)
+
+        if(status.data.data.active) {
+            const buddyAccount = await Buddy.create(data);
+            return buddyAccount
+        }
+        return {
+            message: 'Buddy Acount not Registered'
+        }
     } catch (error) {
         console.error(error.message || null);
         throw new Error('Could not process your request');
