@@ -296,7 +296,7 @@ module.exports.set = app => {
 
     // buddyAccount Routes
     app.get("/buddy", authMiddleware.checkAuth, buddyAccountController.index);
-    app.post("/buddy", buddyAccountController.store);
+    app.post("/buddy", authMiddleware.checkAuth, buddyAccountController.store);
     app.get("/buddy/:buddyId", authMiddleware.checkAuth, buddyAccountController.show);
     app.put("/buddy/:buddyId", authMiddleware.checkAuth, buddyAccountController.update);
     app.delete("/buddy/:buddyId", authMiddleware.checkAuth, buddyAccountController.destroy);
