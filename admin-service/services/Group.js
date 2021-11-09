@@ -117,10 +117,33 @@ async function destroy(id) {
     }
 };
 
+
+/**
+ * 
+ * Archived Role
+ * 
+ * Archived company’s role.
+ * 
+ * @param {string} id
+ * @returns 
+ */
+ async function archive(id) {
+    try {
+        return Group.update({
+            archived: true,
+            updated: sequelize.fn('NOW'),
+        }, { where: { id } });
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
 module.exports = {
     create,
     index,
     show,
     update,
     destroy,
+    archive,
 }

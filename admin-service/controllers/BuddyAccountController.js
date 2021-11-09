@@ -1,5 +1,4 @@
 const buddyAccountService = require('../services/BuddyAccount');
-const { update } = require('../services/Transaction');
 
 async function store(req, res) {
     try {
@@ -43,7 +42,7 @@ async function show(req, res) {
     }
 }
 
-async function updateBuddy(req, res) {
+async function update(req, res) {
     try {
         let data = {
             buddy_identifier: req.body.buddy_identifier,
@@ -84,6 +83,6 @@ module.exports = {
     store,
     index,
     show,
-    updateBuddy,
+    update,
     destroy
 }

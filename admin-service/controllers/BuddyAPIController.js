@@ -46,6 +46,7 @@ async function lookupTransaction(req, res) {
 async function eventTransfer(req, res) {
     try {
         let data = {
+            // user_id: req.user.id,
             reference: req.body.reference,
             identifier: req.body.identifier,
             amount: req.body.amount,
@@ -60,8 +61,6 @@ async function eventTransfer(req, res) {
         })
     }
 }
-
-
 
 module.exports = {
     lookupBalance,
