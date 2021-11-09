@@ -59,20 +59,29 @@ async function eventTransfer(data) {
     try {
         const nanoid = customAlphabet('1234567890abcdef', 10);
 
+        let amount = data.amount;
+        let currency = 'NAD';
         let reference = 'BUDDY-TRANSFER-' + await nanoid();
         let identifier = await Buddy.findOne({
             where: {
                 user_id: data.user_id
             }
         });
-        let amount = data.amount;
-        let currency = 'NAD';
+
+        if (!identifier.buddy_identifier) {
+            return {
+                message: 'CBI member does not have Buddy Account.'
+            }
+        }
+        
 
         const getBalance = await Account.findOne({
             where: {
                 user_id: data.user_id
             }
         });
+
+
 
         const response = await axios(config.buddy.base_url.staging +'/cbi/event/transfer', {
             method: "POST",
