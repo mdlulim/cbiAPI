@@ -5,7 +5,7 @@ const { Buddy } = requrei('../models/Buddy')
 
 async function lookupBalance() {
     try {
-        const response = await axios('https://staging.buddy.na/api/v2/services/cbi/lookup/balance', {
+        const response = await axios(config.buddy.base_url.staging + '/cbi/lookup/balance', {
             headers:{
                 'authenticationToken': config.buddy.authenticationToken
             }
@@ -19,7 +19,7 @@ async function lookupBalance() {
 
 async function lookupAccount(data) {
     try {
-        const response = await axios('https://staging.buddy.na/api/v2/services/cbi/lookup/account', {
+        const response = await axios(config.buddy.base_url.staging +'/cbi/lookup/account', {
             params: { data },
             headers:{
                 'authenticationToken': config.buddy.authenticationToken
@@ -40,7 +40,7 @@ async function lookupTransaction(data) {
         let perPage = data.search
         let page = data.page
 
-        const response = await axios('https://staging.buddy.na/api/v2/services/cbi/lookup/transactions', {
+        const response = await axios(config.buddy.base_url.staging + '/cbi/lookup/transactions', {
             params: { search, from, to, perPage, page },
             headers:{
                 'authenticationToken': config.buddy.authenticationToken
@@ -80,7 +80,7 @@ async function eventTransfer(data) {
                 where: { user_id }
             });
 
-            const response = await axios('https://staging.buddy.na/api/v2/services/cbi/event/transfer', {
+            const response = await axios(config.buddy.base_url.staging + '/cbi/event/transfer', {
                 method: "POST",
                 data: {
                     reference,
