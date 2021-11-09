@@ -3,7 +3,7 @@ const axios = require('axios');
 const { Account } = require('../models/Account');
 const { Buddy } = require('../models/Buddy');
 const { customAlphabet } = require('nanoid');
-const buddyTransaction = require('../models/BuddyTransction');
+const { buddyTransaction } = require('../models/BuddyTransction');
 
 async function lookupBalance() {
     try {
@@ -59,40 +59,35 @@ async function eventTransfer(data) {
     try {
         const nanoid = customAlphabet('1234567890abcdef', 10);
 
-        let reference = 'BUUDY-TRANSFER-' + await nanoid();
-        let identifier = await Buddy.find({
+        let amount = data.amount;
+        let currency = 'NAD';
+        let reference = 'BUDDY-TRANSFER-' + await nanoid();
+        let identifier = await Buddy.findOne({
             where: {
                 user_id: data.user_id
             }
         });
-        let amount = data.amount;
-        let currency = 'NAD';
 
-        const getBalance = await Account.find({
+        if (!identifier.buddy_identifier) {
+            return {
+                message: 'CBI member does not have Buddy Account.'
+            }
+        }
+        
+
+        const getBalance = await Account.findOne({
             where: {
-                user_id
+                user_id: data.user_id
             }
         });
 
-        if(getBalance.available_balance >= amount) {
-            newAmount = getBalance.available_balance - amount;
-            await Account.update({
-                available_balance: newAmount,
-            }, {
-                where: { user_id }
-            });
-    
-        } else {
-            return {
-                message: 'insufficient funds'
-            }
-        }
 
-        const response = await axios(config.buddy.base_url.staging + '/cbi/event/transfer', {
+
+        const response = await axios(config.buddy.base_url.staging +'/cbi/event/transfer', {
             method: "POST",
             data: {
                 reference,
-                identifier,
+                identifier: identifier.buddy_identifier,
                 amount,
                 currency,
             },
@@ -102,7 +97,7 @@ async function eventTransfer(data) {
         });
 
         try {
-            const data = await buddyTransaction.create({
+            await buddyTransaction.create({
                 user_id: data.user_id,
                 note: response.data.data.data.message,
                 reference,
@@ -111,10 +106,44 @@ async function eventTransfer(data) {
             })
         } catch (error) {
             console.error(error.message || null);
-            throw new Error('Could not process your request');
+            throw new Error('Could not reach BuddyAPI endpoint');
+
         }
 
-        
+        if(getBalance.available_balance >= amount) {
+            if (response.data) {
+                if(response.data.data.data.status == 'APPROVED') {
+                    let newAvaliable = getBalance.available_balance - amount;
+                    let newBalance = getBalance.balance - amount;
+                    await Account.update({
+                        balance: newBalance,
+                        available_balance: newAvaliable
+                    }, {
+                        where: { user_id: data.user_id }
+                    });
+                    await buddyTransaction.update({
+                        status: 'COMPLETED'
+                    }, {
+                        where: { user_id: data.user_id }
+                    });
+                } else {
+                    await buddyTransaction.update({
+                        status: 'PENDING'
+                    }, {
+                        where: { reference }
+                    });
+                }
+            } else {
+                return {
+                    message: 'BuddyAPI unreachable'
+                }
+            }            
+        } else {
+            return {
+                message: 'insufficient funds'
+            }
+        }
+
         return response.data;
 
     } catch (error) {
