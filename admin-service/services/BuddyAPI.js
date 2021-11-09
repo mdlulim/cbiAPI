@@ -1,10 +1,11 @@
 const config = require('../config');
 const axios = require('axios');
 const { Account } = require('../models/Account');
+const { Buddy } = require('../models/Buddy')
 
 async function lookupBalance() {
     try {
-        const response = await axios('https://staging.buddy.na/api/v2/services/cbi/lookup/balance', {
+        const response = await axios(config.buddy.base_url.staging + '/cbi/lookup/balance', {
             headers:{
                 'authenticationToken': config.buddy.authenticationToken
             }
@@ -18,7 +19,7 @@ async function lookupBalance() {
 
 async function lookupAccount(data) {
     try {
-        const response = await axios('https://staging.buddy.na/api/v2/services/cbi/lookup/account', {
+        const response = await axios(config.buddy.base_url.staging +'/cbi/lookup/account', {
             params: { data },
             headers:{
                 'authenticationToken': config.buddy.authenticationToken
@@ -39,7 +40,7 @@ async function lookupTransaction(data) {
         let perPage = data.search
         let page = data.page
 
-        const response = await axios('https://staging.buddy.na/api/v2/services/cbi/lookup/transactions', {
+        const response = await axios(config.buddy.base_url.staging + '/cbi/lookup/transactions', {
             params: { search, from, to, perPage, page },
             headers:{
                 'authenticationToken': config.buddy.authenticationToken
@@ -55,28 +56,29 @@ async function lookupTransaction(data) {
 async function eventTransfer(data) {
     try {
         let reference = data.reference;
-        let identifier = data.identifier;
+        let identifier = await Buddy.find({
+            where: {
+                user_id: data.user_id
+            }
+        });
         let amount = data.amount;
-        let currency = data.currency;
-        // let user_id = data.user_id;
+        let currency = 'NAD';
 
         const getBalance = await Account.find({
             where: {
-                user_id: 'bbf83e4d-b548-43e9-90bd-fd4cd0ccea6b'
+                user_id
             }
         });
-
-        console.log(getBalance.available_balance);
 
         if(getBalance.available_balance >= amount) {
             newAmount = getBalance.available_balance - amount;
             await Account.update({
                 available_balance: newAmount,
             }, {
-                where: { user_id: 'bbf83e4d-b548-43e9-90bd-fd4cd0ccea6b' }
+                where: { user_id }
             });
 
-            const response = await axios('https://staging.buddy.na/api/v2/services/cbi/event/transfer', {
+            const response = await axios(config.buddy.base_url.staging + '/cbi/event/transfer', {
                 method: "POST",
                 data: {
                     reference,
