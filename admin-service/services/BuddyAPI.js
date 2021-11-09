@@ -70,8 +70,6 @@ async function eventTransfer(data) {
             }
         });
 
-        console.log(getBalance.available_balance);
-
         if(getBalance.available_balance >= amount) {
             newAmount = getBalance.available_balance - amount;
             await Account.update({
