@@ -54,7 +54,7 @@ async function update(req, res) {
         });
 
         let rem = '<ul>';
-        req.body.rejected_docs.forEach( item => {
+        data.rejected_docs.forEach( item => {
             rem += `
                 <li>${item}</li>    
             `;

@@ -157,7 +157,7 @@ module.exports.set = app => {
      * 
      * Update a company’s user kyc.
      */
-    app.put('/kyc/:id', authMiddleware.checkAuth, kycController.update);
+    app.put('/kyc', authMiddleware.checkAuth, kycController.update);
 
     /**
      * List User Products
