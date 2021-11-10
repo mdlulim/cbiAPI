@@ -1,11 +1,11 @@
-// // add application performance monitoring 
-// var apm = require('elastic-apm-node').start({
-//     serviceName: 'admin-service',
-//     secretToken: 'K1dPeS59y0hO980e9d0ed4pI',
-//     serverUrl: 'https://apm-server-apm-http.default.svc.cluster.local:8200',
-//     environment: 'development',
-//     verifyServerCert: false
-//     });
+// add application performance monitoring 
+var apm = require('elastic-apm-node').start({
+    serviceName: 'admin-service',
+    secretToken: 'K1dPeS59y0hO980e9d0ed4pI',
+    serverUrl: 'https://apm-server-apm-http.default.svc.cluster.local:8200',
+    environment: 'development',
+    verifyServerCert: false
+    });
     
 const express = require('express');
 const bodyParser = require('body-parser');
