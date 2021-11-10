@@ -47,7 +47,7 @@ const kycNotification = data => {
         <p>
             We have reviewed your documents and you have qualified for level ${level}.
             `;
-    if (parseInt(level) < 3) {
+    if (level+'' !== '3') {
         html += `To increase your withdrawal limit please read the following comments and re-upload 
             ${remaining}`
     }
