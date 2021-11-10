@@ -196,6 +196,19 @@ module.exports.set = app => {
      */
     app.get('/products/categories', authMiddleware.checkAuth, productController.categories);
 
+     /**
+     * Create Product Category
+     * 
+     * Create a product category belonging to CBI.
+     */
+    app.post('/products/categories', authMiddleware.checkAuth, productController.createCategory);
+
+    /**
+     * Update Categories
+     * 
+     * Update company’s categories details.
+     */
+    app.put('/products/categories/:id', authMiddleware.checkAuth, productController.updateCategory);
     /**
      * Create Product
      * 
@@ -251,6 +264,13 @@ module.exports.set = app => {
      * Retrieve a company’s transaction.
      */
     app.get('/transactions/:id', authMiddleware.checkAuth, transactionController.show);
+
+     /**
+     * Update Product
+     * 
+     * Update company’s product details.
+     */
+    app.put('/transactions/:id', authMiddleware.checkAuth, userController.updateTransaction);
 
     /**
      * List Currencies

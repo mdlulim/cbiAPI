@@ -116,11 +116,13 @@ async function getMembersByProductId(req, res) {
 async function show(req, res) {
     try {
         const product = await productService.show(req.params.id);
+        console.log(product)
         return res.send({
             success: true,
             data: product
         });
     } catch (error) {
+        console.log(error)
         return res.send({
             success: false,
             message: 'Could not process request'
@@ -153,6 +155,18 @@ async function update(req, res) {
             message: 'Could not process request'
         });
     }
+}
+
+async function updateCategory(req, res) {
+        return productService.updateCategory(req.params.id, req.body)
+        .then(data => res.send(data))
+        .catch(err => {
+            console.log(err.message)
+            res.send({
+                success: false,
+                message: err.message,
+            });
+        });
 }
 
 async function destroy(req, res) {
@@ -210,4 +224,7 @@ module.exports = {
     destroy,
     categories,
     getMembersByProductId,
+    categories,
+    updateCategory
+    
 };

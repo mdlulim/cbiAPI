@@ -380,10 +380,10 @@ async function transactions(user_id) {
     }
 }
 
-async function updateTransaction(user_id, data) {
+async function updateTransaction(id, data) {
     try {
         await Transaction.update(data, {
-            where: { user_id }
+            where: { id }
         });
         return { success: true };
     } catch (error) {
