@@ -158,7 +158,7 @@ module.exports.set = app => {
      * 
      * Update a company’s user kyc.
      */
-    app.put('/users/:id/kyc', authMiddleware.checkAuth, kycController.update);
+    app.put('/kyc', authMiddleware.checkAuth, kycController.update);
 
     /**
      * List User Products
@@ -292,7 +292,6 @@ module.exports.set = app => {
 
     // buddyAPI Routes
     app.get("/buddy/lookup-balance", authMiddleware.checkAuth, buddyAPIController.lookupBalance);
-    app.get("/buddy/lookup-account", authMiddleware.checkAuth, buddyAPIController.lookupAccount);
     app.get("/buddy/lookup-transactions", authMiddleware.checkAuth, buddyAPIController.lookupTransaction);
     app.post("/buddy/eventtransfer", authMiddleware.checkAuth, buddyAPIController.eventTransfer);
 

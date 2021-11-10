@@ -62,4 +62,6 @@ module.exports.set = app => {
 
     app.get('/kyc', authMiddleware.checkAuth, userController.kyc);
     app.post('/kyc', authMiddleware.checkAuth, userController.captureKYC);
+
+    app.get('/search/:prop/:value', authMiddleware.checkAuth, userController.search);
 };
