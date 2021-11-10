@@ -15,10 +15,11 @@ async function create(data) {
 
 async function show(id) {
     try {
-        return KYC.findOne({
+        return KYC.findAll({
             where: {
                 user_id: id
-            }
+            },
+            order: [['level','ASC']]
         });
     } catch (error) {
         console.error(error.message || null);

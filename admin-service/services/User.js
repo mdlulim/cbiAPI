@@ -85,6 +85,7 @@ async function index(query) {
                 'referral_id',
                 'autorenew',
                 'expiry',
+                'deactivation_date',
             ],
             where,
             include: [{ model: Group, where: groupWhere }],
@@ -153,6 +154,7 @@ async function show(id) {
                 'referral_id',
                 'autorenew',
                 'expiry',
+                'deactivation_date',
             ],
             where: { id },
             include: [{ model: Group }],
@@ -200,6 +202,7 @@ async function archive(id) {
         return User.update({
             status: 'Archived',
             archived: true,
+            deactivation_date:sequelize.fn('NOW'),
             updated: sequelize.fn('NOW'),
         }, { where: { id } });
     } catch (error) {
@@ -345,6 +348,7 @@ async function referrals(id) {
                 'sponsor',
                 'autorenew',
                 'expiry',
+                'deactivation_date',
             ],
             where: { sponsor: id },
             include: [{ model: Group }],
