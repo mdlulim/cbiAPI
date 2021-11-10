@@ -22,7 +22,7 @@ async function lookupBalance() {
 async function lookupAccount(data) {
     try {
         const response = await axios(config.buddy.base_url.staging +'/cbi/lookup/account', {
-            params: { data },
+            params: { identifier: data },
             headers:{
                 'authenticationToken': config.buddy.authenticationToken
             }

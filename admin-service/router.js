@@ -291,7 +291,6 @@ module.exports.set = app => {
 
     // buddyAPI Routes
     app.get("/buddy/lookup-balance", authMiddleware.checkAuth, buddyAPIController.lookupBalance);
-    app.get("/buddy/lookup-account", authMiddleware.checkAuth, buddyAPIController.lookupAccount);
     app.get("/buddy/lookup-transactions", authMiddleware.checkAuth, buddyAPIController.lookupTransaction);
     app.post("/buddy/eventtransfer", authMiddleware.checkAuth, buddyAPIController.eventTransfer);
 
