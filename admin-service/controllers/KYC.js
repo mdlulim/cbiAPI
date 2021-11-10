@@ -47,10 +47,11 @@ async function update(req, res) {
     try {
         const data = req.body
         const levels_to_update = Object.keys(data.levels);
+        let updated = null
         levels_to_update.forEach(async(i) => {
             const id = data.levels[i].id
             delete data.levels[i].id
-            const updated = await kycService.update(data.levels[i], id);
+            updated = await kycService.update(data.levels[i], id);
         });
 
         let rem = '<ul>';
@@ -80,7 +81,7 @@ async function update(req, res) {
         console.log(error);
         return res.send({
             success: false,
-            message: 'Could not process request'
+            message: error
         });
     }
 }
