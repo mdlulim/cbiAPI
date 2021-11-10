@@ -45,14 +45,27 @@ async function show(req, res) {
 
 async function update(req, res) {
     try {
-        // array.forEach(element => {
-        //     const updated = await kycService.update(req.body, req.params.id);
-        // });
+        const data = req.body
+        const levels_to_update = Object.keys(data.levels);
+        levels_to_update.forEach(i => {
+            const id = data.level[i].id
+            delete data.level[i].id
+            const updated = await kycService.update(data.level[i], id);
+        });
 
+        let rem = '<ul>';
+        req.body.rejected_docs.forEach( item => {
+            rem += `
+                <li>${item}</li>    
+            `;
+        });
+
+        rem += '</ul>'
+        
         const notified = await kycNotification({
             first_name:"Palema",
-            remaining:"id card",
-            level:"2",
+            remaining:rem,
+            level:data.kyc,
             email: "abpalema@gmail.com"   
         })
 
