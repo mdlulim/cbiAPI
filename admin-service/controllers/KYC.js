@@ -62,16 +62,16 @@ async function update(req, res) {
 
         rem += '</ul>'
         
-        // const notified = await kycNotification({
-        //     first_name:"Palema",
-        //     remaining:rem,
-        //     level:data.kyc,
-        //     email: "abpalema@gmail.com"   
-        // })
+        const notified = await kycNotification({
+            first_name:"Palema",
+            remaining:rem,
+            level:data.kyc,
+            email: "abpalema@gmail.com"   
+        })
 
         return res.send({
             success: true,
-            // updated,
+            updated,
             notified
         });
 
