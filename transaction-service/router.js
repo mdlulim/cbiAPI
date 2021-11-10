@@ -1,8 +1,6 @@
 const authMiddleware = require('./middlewares/auth');
 const feeController = require('./controllers/Fee');
 const transactionController = require('./controllers/Transaction');
-const buddyAPIController = require('./controllers/BuddyAPIController');
-const buddyAccountController = require('./controllers/BuddyAccountController');
 
 module.exports.set = app => {
     
@@ -54,5 +52,4 @@ module.exports.set = app => {
     app.get("/buddy/:buddyId", authMiddleware.checkAuth, buddyAccountController.show);
     app.put("/buddy/:buddyId", authMiddleware.checkAuth, buddyAccountController.updateBuddy);
     app.delete("/buddy/:buddyId", authMiddleware.checkAuth, buddyAccountController.destroy);
-
 };

@@ -106,11 +106,7 @@ async function kyc(req, res) {
 
 async function captureKYC(req, res) {
     try {
-        const data = {
-            ...req.body,
-            user_id: req.user.id,
-        };
-        await kycService.capture(data);
+        await kycService.capture(req.body);
         await activityService.add({
             user_id: req.user.id,
             action: `${req.user.group_name.toLowerCase()}.kyc.capture`,

@@ -1,9 +1,16 @@
 const { Buddy } = require('../models/Buddy');
+const { lookupAccount } = require('../services/BuddyAPI')
 
 async function index() {
     try {
-        const buddyAccount = await Buddy.findAll();
-        return buddyAccount
+        const allbuddyAccounts = await Buddy.findAll();
+        return {
+            code: 200,
+            status: 'OK',
+            data: {
+                allbuddyAccounts
+            }
+        }
     } catch (error) {
         console.error(error.message || null);
         throw new Error('Could not process your request');
@@ -12,8 +19,16 @@ async function index() {
 
 async function store(data) {
     try {
-        const buddyAccount = await Buddy.create(data);
-        return buddyAccount
+
+        let status = await lookupAccount(data.buddy_identifier)
+
+        if(status.data.data.active) {
+            const buddyAccount = await Buddy.create(data);
+            return buddyAccount
+        }
+        return {
+            message: 'Buddy Acount not Registered'
+        }
     } catch (error) {
         console.error(error.message || null);
         throw new Error('Could not process your request');
@@ -22,8 +37,20 @@ async function store(data) {
 
 async function show(id) {
     try {
-        const buddyAccount = await Buddy.findByPk(id);
-        return buddyAccount
+        const buddyAccount = await Buddy.findOne({
+            where: {
+                user_id: id
+            }
+        });
+        return {
+            code: 200,
+            status: 'OK',
+            data: {
+                identifier: buddyAccount.buddy_identifier,
+                id: buddyAccount.id,
+                created: buddyAccount.created
+            }
+        }
     } catch (error) {
         console.error(error.message || null);
         throw new Error('Could not process your request');

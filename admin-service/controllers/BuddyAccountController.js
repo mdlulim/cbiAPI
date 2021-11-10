@@ -1,5 +1,4 @@
 const buddyAccountService = require('../services/BuddyAccount');
-const { update } = require('../services/Transaction');
 
 async function store(req, res) {
     try {
@@ -9,8 +8,11 @@ async function store(req, res) {
             updated: req.body.updated,
             user_id: req.user.id
         }
-        const buddyAccount = await buddyAccountService.store(data);
-        res.send(buddyAccount);
+        await buddyAccountService.store(data);
+        res.status(200).send({
+            status: 200,
+            message: 'resource created successfully'
+        });
     } catch (err) {
         return res.status(500).send({
             success: false,
@@ -43,7 +45,7 @@ async function show(req, res) {
     }
 }
 
-async function updateBuddy(req, res) {
+async function update(req, res) {
     try {
         let data = {
             buddy_identifier: req.body.buddy_identifier,
@@ -51,7 +53,7 @@ async function updateBuddy(req, res) {
             updated: req.body.updated,
             id: req.params.buddyId
         }
-        const buddyAccount = await buddyAccountService.update(data);
+        await buddyAccountService.update(data);
         res.status(200).send({
             status: 200,
             message: 'resource update successfully'
@@ -84,6 +86,6 @@ module.exports = {
     store,
     index,
     show,
-    updateBuddy,
+    update,
     destroy
 }

@@ -2,6 +2,8 @@ const sequelize = require('../config/db');
 const { Currency } = require('../models/Currency');
 const { Product } = require('../models/Product');
 const { ProductCategory } = require('../models/ProductCategory');
+const { UserProduct } = require('../models/UserProduct');
+const User = require('../models/User');
 
 Product.belongsTo(Currency, { foreignKey: 'currency_code', targetKey: 'code' });
 Product.belongsTo(ProductCategory, { foreignKey: 'category_id', targetKey: 'id' });
@@ -65,11 +67,23 @@ async function categories(query) {
     }
 }
 
+async function getMembersByProductId(product_id) {
+    try {
+
+        return sequelize.query("SELECT * FROM users ur JOIN user_products up ON ur.id = up.user_id  WHERE up.product_id ='"+product_id+"'"
+                );
+
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
 async function show(id) {
     try {
         return Product.findOne({
             where: { id },
-            include: [{ model: Currency }, { model: ProductCategory }],
+            include: [{ model: Product }, { model: ProductCategory }],
         });
     } catch (error) {
         console.error(error.message || null);
@@ -126,4 +140,5 @@ module.exports = {
     findByPermakey,
     categories,
     createCategory,
+    getMembersByProductId,
 }
