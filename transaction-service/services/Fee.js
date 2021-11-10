@@ -1,4 +1,4 @@
-// const sequelize = require('../config/db');
+const sequelize = require('../config/db');
 const { Currency } = require('../models/Currency');
 const { Fee }  = require('../models/Fee');
 
@@ -6,12 +6,14 @@ Fee.belongsTo(Currency, { foreignKey: 'currency_code', targetKey: 'code' });
 
 async function show(tx_type, subtype) {
     try {
+        const { Op } = sequelize;
         return Fee.findOne({
             where: {
-                tx_type,
-                subtype,
+                tx_type: { [Op.iLike]: tx_type },
+                subtype: { [Op.iLike]: subtype },
                 archived: false,
             },
+            include: [{ model: Currency }]
         });
     } catch (error) {
         console.error(error.message || null);
