@@ -1,4 +1,5 @@
 const kycService = require('../services/KYC');
+const { kycNotification } = require('../helpers/emailHandler');
 
 async function create(req, res) {
     try {
@@ -44,12 +45,24 @@ async function show(req, res) {
 
 async function update(req, res) {
     try {
-        const updated = await kycService.update(req.body, req.params.id);
+        // array.forEach(element => {
+        //     const updated = await kycService.update(req.body, req.params.id);
+        // });
+
+        const notified = await kycNotification({
+            first_name:"Palema",
+            remaining:"id card",
+            level:"2",
+            email: "abpalema@gmail.com"   
+        })
+
         return res.send({
             success: true,
-            updated,
-            
+            // updated,
+            notified
         });
+
+
     } catch (error) {
         console.log(error);
         return res.send({

@@ -4,6 +4,7 @@ const { KYC } = require('../models/KYC');
 async function capture(data) {
     try {
         return KYC.bulkCreate(data);
+        
     } catch (error) {
         console.error(error.message || null);
         throw new Error('Could not process your request');
