@@ -47,7 +47,7 @@ async function update(req, res) {
     try {
         const data = req.body
         const levels_to_update = Object.keys(data.levels);
-        levels_to_update.forEach(i => {
+        levels_to_update.forEach(async(i) => {
             const id = data.level[i].id
             delete data.level[i].id
             const updated = await kycService.update(data.level[i], id);
