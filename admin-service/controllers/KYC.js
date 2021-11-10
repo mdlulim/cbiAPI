@@ -64,10 +64,10 @@ async function update(req, res) {
         rem += '</ul>'
         
         const notified = await kycNotification({
-            first_name:data.last_name,
+            first_name:"Palema",
             remaining:rem,
             level:data.kyc,
-            email: data.email   
+            email: "abpalema@gmail.com"   
         })
 
         return res.send({

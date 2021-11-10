@@ -46,6 +46,8 @@ const kycNotification = data => {
         <p>Hi ${first_name},</p>
         <p>
             We have reviewed your documents and you have qualified for level ${level}.
+            
+            ${(level+'' !=='3')? 'To increase your withdrawal limit please read the following comments and re-upload ' + remaining : ''}
         <p>
         <p>If this request wasn't made by you, contact support urgently.</p>
         <p style="padding-top:15px"><strong>Regards</strong>,<br />CBI Support</p>
