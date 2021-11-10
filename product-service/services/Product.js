@@ -1,9 +1,12 @@
 const sequelize = require('../config/db');
+const { Account }  = require('../models/Account');
 const { Currency }  = require('../models/Currency');
 const { Product }  = require('../models/Product');
 const { ProductCategory }  = require('../models/ProductCategory');
 const { UserProduct }  = require('../models/UserProduct');
 const { User }  = require('../models/User');
+
+Account.belongsTo(User, { foreignKey: 'user_id', targetKey: 'id' });
 
 Product.belongsTo(UserProduct, { foreignKey: 'id', targetKey: 'product_id' });
 User.belongsTo(UserProduct, { foreignKey: 'id', targetKey: 'user_id' });
@@ -92,9 +95,38 @@ async function subscribe(data) {
     }
 }
 
+async function products(category_id) {
+    try {
+        return Product.findAndCountAll({
+            where: { category_id },
+            include: [{
+                model: Currency
+            }, {
+                model: ProductCategory
+            }]
+        });
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
+async function categories() {
+    try {
+        return ProductCategory.findAndCountAll({
+            order: [[ "title", "ASC" ]]
+        });
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
 module.exports = {
     show,
     index,
     overview,
     subscribe,
+    products,
+    categories,
 }
