@@ -25,11 +25,12 @@ async function create(data) {
  * @returns 
  */
 async function index(query) {
+    console.log(query);
     try {
         const where = query || {};
         const permission_levels = await PermissionLevel.findAndCountAll({
             where,
-            order: [['created', 'DESC']],
+            // order: [['created', 'DESC']],
         });
         const { count, rows } = permission_levels;
         return {
