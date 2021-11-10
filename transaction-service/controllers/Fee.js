@@ -1,8 +1,9 @@
 const feeService = require('../services/Fee');
 
-function show(req, res){
+async function show(req, res){
     try {
-        const fee = await feeService.show(req.params.tx_type, req.params.subtype);
+        const { tx_type, subtype } = req.params;
+        const fee = await feeService.show(tx_type, subtype);
         res.send({
             success: true,
             data: fee,
