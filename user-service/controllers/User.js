@@ -21,15 +21,34 @@ async function profile(req, res) {
 async function referrals(req, res) {
     try {
         const referrals = await userService.referrals(req.user.id);
-        const { count, rows } = referrals;
         return res.send({
             success: true,
             data: {
-                count,
-                results: rows,
+                count: (referrals && referrals.length) || 0,
+                results: referrals,
             },
         });
     } catch (error) {
+        console.log(error.message);
+        return res.send({
+            success: false,
+            message: 'Could not process request'
+        });
+    }
+}
+
+async function referralsByUUID(req, res) {
+    try {
+        const referrals = await userService.referralsByUUID(req.params.uuid);
+        return res.send({
+            success: true,
+            data: {
+                count: (referrals && referrals.length) || 0,
+                results: referrals,
+            },
+        });
+    } catch (error) {
+        console.log(error.message);
         return res.send({
             success: false,
             message: 'Could not process request'
@@ -149,11 +168,32 @@ async function autorenew(req, res) {
     }
 }
 
+async function search(req, res) {
+    try {
+        const users = await userService.search(req.params.prop, req.params.value);
+        const { count, rows } = users;
+        return res.send({
+            success: true,
+            data: {
+                count,
+                results: rows,
+            },
+        });
+    } catch (error) {
+        return res.send({
+            success: false,
+            message: 'Could not process request'
+        });
+    }
+}
+
 module.exports = {
     profile,
     referrals,
+    referralsByUUID,
     update,
     kyc,
     captureKYC,
     autorenew,
+    search,
 };

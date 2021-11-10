@@ -4,6 +4,7 @@ const currencyController = require('./controllers/Currency');
 const groupController = require('./controllers/Group');
 const kycController = require('./controllers/KYC');
 const productController = require('./controllers/Product');
+const permissionLevelController = require('./controllers/PermissionLevel');
 const transactionController = require('./controllers/Transaction');
 const userController = require('./controllers/User');
 const buddyAPIController = require('./controllers/BuddyAPIController');
@@ -157,7 +158,7 @@ module.exports.set = app => {
      * 
      * Update a company’s user kyc.
      */
-    app.put('/kyc/:id', authMiddleware.checkAuth, kycController.update);
+    app.put('/kyc', authMiddleware.checkAuth, kycController.update);
 
     /**
      * List User Products
@@ -300,4 +301,13 @@ module.exports.set = app => {
     app.get("/buddy/:buddyId", authMiddleware.checkAuth, buddyAccountController.show);
     app.put("/buddy/:buddyId", authMiddleware.checkAuth, buddyAccountController.update);
     app.delete("/buddy/:buddyId", authMiddleware.checkAuth, buddyAccountController.destroy);
+
+
+    // Permissions Level Routes
+    app.get("/levels", authMiddleware.checkAuth, permissionLevelController.index);
+    app.post("/level", authMiddleware.checkAuth, permissionLevelController.create);
+    app.get("/level/:levelId", authMiddleware.checkAuth, permissionLevelController.show);
+    app.put("/level/:buddyId", authMiddleware.checkAuth, permissionLevelController.update);
+    app.delete("/level/:levelId", authMiddleware.checkAuth, permissionLevelController.destroy);
+    
 };

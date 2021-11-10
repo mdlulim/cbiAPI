@@ -19,6 +19,8 @@ module.exports.set = app => {
     app.get('/referrals', authMiddleware.checkAuth, userController.referrals);
     app.put('/profile', authMiddleware.checkAuth, userController.update);
 
+    app.get('/referrals/:uid', authMiddleware.checkAuth, userController.referralsByUUID);
+
     app.post('/bank_accounts', authMiddleware.checkAuth, bankAccountController.create);
     app.get('/bank_accounts', authMiddleware.checkAuth, bankAccountController.index);
     app.get('/bank_accounts/:id', authMiddleware.checkAuth, bankAccountController.show);
@@ -62,4 +64,6 @@ module.exports.set = app => {
 
     app.get('/kyc', authMiddleware.checkAuth, userController.kyc);
     app.post('/kyc', authMiddleware.checkAuth, userController.captureKYC);
+
+    app.get('/search/:prop/:value', authMiddleware.checkAuth, userController.search);
 };

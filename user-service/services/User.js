@@ -91,6 +91,35 @@ async function update(id, data) {
 
 async function referrals(id) {
     try {
+        const sql = `
+        WITH RECURSIVE cte_query
+        AS
+            (
+                SELECT p.id, p.referral_id, p.first_name, p.status, p.sponsor
+                FROM users p
+                WHERE p.id = '${id}'
+                UNION ALL
+                SELECT e.id, e.referral_id, e.first_name, e.status, e.sponsor
+                FROM users e
+                    INNER JOIN cte_query c ON c.id = e.sponsor
+            )
+            SELECT *
+            FROM cte_query
+            WHERE id != '${id}'
+        `;
+        const options = {
+            nest: true,
+            type: sequelize.QueryTypes.SELECT
+        };
+        return sequelize.query(sql, options);
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
+async function referralsByUUID(id) {
+    try {
         const users = await User.findAndCountAll({
             attributes: [
                 'id',
@@ -151,6 +180,52 @@ async function countReferrals(id) {
     }
 }
 
+async function search(prop, value) {
+    try {
+        const { Op, fn, col, where } = sequelize;
+        const whereQry = {
+            status: 'Active',
+            blocked: false,
+            verified: true,
+        };
+
+        if (prop === 'referral_id') {
+            whereQry.referral_id = value;
+        } else if (prop === 'find') {
+            whereQry.userQuery = where(
+                fn(
+                    'CONCAT',
+                    col('first_name'),
+                    ' ',
+                    col('last_name'),
+                    ' ',
+                    col('referral_id')
+                ),
+                {
+                    [Op.iLike]: `%${value}%`
+                }
+            );
+        }
+        const users = await User.findAndCountAll({
+            attributes: [
+                'last_name',
+                'first_name',
+                'referral_id',
+            ],
+            where: whereQry,
+            include: [{
+                model: Group,
+                channel: 'frontend',
+                is_public: true,
+            }],
+        });
+        return users;
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
 module.exports = {
     create,
     show,
@@ -158,4 +233,6 @@ module.exports = {
     findByEmail,
     referrals,
     countReferrals,
+    referralsByUUID,
+    search,
 }

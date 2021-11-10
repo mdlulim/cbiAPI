@@ -47,14 +47,15 @@ async function update(req, res) {
     try {
         const data = req.body
         const levels_to_update = Object.keys(data.levels);
-        levels_to_update.forEach(i => {
-            const id = data.level[i].id
-            delete data.level[i].id
-            const updated = await kycService.update(data.level[i], id);
+        let updated = null
+        levels_to_update.forEach(async(i) => {
+            const id = data.levels[i].id
+            delete data.levels[i].id
+            updated = await kycService.update(data.levels[i], id);
         });
 
         let rem = '<ul>';
-        req.body.rejected_docs.forEach( item => {
+        data.rejected_docs.forEach( item => {
             rem += `
                 <li>${item}</li>    
             `;
@@ -63,15 +64,15 @@ async function update(req, res) {
         rem += '</ul>'
         
         const notified = await kycNotification({
-            first_name:"Palema",
+            first_name:data.last_name,
             remaining:rem,
             level:data.kyc,
-            email: "abpalema@gmail.com"   
+            email: data.email   
         })
 
         return res.send({
             success: true,
-            // updated,
+            updated,
             notified
         });
 
@@ -80,7 +81,7 @@ async function update(req, res) {
         console.log(error);
         return res.send({
             success: false,
-            message: 'Could not process request'
+            message: error
         });
     }
 }
