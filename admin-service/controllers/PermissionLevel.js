@@ -12,6 +12,7 @@ function create(req, res){
 };
 
 function index(req, res){
+    // console.log(req.query);
     return permissionService.index(req.query)
     .then(data => res.send(data))
     .catch(err => {
