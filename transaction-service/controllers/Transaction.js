@@ -102,9 +102,36 @@ async function create(req, res) {
 
 async function index(req, res){
     try {
-        return transactionService.index(req.user.id)
+        return transactionService.index(req.user.id, req.query)
         .then(data => res.send(data));
     } catch (err) {
+        return res.status(500).send({
+            success: false,
+            message: 'Could not process your request'
+        });
+    }
+};
+
+async function count(req, res){
+    try {
+        const { tx_type, subtype } = req.params;
+        return transactionService.count(req.user.id, tx_type, subtype)
+        .then(data => res.send(data));
+    } catch (err) {
+        return res.status(500).send({
+            success: false,
+            message: 'Could not process your request'
+        });
+    }
+};
+
+async function totals(req, res){
+    try {
+        const { tx_type, subtype } = req.params;
+        return transactionService.totals(req.user.id, tx_type, subtype)
+        .then(data => res.send(data));
+    } catch (err) {
+        console.log(err.message)
         return res.status(500).send({
             success: false,
             message: 'Could not process your request'
@@ -115,4 +142,6 @@ async function index(req, res){
 module.exports = {
     create,
     index,
+    count,
+    totals,
 };
