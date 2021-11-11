@@ -31,6 +31,7 @@ async function index(user_id) {
     }
 }
 
+
 module.exports = {
     capture,
     index,
