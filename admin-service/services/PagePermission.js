@@ -27,11 +27,11 @@ async function create(data) {
 async function index(query) {
     try {
         const where = query || {};
-        const groups = await PagePermission.findAll({
+        const pagePermissions = await PagePermission.findAll({
             where,
             order: [['created', 'DESC']],
         });
-        const { count, rows } = groups;
+        const { count, rows } = pagePermissions;
         return {
             success: true,
             data: {
@@ -43,7 +43,7 @@ async function index(query) {
         };
     } catch (error) {
         console.error(error.message || null);
-        throw new Error('Could not process your request');
+        throw new Error(error.message);
     }
 };
 
