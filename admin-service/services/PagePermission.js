@@ -41,9 +41,9 @@ async function index(query) {
                 results: rows,
             }
         };
-    } catch (err) {
-        console.log(err);
-        res.send(err);
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
     }
 };
 
