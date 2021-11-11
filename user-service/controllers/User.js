@@ -99,7 +99,7 @@ async function kyc(req, res) {
     } catch (error) {
         return res.send({
             success: false,
-            message: 'Could not process request'
+            message: error
         });
     }
 }
