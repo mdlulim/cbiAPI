@@ -55,7 +55,7 @@ async function update(req, res) {
         }
         await buddyAccountService.update(data);
         res.status(200).send({
-            status: 200,
+            success: true,
             message: 'resource update successfully'
         });
     } catch (err) {
@@ -70,7 +70,7 @@ async function destroy(req, res) {
     try {
         await buddyAccountService.destroy(req.params.buddyId);
         res.status(200).send({
-            status: 200,
+            success: true,
             message: 'resource deleted successfully'
         });
     } catch (err) {
