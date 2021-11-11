@@ -12,7 +12,7 @@ async function capture(data) {
             return
         });
 
-        
+        return result
 
     } catch (error) {
         console.error(error.message || null);
