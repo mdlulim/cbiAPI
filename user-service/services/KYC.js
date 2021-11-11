@@ -8,7 +8,7 @@ async function capture(data) {
 
             let res = null
             data.forEach(async (level) => {
-                res = await KYC.upsert(level, { transaction: t })
+                res = await KYC.insertOrUpdate(level, { transaction: t })
             });
             // return KYC.bulkCreate(data);
             return res
