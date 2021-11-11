@@ -1,5 +1,5 @@
 // const sequelize = require('../config/db');
-const { Group } = require('../models/PagePermission');
+const { PagePermission } = require('../models/PagePermission');
 
 /**
  * Create a new group
@@ -8,10 +8,10 @@ const { Group } = require('../models/PagePermission');
  */
 async function create(data) {
     try {
-        const group = await Group.create(data);
+        const page_permission = await PagePermission.create(data);
         return {
             success: true,
-            data: group
+            data: page_permission
         };
     } catch (err) {
         console.log(err);
@@ -27,7 +27,7 @@ async function create(data) {
 async function index(query) {
     try {
         const where = query || {};
-        const groups = await Group.findAndCountAll({
+        const groups = await PagePermission.findAll({
             where,
             order: [['created', 'DESC']],
         });

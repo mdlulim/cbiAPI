@@ -1,7 +1,7 @@
-const groupService = require('../services/PagePermission');
+const pagePermissionService = require('../services/PagePermission');
 
 function create(req, res){
-    return groupService.create(req.body)
+    return pagePermissionService.create(req.body)
     .then(data => res.send(data))
     .catch(err => {
         res.send({
@@ -11,11 +11,12 @@ function create(req, res){
     });
 };
 
-function index(req, res){
-    return groupService.index(req.query)
-    .then(data => res.send(data))
+function index(req, resd){
+    return pagePermissionService.index(req.query)
+    .then(
+        data => resd.send(data))
     .catch(err => {
-        res.send({
+        resd.send({
             success: false,
             message: err.message,
         });
@@ -23,7 +24,7 @@ function index(req, res){
 };
 
 function show(req, res){
-    return groupService.show(req.params.id)
+    return pagePermissionService.show(req.params.id)
     .then(data => res.send(data))
     .catch(err => {
         res.send({
@@ -34,7 +35,7 @@ function show(req, res){
 };
 
 function update(req, res){
-    return groupService.update(req.params.id, req.body)
+    return pagePermissionService.update(req.params.id, req.body)
 
     .then(data => res.send(data))
     .catch(err => {
@@ -47,7 +48,7 @@ function update(req, res){
 };
 
 function destroy(req, res){
-    return groupService.destroy(req.params.id)
+    return pagePermissionService.destroy(req.params.id)
     .then(data => res.send(data))
     .catch(err => {
         res.send({
@@ -60,7 +61,7 @@ function destroy(req, res){
 
 async function archive(req, res) {
     try {
-        return groupService.archive(req.params.id)
+        return pagePermissionService.archive(req.params.id)
         .then(() => res.send({ success: true }))
         .catch(err => {
             res.send({

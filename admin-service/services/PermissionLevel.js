@@ -27,24 +27,20 @@ async function create(data) {
 async function index(query) {
     console.log(query);
     try {
+        const { offset, limit } = query;
         const where = query || {};
-        const permission_levels = await PermissionLevel.findAndCountAll({
+
+        delete where.offset;
+        delete where.limit;
+
+        return PermissionLevel.findAndCountAll({
             where,
-            // order: [['created', 'DESC']],
+            order: [['created', 'DESC']],
+            offset: offset || 0,
         });
-        const { count, rows } = permission_levels;
-        return {
-            success: true,
-            data: {
-                count,
-                next: null,
-                previous: null,
-                results: rows,
-            }
-        };
-    } catch (err) {
-        console.log(err);
-        res.send(err);
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
     }
 };
 
