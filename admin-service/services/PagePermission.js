@@ -31,14 +31,13 @@ async function index(query) {
             where,
             order: [['created', 'DESC']],
         });
-        const { count, rows } = pagePermissions;
+
         return {
             success: true,
             data: {
-                count,
                 next: null,
                 previous: null,
-                results: rows,
+                results: pagePermissions,
             }
         };
     } catch (error) {
