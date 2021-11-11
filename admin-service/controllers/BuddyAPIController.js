@@ -12,18 +12,6 @@ async function lookupBalance(req, res){
     }
 };
 
-async function lookupAccount(req, res){
-    try {
-        const buddybalance = await buddyService.lookupAccount(req.body.identifier);
-        res.send(buddybalance)
-    } catch (err) {
-        return res.status(500).send({
-            success: false,
-            message: 'Could not process your request'
-        })
-    }
-};
-
 async function lookupTransaction(req, res) {
     try {
         let data = {
@@ -46,8 +34,7 @@ async function lookupTransaction(req, res) {
 async function eventTransfer(req, res) {
     try {
         let data = {
-            reference: req.body.reference,
-            identifier: req.body.identifier,
+            user_id: req.user.id,
             amount: req.body.amount,
             currency: req.body.currency,
         }
@@ -61,11 +48,8 @@ async function eventTransfer(req, res) {
     }
 }
 
-
-
 module.exports = {
     lookupBalance,
-    lookupAccount,
     lookupTransaction,
     eventTransfer
 }

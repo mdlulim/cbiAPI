@@ -43,11 +43,12 @@ const User = sequelize.define('user', {
 	sponsor: Sequelize.UUID,
 	referral_id: Sequelize.INTEGER,
 	expiry: Sequelize.DATE,
+	deactivation_date: Sequelize.DATE,
 	autorenew: {
         type: Sequelize.BOOLEAN,
         defaultValue: false,
     },
-}, {
+}, { 
     timestamps: false,
 });
 

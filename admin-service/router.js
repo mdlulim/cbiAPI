@@ -4,9 +4,13 @@ const currencyController = require('./controllers/Currency');
 const groupController = require('./controllers/Group');
 const kycController = require('./controllers/KYC');
 const productController = require('./controllers/Product');
+const permissionLevelController = require('./controllers/PermissionLevel');
 const transactionController = require('./controllers/Transaction');
 const userController = require('./controllers/User');
+const buddyAPIController = require('./controllers/BuddyAPIController');
+const buddyAccountController = require('./controllers/BuddyAccountController');
 const authMiddleware = require('./middlewares/auth');
+
 
 module.exports.set = app => {
     /**
@@ -154,7 +158,7 @@ module.exports.set = app => {
      * 
      * Update a company’s user kyc.
      */
-    app.put('/users/:id/kyc', authMiddleware.checkAuth, kycController.update);
+    app.put('/kyc', authMiddleware.checkAuth, kycController.update);
 
     /**
      * List User Products
@@ -176,6 +180,7 @@ module.exports.set = app => {
     app.get('/groups', authMiddleware.checkAuth, groupController.index);
     app.get('/groups/:id', authMiddleware.checkAuth, groupController.show);
     app.put('/groups/:id', authMiddleware.checkAuth, groupController.update);
+    app.put('/groups/:id/archive', authMiddleware.checkAuth, groupController.archive);
     app.delete('/groups/:id', authMiddleware.checkAuth, groupController.destroy);
 
     /**
@@ -212,6 +217,13 @@ module.exports.set = app => {
      * Retrieve a company’s product.
      */
     app.get('/products/:id', authMiddleware.checkAuth, productController.show);
+
+    /**
+     * Retrieve Users By product Product
+     * 
+     * Retrieve a company’s product.
+     */
+    app.get('/products/:id/users', authMiddleware.checkAuth, productController.getMembersByProductId);
 
     /**
      * Update Product
@@ -277,4 +289,25 @@ module.exports.set = app => {
     app.get('/countries', authMiddleware.checkAuth, countryController.index);
     app.put('/countries/:id/blacklist', authMiddleware.checkAuth, countryController.blacklist);
     app.put('/countries/:id/unblacklist', authMiddleware.checkAuth, countryController.unblacklist);
+
+    // buddyAPI Routes
+    app.get("/buddy/lookup-balance", authMiddleware.checkAuth, buddyAPIController.lookupBalance);
+    app.get("/buddy/lookup-transactions", authMiddleware.checkAuth, buddyAPIController.lookupTransaction);
+    app.post("/buddy/eventtransfer", authMiddleware.checkAuth, buddyAPIController.eventTransfer);
+
+    // buddyAccount Routes
+    app.get("/buddy", authMiddleware.checkAuth, buddyAccountController.index);
+    app.post("/buddy", authMiddleware.checkAuth, buddyAccountController.store);
+    app.get("/buddy/:buddyId", authMiddleware.checkAuth, buddyAccountController.show);
+    app.put("/buddy/:buddyId", authMiddleware.checkAuth, buddyAccountController.update);
+    app.delete("/buddy/:buddyId", authMiddleware.checkAuth, buddyAccountController.destroy);
+
+
+    // Permissions Level Routes
+    app.get("/levels", authMiddleware.checkAuth, permissionLevelController.index);
+    app.post("/level", authMiddleware.checkAuth, permissionLevelController.create);
+    app.get("/level/:levelId", authMiddleware.checkAuth, permissionLevelController.show);
+    app.put("/level/:buddyId", authMiddleware.checkAuth, permissionLevelController.update);
+    app.delete("/level/:levelId", authMiddleware.checkAuth, permissionLevelController.destroy);
+    
 };

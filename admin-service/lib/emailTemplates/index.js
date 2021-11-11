@@ -4,6 +4,7 @@ const newUser = data => {
         password,
         first_name,
     } = data;
+
     const html = `
         <p>Hi ${first_name},</p>
         <p>
@@ -31,8 +32,44 @@ const newUser = data => {
         html,
         text
     }
+
+
+};
+
+const kycNotification = data => {
+    const {
+        first_name,
+        remaining,
+        level
+    } = data;
+    const html = `
+        <p>Hi ${first_name},</p>
+        <p>
+            We have reviewed your documents and you have qualified for level ${level}.
+            
+        `;
+    if (level+'' !== '3') {
+        html += `To increase your withdrawal limit please read the following comments and re-upload 
+            ${remaining}`
+    }
+    html = +`
+        <p>
+        <p>If this request wasn't made by you, contact support urgently.</p>
+        <p style="padding-top:15px"><strong>Regards</strong>,<br />CBI Support</p>
+    `;
+    const text = `
+        Hi ${first_name}, 
+        We have reviewed your documents and you have qualified for level ${level}
+        If this request wasn't made by you, contact support urgently. 
+        Regards, CBI Support
+    `;
+    return {
+        html,
+        text
+    }
 };
 
 module.exports = {
     newUser,
+    kycNotification
 };

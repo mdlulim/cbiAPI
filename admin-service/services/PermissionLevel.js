@@ -1,17 +1,17 @@
 // const sequelize = require('../config/db');
-const { Group } = require('../models/Group');
+const {PermissionLevel } = require('../models/PermissionLevel');
 
 /**
- * Create a new group
+ * Create a new permission level
  * @param {*} query 
  * @returns 
  */
 async function create(data) {
     try {
-        const group = await Group.create(data);
+        const permission_level = await PermissionLevel.create(data);
         return {
             success: true,
-            data: group
+            data: permission_level
         };
     } catch (err) {
         console.log(err);
@@ -20,18 +20,18 @@ async function create(data) {
 };
 
 /**
- * Get a list of groups that have been created.
+ * Get a list of permission levels that have been created.
  * @param {*} query 
  * @returns 
  */
 async function index(query) {
     try {
         const where = query || {};
-        const groups = await Group.findAndCountAll({
+        const permission_levels = await PermissionLevel.findAndCountAll({
             where,
             order: [['created', 'DESC']],
         });
-        const { count, rows } = groups;
+        const { count, rows } = permission_levels;
         return {
             success: true,
             data: {
@@ -48,18 +48,18 @@ async function index(query) {
 };
 
 /**
- * Get a single of group that has been created.
+ * Get a single of permission level that has been created.
  * @param {string} id 
  * @returns 
  */
 async function show(id) {
     try {
-        const group = await Group.findOne({
+        const permission_level = await PermissionLevel.findOne({
             where: { id },
         });
         return {
             success: true,
-            data: group,
+            data: permission_level,
         };
     } catch (err) {
         console.log(err);
@@ -68,44 +68,32 @@ async function show(id) {
 };
 
 /**
- * Update the group’s details.
+ * Update the permission level’s details.
  * @param {string} id 
  * @param {object} data 
  * @returns 
  */
 async function update(id, data) {
     
-    console.log('THABIOS '+id);
     try {
-        return Group.update(data, {
+        return PermissionLevel.update(data, {
             where: { id },
         });
-        // return Group.update(data, { where: { id } });
+        // return permission level.update(data, { where: { id } });
     } catch (error) {
         console.log(error);
         res.send(err);
     }
-    // try {
-    //     await Group.update(data, {
-    //         where: { id },
-    //     });
-    //     return {
-    //         success: true,
-    //     };
-    // } catch (err) {
-    //     console.log(err);
-    //     res.send(err);
-    // } 
 };
 
 /**
- * Delete the group.
+ * Delete the permission level.
  * @param {string} id 
  * @returns 
  */
 async function destroy(id) {
     try {
-        await Group.destroy({
+        await PermissionLevel.destroy({
             where: { id },
         });
         return {
@@ -129,7 +117,7 @@ async function destroy(id) {
  */
  async function archive(id) {
     try {
-        return Group.update({
+        return PermissionLevel.update({
             archived: true,
             updated: sequelize.fn('NOW'),
         }, { where: { id } });

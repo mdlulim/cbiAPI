@@ -1,7 +1,7 @@
 const Sequelize = require('sequelize');
 const sequelize = require('../config/db');
 
-const BuddyTransaction = sequelize.define('buddy_transaction', {
+const buddyTransaction = sequelize.define('buddy_transaction', {
     id: {
         type: Sequelize.UUID,
         defaultValue: Sequelize.UUIDV4,
@@ -13,7 +13,6 @@ const BuddyTransaction = sequelize.define('buddy_transaction', {
     note: Sequelize.STRING,
     reference: Sequelize.STRING,
     amount: Sequelize.FLOAT,
-    currency: Sequelize.STRING,
     status: Sequelize.STRING,
     created: Sequelize.DATE,
     updated: Sequelize.DATE,
@@ -22,5 +21,5 @@ const BuddyTransaction = sequelize.define('buddy_transaction', {
 });
 
 module.exports = {
-    BuddyTransaction,
+    buddyTransaction,
 }
