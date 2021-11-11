@@ -7,7 +7,7 @@ async function capture(data) {
         
     } catch (error) {
         console.error(error.message || null);
-        throw new error;
+        throw new Error('Could not process your request');
     }
 }
 
