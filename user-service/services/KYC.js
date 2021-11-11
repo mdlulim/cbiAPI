@@ -3,8 +3,16 @@ const { KYC } = require('../models/KYC');
 
 async function capture(data) {
     try {
-        return KYC.bulkCreate(data);
-        
+
+        const result = await sequelize.transaction(async (t) => {
+
+            data.forEach(async(level) => {
+                await KYC.insertOrUpdate(level, {transaction: t} )
+            });
+            return
+        });
+
+        return result
     } catch (error) {
         console.error(error.message || null);
         throw new Error('Could not process your request');
