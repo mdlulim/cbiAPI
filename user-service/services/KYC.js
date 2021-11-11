@@ -7,14 +7,14 @@ async function capture(data) {
         const result = await sequelize.transaction(async (t) => {
 
             let res = null
-            data.forEach(async(level) => {
-               res = await KYC.upsert(level, {transaction: t} )
+            data.forEach(async (level) => {
+                res = await KYC.upsert(level, { transaction: t })
             });
             // return KYC.bulkCreate(data);
             return res
         });
 
-        
+        return result;
 
     } catch (error) {
         console.error(error.message || null);
