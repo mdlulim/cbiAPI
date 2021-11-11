@@ -3,7 +3,7 @@ const { KYC } = require('../models/KYC');
 
 async function capture(data) {
     try {
-        return KYC.bulkCreate(data, {updateOnDuplicate: ["user_id", "level"]});
+        return KYC.bulkCreate(data);
         
     } catch (error) {
         console.error(error.message || null);
