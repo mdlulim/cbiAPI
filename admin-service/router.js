@@ -9,6 +9,7 @@ const transactionController = require('./controllers/Transaction');
 const userController = require('./controllers/User');
 const buddyAPIController = require('./controllers/BuddyAPIController');
 const buddyAccountController = require('./controllers/BuddyAccountController');
+const pagePermissionController = require('./controllers/PagePermission');
 const authMiddleware = require('./middlewares/auth');
 
 
@@ -309,5 +310,13 @@ module.exports.set = app => {
     app.get("/level/:levelId", authMiddleware.checkAuth, permissionLevelController.show);
     app.put("/level/:buddyId", authMiddleware.checkAuth, permissionLevelController.update);
     app.delete("/level/:levelId", authMiddleware.checkAuth, permissionLevelController.destroy);
-    
+
+
+    // Page Permissions Routes
+    app.get("/page_permissions", authMiddleware.checkAuth, pagePermissionController.index);
+    // app.post("/level", authMiddleware.checkAuth, permissionLevelController.create);
+    // app.get("/level/:levelId", authMiddleware.checkAuth, permissionLevelController.show);
+    app.put("/page_permission/:page_permissionId", authMiddleware.checkAuth, pagePermissionController.update);
+    // app.delete("/level/:levelId", authMiddleware.checkAuth, permissionLevelController.destroy);
+
 };
