@@ -106,7 +106,7 @@ async function kyc(req, res) {
 
 async function captureKYC(req, res) {
     try {
-        const cap = await kycService.capture(req.body);
+        await kycService.capture(req.body);
         await activityService.add({
             user_id: req.user.id,
             action: `${req.user.group_name.toLowerCase()}.kyc.capture`,
@@ -120,7 +120,7 @@ async function captureKYC(req, res) {
         /**
          * @TODO : send email to member
          */
-        return res.send({ success: cap });
+        return res.send({ success: true });
     } catch (error) {
         return res.send({
             success: false,
