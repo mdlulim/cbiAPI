@@ -1,8 +1,10 @@
 const sequelize = require('../config/db');
+// const { BuddyAccount } = require('../models/BuddyAccount');
 const { Group } = require('../models/Group');
 const { User }  = require('../models/User');
 
 User.belongsTo(Group, { foreignKey: 'group_id', targetKey: 'id' });
+// BuddyAccount.belongsTo(User, { foreignKey: 'user_id', targetKey: 'id' });
 
 async function create(data) {
     try {
@@ -15,6 +17,7 @@ async function create(data) {
 
 async function show(id) {
     try {
+        // const buddy = await BuddyAccount.findOne({ where: { user_id, id } })
         const user = await User.findOne({
             attributes: [
                 'id',
@@ -53,7 +56,10 @@ async function show(id) {
                 'expiry',
             ],
             where: { id },
-            include: [{ model: Group }],
+            include: [
+                { model: Group }, 
+                // { model: BuddyAccount }
+            ],
         });
         return user;
     } catch (error) {
@@ -95,11 +101,11 @@ async function referrals(id) {
         WITH RECURSIVE cte_query
         AS
             (
-                SELECT p.id, p.referral_id, p.first_name, p.status, p.sponsor
+                SELECT p.id, p.referral_id, p.email, p.first_name, p.last_name, p.nationality, p.status, p.sponsor
                 FROM users p
                 WHERE p.id = '${id}'
                 UNION ALL
-                SELECT e.id, e.referral_id, e.first_name, e.status, e.sponsor
+                SELECT e.id, e.referral_id, e.email, e.first_name, e.last_name, e.nationality, e.status, e.sponsor
                 FROM users e
                     INNER JOIN cte_query c ON c.id = e.sponsor
             )

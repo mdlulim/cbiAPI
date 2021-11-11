@@ -1,9 +1,7 @@
 const sequelize = require('../config/db');
-const { BuddyTransaction } = require('../models/BuddyTransaction');
 const { Transaction }  = require('../models/Transaction');
 const { User }  = require('../models/User');
 
-BuddyTransaction.belongsTo(User, { foreignKey: 'user_id', targetKey: 'id' });
 Transaction.belongsTo(User, { foreignKey: 'user_id', targetKey: 'id' });
 
 async function create(data) {
