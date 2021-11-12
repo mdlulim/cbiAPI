@@ -161,6 +161,7 @@ module.exports.set = app => {
      */
     app.put('/kyc', authMiddleware.checkAuth, kycController.update);
 
+
     /**
      * List User Products
      * 
