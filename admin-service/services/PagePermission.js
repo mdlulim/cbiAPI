@@ -53,7 +53,7 @@ async function index(query) {
  */
 async function show(id) {
     try {
-        const group = await Group.findOne({
+        const pagePermission = await PagePermission.findOne({
             where: { id },
         });
         return {
@@ -74,9 +74,8 @@ async function show(id) {
  */
 async function update(id, data) {
     
-    console.log('THABIOS '+id);
     try {
-        return Group.update(data, {
+        return PagePermission.update(data, {
             where: { id },
         });
         // return Group.update(data, { where: { id } });
@@ -84,17 +83,6 @@ async function update(id, data) {
         console.log(error);
         res.send(err);
     }
-    // try {
-    //     await Group.update(data, {
-    //         where: { id },
-    //     });
-    //     return {
-    //         success: true,
-    //     };
-    // } catch (err) {
-    //     console.log(err);
-    //     res.send(err);
-    // } 
 };
 
 /**
