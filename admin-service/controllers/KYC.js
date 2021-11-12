@@ -101,7 +101,7 @@ async function kyc_level(req, res) {
                 total_verified += 1;
         })
 
-        const kyc_level = (least_rejected === 10 && total_verified === 4) ? 3 : (least_rejected === 0) ? -1 : 9
+        const kyc_level = (least_rejected === 10 && total_verified === 4) ? 3 : (least_rejected === 0) ? -1 : least_rejected - 1
 
         return res.send({
             success: true,
