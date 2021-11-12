@@ -34,8 +34,8 @@ async function create(data) {
  * 
  * Get a list of users belonging to CBI.
  * 
- * @param {object} query 
- * @returns 
+ * @param {object} query
+ * @returns
  */
 async function index(query) {
     try {
@@ -384,10 +384,10 @@ async function transactions(user_id) {
     }
 }
 
-async function updateTransaction(user_id, data) {
+async function updateTransaction(id, data) {
     try {
         await Transaction.update(data, {
-            where: { user_id }
+            where: { id }
         });
         return { success: true };
     } catch (error) {
