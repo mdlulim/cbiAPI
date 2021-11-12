@@ -91,18 +91,21 @@ async function update(req, res) {
 async function kyc_level(req, res) {
     try {
         const kyc_applications = await kycService.show(req.params.id);
-        // const levels = Object.keys(data);
-        // let least_rejected = 10
-        // levels.foreach((level) => {
-        //     if (parseInt(level) < least_rejected && data[level].status === 'Rejected') {
-        //         least_rejected = level
-        //     }
-        // })
-        // const kyc_level = (least_rejected === 10 && data[3].status === 'Approved') ? 3 : (least_rejected === '0') ? -1 : levels[levels.indexOf(least_rejected) - 1]
+        let least_rejected = 10;
+        let total_verified = 0;
+
+        kyc_applications.forEach(row=>{
+            if(parseInt(row.level) < least_rejected && row.status === 'Rejected')
+                least_rejected = parseInt(row.level)
+            if(row.verified)
+                total_verified += 1;
+        })
+
+        const kyc_level = (least_rejected === 10 && total_verified === 4) ? 3 : (least_rejected === 0) ? -1 : 9
 
         return res.send({
             success: true,
-            data:{ rows: kyc_applications},
+            data:{ kyc_level, },
         });
     } catch (error) {
         return res.send({
