@@ -95,7 +95,7 @@ async function kyc_level(req, res) {
 
         const levels = Object.keys(kyc_applications);
         let least_rejected = 10
-        levels.foreach(() => {
+        levels.foreach((level) => {
             if (parseInt(level) < least_rejected && kyc_applications[level].status === 'Rejected') {
                 least_rejected = level
             }
