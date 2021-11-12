@@ -90,7 +90,7 @@ async function update(req, res) {
 
 async function kyc_level(req, res) {
     try {
-        const data = await kycService.show(req.id);
+        const data = await kycService.show(req.params.id);
         // const { count, kyc_applications } = data;
 
         // const levels = Object.keys(kyc_applications);
@@ -104,7 +104,7 @@ async function kyc_level(req, res) {
 
         return res.send({
             success: true,
-            data: req.id,
+            data,
         });
     } catch (error) {
         return res.send({
