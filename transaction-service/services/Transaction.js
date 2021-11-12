@@ -22,10 +22,14 @@ async function update(data, id) {
     }
 }
 
-async function index(user_id) {
+async function index(user_id, query) {
     try {
+        const where = {
+            ...query,
+            user_id,
+        };
         const transactions = await Transaction.findAndCountAll({
-            where: { user_id },
+            where,
             order: [[ 'created', 'DESC' ]],
         });
         const { count, rows } = transactions;
@@ -44,8 +48,66 @@ async function index(user_id) {
     }
 }
 
+async function count(user_id, txtype, subtype) {
+    try {
+        const { Op } = sequelize;
+        const where = {
+            tx_type: { [Op.iLike]: txtype },
+            subtype: { [Op.iLike]: subtype },
+            user_id,
+        };
+        let count = 0;
+        if (subtype.toLowerCase() === 'buddy') {
+            count = await BuddyTransaction.count({
+                where,
+            });
+        } else {
+            count = await Transaction.count({
+                where,
+            });
+        }
+        return {
+            success: true,
+            data: count || 0,
+        };
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
+async function totals(user_id, txtype, subtype) {
+    try {
+        const { Op } = sequelize;
+        const where = {
+            tx_type: { [Op.iLike]: txtype },
+            subtype: { [Op.iLike]: subtype },
+            user_id,
+        };
+        let total = 0;
+        if (subtype.toLowerCase() === 'buddy') {
+            total = await BuddyTransaction.sum('amount', {
+                where,
+            });
+        } else {
+            total = await Transaction.sum('total_amount', {
+                where,
+            });
+        }
+        return {
+            success: true,
+            data: total || 0,
+        };
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
 module.exports = {
     create,
     index,
     update,
+    count,
+    totals,
 }

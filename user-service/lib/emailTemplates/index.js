@@ -233,6 +233,35 @@ const autoRenewStatusChange = data => {
     }
 };
 
+const kycNotification = data => {
+    const {
+        first_name,
+        remaining,
+        level
+    } = data;
+    const html = `
+        <p>Hi ${first_name},</p>
+        <p>
+            We have reviewed your documents and you have qualified for level ${level}.
+            To increase your withdrawal limit please re-upload the following documents 
+            [${remaining}]
+        <p>
+        <p>If this request wasn't made by you, contact support urgently.</p>
+        <p style="padding-top:15px"><strong>Regards</strong>,<br />CBI Support</p>
+    `;
+    const text = `
+        Hi ${first_name}, 
+        We have reviewed your documents and you have qualified for level ${level}
+        You have been registered on CBI.
+        If this request wasn't made by you, contact support urgently. 
+        Regards, CBI Support
+    `;
+    return {
+        html,
+        text
+    }
+};
+
 module.exports = {
     welcome,
     resetPassword,
@@ -241,4 +270,5 @@ module.exports = {
     loginNotify,
     confirmEmail,
     autoRenewStatusChange,
+    kycNotification
 };

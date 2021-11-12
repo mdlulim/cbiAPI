@@ -26,7 +26,7 @@ if (stage === 'dev') {
             }
         },
         buddy: {
-            baseURL: {
+            base_url: {
                 staging: 'https://staging.buddy.na/api/v2/services',
                 production: 'https://buddy.na/api/v2/services'
             }, 

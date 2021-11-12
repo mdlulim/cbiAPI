@@ -6,7 +6,6 @@ var apm = require('elastic-apm-node').start({
     environment: 'development',
     verifyServerCert: false
     })
-
 const express = require('express');
 const bodyParser = require('body-parser');
 var cors = require('cors');

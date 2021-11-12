@@ -4,10 +4,12 @@ const currencyController = require('./controllers/Currency');
 const groupController = require('./controllers/Group');
 const kycController = require('./controllers/KYC');
 const productController = require('./controllers/Product');
+const permissionLevelController = require('./controllers/PermissionLevel');
 const transactionController = require('./controllers/Transaction');
 const userController = require('./controllers/User');
 const buddyAPIController = require('./controllers/BuddyAPIController');
 const buddyAccountController = require('./controllers/BuddyAccountController');
+const pagePermissionController = require('./controllers/PagePermission');
 const authMiddleware = require('./middlewares/auth');
 
 
@@ -157,7 +159,8 @@ module.exports.set = app => {
      * 
      * Update a company’s user kyc.
      */
-    app.put('/users/:id/kyc', authMiddleware.checkAuth, kycController.update);
+    app.put('/kyc', authMiddleware.checkAuth, kycController.update);
+
 
     /**
      * List User Products
@@ -311,7 +314,6 @@ module.exports.set = app => {
 
     // buddyAPI Routes
     app.get("/buddy/lookup-balance", authMiddleware.checkAuth, buddyAPIController.lookupBalance);
-    app.get("/buddy/lookup-account", authMiddleware.checkAuth, buddyAPIController.lookupAccount);
     app.get("/buddy/lookup-transactions", authMiddleware.checkAuth, buddyAPIController.lookupTransaction);
     app.post("/buddy/eventtransfer", authMiddleware.checkAuth, buddyAPIController.eventTransfer);
 
@@ -321,4 +323,21 @@ module.exports.set = app => {
     app.get("/buddy/:buddyId", authMiddleware.checkAuth, buddyAccountController.show);
     app.put("/buddy/:buddyId", authMiddleware.checkAuth, buddyAccountController.update);
     app.delete("/buddy/:buddyId", authMiddleware.checkAuth, buddyAccountController.destroy);
+
+
+    // Permissions Level Routes
+    app.get("/levels", authMiddleware.checkAuth, permissionLevelController.index);
+    app.post("/level", authMiddleware.checkAuth, permissionLevelController.create);
+    app.get("/level/:levelId", authMiddleware.checkAuth, permissionLevelController.show);
+    app.put("/level/:buddyId", authMiddleware.checkAuth, permissionLevelController.update);
+    app.delete("/level/:levelId", authMiddleware.checkAuth, permissionLevelController.destroy);
+
+
+    // Page Permissions Routes
+    app.get("/page_permissions", authMiddleware.checkAuth, pagePermissionController.index);
+    app.post("/page_permission", authMiddleware.checkAuth, pagePermissionController.create);
+    // app.get("/level/:levelId", authMiddleware.checkAuth, permissionLevelController.show);
+    app.put("/page_permission/:page_permissionId", authMiddleware.checkAuth, pagePermissionController.update);
+    // app.delete("/level/:levelId", authMiddleware.checkAuth, permissionLevelController.destroy);
+
 };
