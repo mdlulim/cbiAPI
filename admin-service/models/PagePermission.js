@@ -1,20 +1,23 @@
 const Sequelize = require('sequelize');
 const sequelize = require('../config/db');
 
-const Buddy = sequelize.define('buddy_accounts', {
+const PagePermission = sequelize.define('page_permission', {
     id: {
         type: Sequelize.UUID,
         defaultValue: Sequelize.UUIDV4,
         primaryKey: true,
     },
-    buddy_identifier: Sequelize.STRING,
+    page: Sequelize.STRING,
+    low: Sequelize.BOOLEAN,
+    basic: Sequelize.BOOLEAN,
+    medium: Sequelize.BOOLEAN,
+    high: Sequelize.BOOLEAN,
     created: Sequelize.DATE,
     updated: Sequelize.DATE,
-    user_id: Sequelize.UUID,
 }, {
-    timestamps: false 
+    timestamps: false
 });
 
 module.exports = {
-    Buddy,
+    PagePermission,
 }

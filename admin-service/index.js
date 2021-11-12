@@ -5,8 +5,7 @@ var apm = require('elastic-apm-node').start({
     serverUrl: 'https://apm-server-apm-http.default.svc.cluster.local:8200',
     environment: 'development',
     verifyServerCert: false
-    });
-    
+    })
 const express = require('express');
 const bodyParser = require('body-parser');
 var cors = require('cors');

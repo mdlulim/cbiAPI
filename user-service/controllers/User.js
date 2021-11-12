@@ -11,7 +11,8 @@ async function profile(req, res) {
             data: user,
         });
     } catch (error) {
-        return res.send({
+        console.log(error.message)
+        return res.status(500).send({
             success: false,
             message: 'Could not process request'
         });
@@ -59,24 +60,24 @@ async function referralsByUUID(req, res) {
 async function update(req, res) {
     try {
         return userService.update(req.user.id, req.body)
-        .then(async () => {
-            await activityService.add({
-                user_id: req.user.id,
-                action: `${req.user.group_name.toLowerCase()}.profile.update`,
-                description: `${req.user.first_name} updated profile`,
-                section: 'Account',
-                subsection: 'Profile',
-                data: { id: req.user.id, data: req.body },
-                ip: null,
+            .then(async () => {
+                await activityService.add({
+                    user_id: req.user.id,
+                    action: `${req.user.group_name.toLowerCase()}.profile.update`,
+                    description: `${req.user.first_name} updated profile`,
+                    section: 'Account',
+                    subsection: 'Profile',
+                    data: { id: req.user.id, data: req.body },
+                    ip: null,
+                });
+                return res.send({ success: true });
+            })
+            .catch(err => {
+                res.send({
+                    success: false,
+                    message: err.message,
+                });
             });
-            return res.send({ success: true });
-        })
-        .catch(err => {
-            res.send({
-                success: false,
-                message: err.message,
-            });
-        });
     } catch (error) {
         return res.send({
             success: false,
@@ -99,7 +100,7 @@ async function kyc(req, res) {
     } catch (error) {
         return res.send({
             success: false,
-            message: 'Could not process request'
+            message: error
         });
     }
 }
@@ -125,6 +126,34 @@ async function captureKYC(req, res) {
         return res.send({
             success: false,
             message: 'Could not process request' + error.message
+        });
+    }
+}
+
+async function kyc_level(req, res) {
+    try {
+        const data = await kycService.index(req.user.id);
+        const { count, kyc_applications } = data;
+
+        const levels = Object.keys(kyc_applications);
+        let least_rejected = 10
+        levels.foreach(() => {
+            if (parseInt(level) < least_rejected && kyc_applications[level].status === 'Rejected') {
+                least_rejected = level
+            }
+        })
+        const kyc_level = (least_rejected === 10 && kyc_applications[3].status === 'Approved') ? 3 : (least_rejected === '0') ? -1 : levels[levels.indexOf(least_rejected) - 1]
+
+        return res.send({
+            success: true,
+            data: {
+                level: kyc_level
+            },
+        });
+    } catch (error) {
+        return res.send({
+            success: false,
+            message: error
         });
     }
 }
@@ -196,4 +225,5 @@ module.exports = {
     captureKYC,
     autorenew,
     search,
+    kyc_level
 };
