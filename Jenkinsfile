@@ -39,6 +39,8 @@ def COLOR_MAP = [
     'FAILURE': 'danger',
 ]
 
+def scannerHome = tool 'SonarScanner';
+
 pipeline {
     environment {
         // test variable: 0=success, 1=fail; must be string
@@ -49,7 +51,6 @@ pipeline {
     stages {
         stage('SonarQube Analysis') {
             steps {
-                def scannerHome = tool 'SonarScanner';
                 withSonarQubeEnv() {
                     sh "${scannerHome}/bin/sonar-scanner"
                 }
