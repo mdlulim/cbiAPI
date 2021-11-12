@@ -14,7 +14,6 @@ async function create(data) {
 }
 
 async function show(id) {
-    console.log("^^^^^^^^^^^^^")
     try {
         return KYC.findAll({
             where: {
