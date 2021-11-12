@@ -83,11 +83,11 @@ async function show(id) {
     try {
         return Product.findOne({
             where: { id },
-            include: [{ model: Product }, { model: ProductCategory }],
+            include: [ { model: ProductCategory }],
         });
     } catch (error) {
         console.error(error.message || null);
-        throw new Error('Could not process your request');
+        throw new Error('Could not process your request in service');
     }
 }
 
@@ -110,12 +110,32 @@ async function findByPermakey(permakey) {
  * Update company’s product details.
  * 
  * @param {string} id
- * @param {string} data 
- * @returns 
+ * @param {string} data
+ * @returns
  */
 async function update(id, data) {
     try {
         return Product.update(data, { where: { id } });
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
+
+/**
+ * 
+ * Update Product
+ * 
+ * Update company’s product details.
+ * 
+ * @param {string} id
+ * @param {string} data 
+ * @returns 
+ */
+async function updateCategory(id, data) {
+    try {
+        return ProductCategory.update(data, { where: { id } });
     } catch (error) {
         console.error(error.message || null);
         throw new Error('Could not process your request');
@@ -141,4 +161,5 @@ module.exports = {
     categories,
     createCategory,
     getMembersByProductId,
+    updateCategory,
 }
