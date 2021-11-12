@@ -47,16 +47,16 @@ pipeline {
     }
     agent any
     stages {
-        stage('SonarQube Analysis') {
-            steps {
-                script {
-                    def scannerHome = tool 'sonar-scanner';
-                }
-                withSonarQubeEnv(installationName: 'cbiglobal-sonarqube', credentialsId: 'sonarqube') {
-                    sh "${scannerHome}/bin/sonar-scanner"
-                }
-            }
-        }
+        // stage('SonarQube Analysis') {
+        //     steps {
+        //         script {
+        //             def scannerHome = tool 'sonar-scanner';
+        //         }
+        //         withSonarQubeEnv(installationName: 'cbiglobal-sonarqube', credentialsId: 'sonarqube') {
+        //             sh "${scannerHome}/bin/sonar-scanner"
+        //         }
+        //     }
+        // }
         stage('Docker Build Microservices') {
             parallel {
                 stage('admin-service') {
