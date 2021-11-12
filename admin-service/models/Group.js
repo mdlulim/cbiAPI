@@ -10,6 +10,7 @@ const Group = sequelize.define('group', {
     name: Sequelize.STRING,
     label: Sequelize.STRING,
     description: Sequelize.STRING,
+    channel: Sequelize.STRING,
     is_default: Sequelize.BOOLEAN,
     is_public: Sequelize.BOOLEAN,
     settings: Sequelize.JSONB,

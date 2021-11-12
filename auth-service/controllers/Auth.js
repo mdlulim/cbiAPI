@@ -1,11 +1,17 @@
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const moment = require('moment');
+const rn = require('random-number');
 const generator = require('generate-password');
 const config = require('../config');
 const sequelize = require('../config/db');
 const authService = require('../services/Auth');
 const userService = require('../services/User');
+const groupService = require('../services/Group');
+const accountService = require('../services/Account');
+const emailAddressService = require('../services/EmailAddress');
+const mobileNumberService = require('../services/MobileNumber');
+const notificationService = require('../services/Notification');
 const errorHandler = require('../helpers/errorHandler');
 const activityService = require('../services/Activity');
 const sessionService = require('../services/Session');
@@ -16,6 +22,45 @@ const {
     tokenExpireHours,
     tokenExpireTime,
 } = config;
+
+async function validate(req, res) {
+    try {
+        const { prop, value } = req.params;
+        const user = await userService.findByPropertyValue(prop, value);
+        return res.send({
+            success: true,
+            exists: (user && user.id) ? true : false,
+        });
+    } catch (error) {
+        console.log(error)
+        return res.send({
+            success: false,
+            message: 'Could not process request'
+        });
+    }
+}
+
+async function tokensVerify(req, res) {
+    try {
+        const { type } = req.body;
+        const params = req.user;
+        params.type = type;
+        if (type === 'login') {
+            const data = await authService.verifyLogin({
+                ...req.user,
+                ...req.body
+            });
+            return res.send(data);
+        }
+        const data = await authService.tokensVerify(params);
+        return res.send(data);
+    } catch (error) {
+        return res.send({
+            success: false,
+            message: error.message || 'Could not process request'
+        });
+    }
+}
 
 /**
  * Login
@@ -41,10 +86,10 @@ async function login(req, res) {
          */
         const isAdmin = group.name === 'admin';
 
-         if (isAdmin) {
+        if (isAdmin) {
             const expires = new Date();
             expires.setHours(expires.getHours() + tokenExpireHours);
-    
+
             // log user activity
             await activityService.addActivity({
                 user_id: user.id,
@@ -56,7 +101,7 @@ async function login(req, res) {
                 subsection: 'Login',
                 data: { device },
             });
-            
+
             // add user session to database
             await sessionService.addSession({
                 token,
@@ -83,7 +128,7 @@ async function login(req, res) {
                 },
             });
         }
-    
+
         // log user activity
         const transaction = `${group.name}.login.verify`;
         await activityService.addActivity({
@@ -99,6 +144,7 @@ async function login(req, res) {
 
         // auth (jwt) token
         const payload = {
+            email,
             id: user.id,
             time: new Date(),
         };
@@ -107,7 +153,11 @@ async function login(req, res) {
         });
 
         // generate otp code
-        const code = generator.generate({ length: 4 }).toUpperCase();
+        const code = rn({
+            min: 1000,
+            max: 9999,
+            integer: true,
+        });
         const authRecord = {
             user_id: user.id,
             device: device || {},
@@ -134,23 +184,44 @@ async function login(req, res) {
 
         // send verify login email
         await emailHandler.verifyLogin({
-            first_name: 'Thembinkosi',
-            email: 'thembinkosi.klein@gmail.com',
+            first_name,
+            email,
             code,
         });
         return res.send({
             success: true,
             data: {
-                token,
-                admin: group.name === 'admin'
+                admin: group.name === 'admin',
+                token: verifyToken,
             },
         });
 
     } catch (err) {
         return errorHandler.error(err, res);
     }
-    
 };
+
+function cleanMobile(data) {
+    const { mobile, country } = data;
+    if (mobile) {
+        if (country.iso === 'ZA') {
+            if (mobile.indexOf('0') === 0) {
+                return country.phone_code + mobile.substr(1);
+            }
+            if (mobile.indexOf('+27') === 0) {
+                return country.phone_code + mobile.substr(3);
+            }
+            if (mobile.indexOf('27') === 0) {
+                return country.phone_code + mobile.substr(2);
+            }
+        }
+    }
+    return mobile;
+}
+
+function cleanEmail(email) {
+    return email ? email.trim() : email;
+}
 
 /**
  * Register
@@ -160,48 +231,196 @@ async function login(req, res) {
  * @param {object} res 
  */
 async function register(req, res) {
-    const { email, first_name, last_name, mobile, username } = req.body;
-    return userService.findByEmail(email)
-        .then(exists => {
-            if (exists){
-                return res.send({
-                    success: false,
-                    message: 'Registration failed. User with this email address already registered.'
+    try {
+        const {
+            username,
+            last_name,
+            first_name,
+            referral_id,
+            nationality,
+            timezone,
+            marketing,
+        } = req.body;
+
+        // validate terms check
+        if (!req.body.terms_agree) {
+            return res.status(403).send({
+                success: false,
+                message: 'Registration failed. Please accept CBI Terms and Conditions.'
+            });
+        }
+
+        // validate email address
+        if (!req.body.email) {
+            return res.status(403).send({
+                success: false,
+                message: 'Registration failed. Email address is required.'
+            });
+        }
+
+        // validate nationality
+        if (!req.body.nationality) {
+            return res.status(403).send({
+                success: false,
+                message: 'Registration failed. Nationality is required.'
+            });
+        }
+
+        // validate mobile number
+        if (!req.body.mobile) {
+            return res.status(403).send({
+                success: false,
+                message: 'Registration failed. Mobile number is required.'
+            });
+        }
+
+        // validate password
+        if (!req.body.password) {
+            return res.status(403).send({
+                success: false,
+                message: 'Registration failed. Password is required.'
+            });
+        }
+
+        // validate confirm password
+        if (!req.body.confirm_password) {
+            return res.status(403).send({
+                success: false,
+                message: 'Registration failed. Confirm Password is required.'
+            });
+        }
+
+        // validate if passwords match
+        if (req.body.confirm_password !== req.body.password) {
+            return res.status(403).send({
+                success: false,
+                message: 'Registration failed. Password do not match.'
+            });
+        }
+
+        const mobile = (mobile) ? cleanMobile(req.body) : null;
+        const email = cleanEmail(req.body.email);
+
+        let isLead = true;
+        const exists = await userService.findByEmail(email);
+        if (exists) {
+            return res.status(403).send({
+                success: false,
+                message: 'Registration failed. User with this email address already registered.'
+            });
+        }
+
+        let role = null;
+        let sponsorId = null;
+        let groupId = null;
+        if (referral_id) {
+            const sponsor = await userService.findByReferralId(referral_id);
+            if (sponsor.id) {
+                isLead = false;
+                sponsorId = sponsor.id;
+                role = await groupService.findByPropertyValue('name', 'member');
+                groupId = role.id;
+            }
+        }
+
+        // lead check and assign respective role
+        if (isLead) {
+            role = await groupService.findByPropertyValue('name', 'lead');
+            groupId = role.id;
+        }
+
+        const code  = generator.generate({ length: 4, numbers: true }).toUpperCase();
+        const token = jwt.sign({
+            code,
+            email,
+        }, jwtSecret, {
+            expiresIn: '30m'
+        });
+        const salt = bcrypt.genSaltSync();
+        const password = bcrypt.hashSync(req.body.password, salt);
+        const user = {
+            email,
+            mobile: mobile || null,
+            first_name: first_name || null,
+            last_name: last_name || null,
+            username: username || email,
+            sponsor: sponsorId,
+            group_id: groupId,
+            password,
+            salt,
+            verification: null,
+            nationality: nationality || null,
+            timezone: timezone || null,
+        };
+
+        if (!isLead) {
+            user.verification = {
+                token,
+                email: false,
+                mobile: false,
+            };
+        }
+
+        // create user
+        const newUser = await userService.create(user);
+
+        if (newUser && newUser.id) {
+
+            // send activation email (if is not a lead)
+            if (!isLead) {
+                await emailHandler.confirmEmail({
+                    first_name,
+                    email,
+                    token,
                 });
             }
-
-            const code = generator.generate({ length: 4, numbers: true }).toUpperCase();
-            const key  = jwt.sign({
-                code,
-                email,
-            }, jwtSecret);
-            const salt = bcrypt.genSaltSync();
-            const password = bcrypt.hashSync(req.body.password, salt);
-            const user = {
-                email,
-                mobile: mobile || null,
-                first_name: first_name || null,
-                last_name: last_name || null,
-                username: username || email,
-                password,
-                salt,
-                verification_token: key,
-            };
-            return userService.create(user)
-                .then(() => res.send({ success: true }))
-                .catch(err => {
-                    return res.send({
-                        success: false,
-                        message: err.message,
-                    });
-                });
-        })
-        .catch(err => {
-            res.send({
-                success: false,
-                message: err.message || null,
+            
+            // create user cbi wallet
+            await accountService.create({
+                name: 'cbi-wallet',
+                label: 'CBI Wallet',
+                reference: referral_id,
+                is_primary: true,
+                user_id: newUser.id,
             });
-        });
+
+            // create primary email address record
+            await emailAddressService.create({
+                user_id: newUser.id,
+                email: email,
+                is_primary: true,
+                verification: user.verification,
+                token,
+            });
+
+            // create primary mobile number record
+            await mobileNumberService.create({
+                user_id: newUser.id,
+                number: mobile,
+                is_primary: true,
+            });
+
+            // create (default) notification record for the user
+            await notificationService.create({
+                user_id: newUser.id,
+                activity: 'Marketing & Communication',
+                description: 'Get the latest promotions, updates and tips',
+                sms: marketing || false,
+                email: marketing || false,
+                push: marketing || false,
+            });
+
+            // response
+            return res.send({
+                success: true,
+                lead: isLead,
+            });
+        } else {
+            throw new Error('Request could not be processed, please try again or contact support.');
+        }
+    } catch (err) {
+        return errorHandler.error(err, res);
+    }
 }
 
 /**
@@ -252,7 +471,7 @@ async function logoutAll(req, res) {
  */
 async function passwordChange(req, res) {
     try {
-        const { old_password, new_password1, new_password2 } = req.body;
+        const { old_password, new_password1, new_password2, geoinfo } = req.body;
         const user = await userService.show(req.user.id);
 
         if (!bcrypt.compareSync(old_password, user.password)) {
@@ -275,6 +494,19 @@ async function passwordChange(req, res) {
         await userService.update(user.id, {
             salt,
             password,
+            updated: sequelize.fn('NOW'),
+        });
+
+        // audit trail / activity logging
+        await activityService.addActivity({
+            user_id: user.id,
+            action: `${user.group.name}.password.change`,
+            description: `${user.group.label} changed password`,
+            data: null,
+            ip: (geoinfo && geoinfo.IPv4) ? geoinfo.IPv4 : null,
+            section: 'Account',
+            subsection: 'Change password',
+            data: { device },
         });
 
         return res.send({
@@ -305,14 +537,28 @@ async function passwordReset(req, res) {
             });
         }
 
-        const code  = generator.generate({ length: 4, numbers: true }).toUpperCase();
+        const code = generator.generate({ length: 4, numbers: true });
         const token = jwt.sign({
             code,
             email,
         }, config.jwtSecret);
 
+        const verification = {
+            ...user.verification,
+            token,
+        };
+
         await userService.update(user.id, {
-            verification_token: token,
+            verification,
+            updated: sequelize.fn('NOW'),
+        });
+
+        // send reset password email
+        const { first_name } = user;
+        await emailHandler.resetPassword({
+            first_name,
+            email,
+            token,
         });
 
         return res.send({
@@ -608,25 +854,47 @@ async function mfaVerify(req, res) {
     }
 }
 
+/**
+ * Multi-factor Verify OTP
+ * 
+ * Authenticate Token
+ */
+async function refresh(req, res) {
+    try {
+        return res.send({
+            auth: true,
+            data: req.user,
+        });
+    } catch (error) {
+        return res.send({
+            auth: false,
+            message: 'Could not process request. Authentication failed'
+        });
+    }
+}
+
 module.exports = {
-   login,
-   register,
-   logout,
-   logoutAll,
-   passwordChange,
-   passwordReset,
-   passwordResetConfirm,
-   emailVerify,
-   emailVerifyResend,
-   mobileVerify,
-   mobileVerifyResend,
-   mfa,
-   createMfaSms,
-   mfaSms,
-   mfaSmsSend,
-   disableMfaSms,
-   createMfaToken,
-   mfaToken,
-   destroyMfaToken,
-   mfaVerify,
+    validate,
+    tokensVerify,
+    login,
+    register,
+    logout,
+    logoutAll,
+    passwordChange,
+    passwordReset,
+    passwordResetConfirm,
+    emailVerify,
+    emailVerifyResend,
+    mobileVerify,
+    mobileVerifyResend,
+    mfa,
+    createMfaSms,
+    mfaSms,
+    mfaSmsSend,
+    disableMfaSms,
+    createMfaToken,
+    mfaToken,
+    destroyMfaToken,
+    mfaVerify,
+    refresh,
 }

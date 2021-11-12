@@ -1,43 +1,42 @@
-const authMiddleware    = require('./middlewares/auth');
-const companyController = require('./controllers/Company');
+const authMiddleware = require('./middlewares/auth');
+const feeController = require('./controllers/Fee');
+const transactionController = require('./controllers/Transaction');
 
 module.exports.set = app => {
+    
     /**
-     * Retrieve Company Details
+     * Create Transaction
      * 
-     * Retrieve current user’s company details.
+     * Create transaction for current user
      */
-    app.get('/company', authMiddleware.checkAuth, companyController.profile);
+    app.post('/', authMiddleware.checkAuth, transactionController.create);
+    
+    /**
+     * Retrieve User's Transactions
+     * 
+     * Retrieve current user’s transactions.
+     */
+    app.get('/', authMiddleware.checkAuth, transactionController.index);
+    
+    /**
+     * Retrieve User's Transactions Stats
+     * 
+     * Retrieve current user’s transactions stats.
+     */
+    app.get('/count/:tx_type/:subtype', authMiddleware.checkAuth, transactionController.count);
+    
+    /**
+     * Retrieve User's Transactions Totals
+     * 
+     * Retrieve current user’s transactions totals.
+     */
+    app.get('/totals/:tx_type/:subtype', authMiddleware.checkAuth, transactionController.totals);
+    
+    /**
+     * Retrieve Transaction Fees
+     * 
+     * Retrieve transaction fees by type.
+     */
+    app.get('/fees/:tx_type/:subtype', authMiddleware.checkAuth, feeController.show);
 
-    /**
-     * List Company Currencies
-     * 
-     * Get a list of available currencies for the 
-     * current user’s company.
-     */
-    app.get('/company/currencies', authMiddleware.checkAuth, companyController.currencies);
-
-    /**
-     * List Company Banks
-     * 
-     * Get a list of company banks for the current
-     * user’s company.
-     */
-    app.get('/company/bank-accounts', authMiddleware.checkAuth, companyController.bankAccounts);
-
-    /**
-     * List Company Crypto Accounts
-     * 
-     * Get a list of company crypto accounts for the current
-     * user’s company.
-     */
-    app.get('/company/bank-accounts', authMiddleware.checkAuth, companyController.cryptoAccounts);
-
-    /**
-     * Retrieve Company Settings
-     * 
-     * Retrieve company settings for the current
-     * user’s company.
-     */
-    app.get('/company/settings', authMiddleware.checkAuth, companyController.settings);
 };

@@ -1,0 +1,10 @@
+{
+    "resource": "/v1/aka_bed/users",
+    "path": "/v1/aka_bed/users",
+    "httpMethod": "GET",
+    "queryStringParameters": {
+        "offset": 0,
+        "limit": 1,
+        "orderby": [ [ "first_name", "ASC" ] ]
+    }
+}

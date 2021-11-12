@@ -1,43 +1,53 @@
 const authMiddleware    = require('./middlewares/auth');
-const companyController = require('./controllers/Company');
+const productController = require('./controllers/Product');
 
 module.exports.set = app => {
     /**
-     * Retrieve Company Details
+     * Retrieve User's Products
      * 
-     * Retrieve current user’s company details.
+     * Retrieve current user’s products.
      */
-    app.get('/company', authMiddleware.checkAuth, companyController.profile);
-
+    app.get('/overview', authMiddleware.checkAuth, productController.overview);
+    
     /**
-     * List Company Currencies
+     * Retrieve User's Products
      * 
-     * Get a list of available currencies for the 
-     * current user’s company.
+     * Retrieve current user’s products.
      */
-    app.get('/company/currencies', authMiddleware.checkAuth, companyController.currencies);
-
+    app.get('/', authMiddleware.checkAuth, productController.index);
+    
     /**
-     * List Company Banks
+     * Retrieve Single Product
      * 
-     * Get a list of company banks for the current
-     * user’s company.
+     * Retrieve current user’s product details.
      */
-    app.get('/company/bank-accounts', authMiddleware.checkAuth, companyController.bankAccounts);
-
+    app.get('/categories', authMiddleware.checkAuth, productController.categories);
+    
     /**
-     * List Company Crypto Accounts
+     * Retrieve Single Product
      * 
-     * Get a list of company crypto accounts for the current
-     * user’s company.
+     * Retrieve current user’s product details.
      */
-    app.get('/company/bank-accounts', authMiddleware.checkAuth, companyController.cryptoAccounts);
-
+    app.get('/category/:id/products', authMiddleware.checkAuth, productController.products);
+    
     /**
-     * Retrieve Company Settings
+     * Retrieve Single Product
      * 
-     * Retrieve company settings for the current
-     * user’s company.
+     * Retrieve current user’s product details.
      */
-    app.get('/company/settings', authMiddleware.checkAuth, companyController.settings);
+    app.get('/:permakey', authMiddleware.checkAuth, productController.show);
+    
+    /**
+     * Subscribe
+     * 
+     * Subscribe a User to a Product
+     */
+    app.post('/subscribe', authMiddleware.checkAuth, productController.subscribe);
+    
+    /**
+     * Invest
+     * 
+     * Invest to a Product
+     */
+    app.post('/invest', authMiddleware.checkAuth, productController.invest);
 };

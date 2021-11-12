@@ -24,6 +24,16 @@ const authMiddleware = require('./middlewares/auth');
 module.exports.set = app => {
 
     /**
+     * Validate
+     */
+    app.post('/validate/:prop/:value', authController.validate);
+
+    /**
+     * Verify Token
+     */
+    app.post('/tokens/verify', authMiddleware.checkAuth, authController.tokensVerify);
+
+    /**
      * Login
      * 
      * Login a user with the credentials provided.
@@ -32,6 +42,11 @@ module.exports.set = app => {
      * subsequent requests.
      */
     app.post('/login', authController.login);
+
+    /**
+     * Authenticate Token
+     */
+    app.post('/refresh', authMiddleware.checkAuth, authController.refresh);
 
     /**
      * Register

@@ -74,17 +74,27 @@ async function show(id) {
  * @returns 
  */
 async function update(id, data) {
+    
     try {
-        await Group.findOne(data, {
+        return Group.update(data, {
             where: { id },
         });
-        return {
-            success: true,
-        };
-    } catch (err) {
-        console.log(err);
+        // return Group.update(data, { where: { id } });
+    } catch (error) {
+        console.log(error);
         res.send(err);
     }
+    // try {
+    //     await Group.update(data, {
+    //         where: { id },
+    //     });
+    //     return {
+    //         success: true,
+    //     };
+    // } catch (err) {
+    //     console.log(err);
+    //     res.send(err);
+    // } 
 };
 
 /**
@@ -106,10 +116,33 @@ async function destroy(id) {
     }
 };
 
+
+/**
+ * 
+ * Archived Role
+ * 
+ * Archived company’s role.
+ * 
+ * @param {string} id
+ * @returns 
+ */
+ async function archive(id) {
+    try {
+        return Group.update({
+            archived: true,
+            updated: sequelize.fn('NOW'),
+        }, { where: { id } });
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
 module.exports = {
     create,
     index,
     show,
     update,
     destroy,
+    archive,
 }

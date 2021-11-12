@@ -1,4 +1,4 @@
-// const sequelize = require('../config/db');
+const sequelize = require('../config/db');
 const { Group } = require('../models/Group');
 const { User }  = require('../models/User');
 
@@ -63,8 +63,19 @@ async function show(id) {
     }
 }
 
+async function update(id, data) {
+    try {
+        data.updated = sequelize.fn('NOW');
+        return User.update(data, { where: { id } });
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
 module.exports = {
     create,
     index,
     show,
+    update,
 }

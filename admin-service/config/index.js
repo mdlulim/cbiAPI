@@ -10,6 +10,28 @@ if (stage === 'dev') {
         jwtSecret: 'BbZJjyoXAdr8BUZuiKKARWimKfrSmQ6fv8kZ7OFfc',
         tokenExpireTime: '6h',
         tokenExpireHours: 6,
+        baseurl: {
+            admin: 'http://admin.cbiglobal.io',
+            frontend: 'http://demo.cbiglobal.io',
+        },
+        mail: {
+            smtp: {
+                host: 'mail.cbiglobal.io',
+                port: 465,
+                secure: true,
+                auth: {
+                    user: 'no-reply@cbiglobal.io',
+                    pass: 'ocJ~$m[NTj#N',
+                }
+            }
+        },
+        buddy: {
+            base_url: {
+                staging: 'https://staging.buddy.na/api/v2/services',
+                production: 'https://buddy.na/api/v2/services'
+            }, 
+            authenticationToken: Buffer.from("6b05e06a-cdcb-41dd-8e01-8dcf551e726d").toString('base64')
+        }
     }
 } else {
     // staging / production
