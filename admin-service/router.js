@@ -201,6 +201,19 @@ module.exports.set = app => {
      */
     app.get('/products/categories', authMiddleware.checkAuth, productController.categories);
 
+     /**
+     * Create Product Category
+     * 
+     * Create a product category belonging to CBI.
+     */
+    app.post('/products/categories', authMiddleware.checkAuth, productController.createCategory);
+
+    /**
+     * Update Categories
+     * 
+     * Update company’s categories details.
+     */
+    app.put('/products/categories/:id', authMiddleware.checkAuth, productController.updateCategory);
     /**
      * Create Product
      * 
@@ -256,6 +269,13 @@ module.exports.set = app => {
      * Retrieve a company’s transaction.
      */
     app.get('/transactions/:id', authMiddleware.checkAuth, transactionController.show);
+
+     /**
+     * Update Product
+     * 
+     * Update company’s product details.
+     */
+    app.put('/transactions/:id', authMiddleware.checkAuth, userController.updateTransaction);
 
     /**
      * List Currencies
@@ -319,7 +339,7 @@ module.exports.set = app => {
     app.get("/page_permissions", authMiddleware.checkAuth, pagePermissionController.index);
     app.post("/page_permission", authMiddleware.checkAuth, pagePermissionController.create);
     // app.get("/level/:levelId", authMiddleware.checkAuth, permissionLevelController.show);
-    app.put("/page_permission/:page_permissionId", authMiddleware.checkAuth, pagePermissionController.update);
+    app.put("/page_permissions/:id", authMiddleware.checkAuth, pagePermissionController.update);
     // app.delete("/level/:levelId", authMiddleware.checkAuth, permissionLevelController.destroy);
 
 };
