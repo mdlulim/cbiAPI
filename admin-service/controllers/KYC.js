@@ -30,6 +30,7 @@ async function create(req, res) {
 async function show(req, res) {
     try {
         const data = await kycService.show(req.params.id);
+        console.log("data after db")
         return res.send({
             success: true,
             data,
@@ -86,8 +87,39 @@ async function update(req, res) {
     }
 }
 
+
+async function kyc_level(req, res) {
+    try {
+        const data = await kycService.index(req.user.id);
+        const { count, kyc_applications } = data;
+
+        const levels = Object.keys(kyc_applications);
+        let least_rejected = 10
+        levels.foreach(() => {
+            if (parseInt(level) < least_rejected && kyc_applications[level].status === 'Rejected') {
+                least_rejected = level
+            }
+        })
+        const kyc_level = (least_rejected === 10 && kyc_applications[3].status === 'Approved') ? 3 : (least_rejected === '0') ? -1 : levels[levels.indexOf(least_rejected) - 1]
+
+        return res.send({
+            success: true,
+            data: {
+                level: kyc_level
+            },
+        });
+    } catch (error) {
+        return res.send({
+            success: false,
+            message: error
+        });
+    }
+}
+
+
 module.exports = {
     create,
     show,
     update,
+    kyc_level
 };

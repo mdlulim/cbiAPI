@@ -152,7 +152,7 @@ module.exports.set = app => {
      * 
      * Retrieve a company’s user kyc.
      */
-    app.get('/users/:id/kyc', authMiddleware.checkAuth, kycController.show);
+    app.get('/users/:id/kyc', kycController.show);
 
     /**
      * Update User's KYC
@@ -160,6 +160,8 @@ module.exports.set = app => {
      * Update a company’s user kyc.
      */
     app.put('/kyc', authMiddleware.checkAuth, kycController.update);
+
+    app.get('/kyc-level/:id', authMiddleware.checkAuth, kycController.kyc_level);
 
 
     /**
