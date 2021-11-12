@@ -95,7 +95,7 @@ async function kyc_level(req, res) {
         let total_verified = 0;
 
         kyc_applications.forEach(row=>{
-            if(parseInt(row.level) < least_rejected && row.status === 'Rejected')
+            if((parseInt(row.level) < least_rejected && row.status === 'Rejected') || (parseInt(row.level) < least_rejected && row.status === 'Pending'))
                 least_rejected = parseInt(row.level)
             if(row.verified)
                 total_verified += 1;
