@@ -52,7 +52,7 @@ pipeline {
                 script {
                     def scannerHome = tool 'sonar-scanner';
                 }
-                withSonarQubeEnv() {
+                withSonarQubeEnv(installationName: 'cbiglobal-sonarqube') {
                     sh "${scannerHome}/bin/sonar-scanner"
                 }
             }
