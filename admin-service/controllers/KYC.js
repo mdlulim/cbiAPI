@@ -91,7 +91,6 @@ async function update(req, res) {
 async function kyc_level(req, res) {
     try {
         const kyc_applications = await kycService.show(req.params.id);
-        const data = kyc_applications.data;
         // const levels = Object.keys(data);
         // let least_rejected = 10
         // levels.foreach((level) => {
@@ -103,7 +102,7 @@ async function kyc_level(req, res) {
 
         return res.send({
             success: true,
-            data:{ rows: data},
+            data:{ rows: kyc_applications},
         });
     } catch (error) {
         return res.send({
