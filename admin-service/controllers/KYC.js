@@ -104,7 +104,7 @@ async function kyc_level(req, res) {
 
         return res.send({
             success: true,
-            data,
+            data: req.id,
         });
     } catch (error) {
         return res.send({
