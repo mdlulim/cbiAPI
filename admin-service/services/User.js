@@ -34,8 +34,8 @@ async function create(data) {
  * 
  * Get a list of users belonging to CBI.
  * 
- * @param {object} query 
- * @returns 
+ * @param {object} query
+ * @returns
  */
 async function index(query) {
     try {
