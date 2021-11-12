@@ -317,7 +317,7 @@ module.exports.set = app => {
     app.get("/page_permissions", authMiddleware.checkAuth, pagePermissionController.index);
     app.post("/page_permission", authMiddleware.checkAuth, pagePermissionController.create);
     // app.get("/level/:levelId", authMiddleware.checkAuth, permissionLevelController.show);
-    app.put("/page_permission/:page_permissionId", authMiddleware.checkAuth, pagePermissionController.update);
+    app.put("/page_permissions/:id", authMiddleware.checkAuth, pagePermissionController.update);
     // app.delete("/level/:levelId", authMiddleware.checkAuth, permissionLevelController.destroy);
 
 };

@@ -75,6 +75,8 @@ async function show(id) {
 async function update(id, data) {
     
     try {
+        
+    console.log('THABIOS '+ id);
         return PagePermission.update(data, {
             where: { id },
         });

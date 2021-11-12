@@ -35,6 +35,7 @@ function show(req, res){
 };
 
 function update(req, res){
+    console.log(req.params.id);
     return pagePermissionService.update(req.params.id, req.body)
 
     .then(data => res.send(data))
