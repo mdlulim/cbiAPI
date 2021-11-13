@@ -190,7 +190,7 @@ async function update(req, res) {
 
 async function archive(req, res) {
     try {
-        return userService.archive(req.params.id)
+        return userService.update(req.params.id, {archive:true,status:"Archived"})
         .then(() => res.send({ success: true }))
         .catch(err => {
             res.send({
