@@ -480,6 +480,18 @@ async function bankAccounts(user_id) {
     }
 }
 
+async function updateBankAccounts(user_id, data) {
+    try {
+        await BankAccount.update(data, {
+            where: { user_id }
+        });
+        return { success: true };
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request'); 
+    }
+}
+
 async function cryptoAccounts(user_id) {
     try {
         const accounts = await CryptoAccount.findAndCountAll({
@@ -534,4 +546,5 @@ module.exports = {
     cryptoAccounts,
     updateTransaction,
     findByPropertyValue,
+    updateBankAccounts
 }
