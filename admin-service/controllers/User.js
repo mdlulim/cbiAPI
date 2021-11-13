@@ -372,8 +372,8 @@ async function bankAccounts(req, res){
 
 async function updateBankAccounts(req, res){
     try {
-        return userService.updateBankAccounts(req.params.id, req.body)
-        .then(data => res.send(data));
+        const updated = userService.updateBankAccounts(req.params.id, req.body)
+        return { success: true,  updated };
     } catch (err) {
         return res.status(500).send({
             success: false,
