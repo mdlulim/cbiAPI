@@ -488,7 +488,7 @@ async function updateBankAccounts(user_id, data) {
         return { success: true };
     } catch (error) {
         console.error(error.message || null);
-        throw new Error('Could not process your request');
+        throw new Error('Could not process your request'); 
     }
 }
 
