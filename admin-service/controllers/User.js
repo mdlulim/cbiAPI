@@ -373,7 +373,7 @@ async function bankAccounts(req, res){
 async function updateBankAccounts(req, res){
     try {
         return userService.updateBankAccounts(req.params.id, req.body)
-        .then(data => res.send(data));
+        .then(data => res.send({ success: true,  updated: data }));
     } catch (err) {
         return res.status(500).send({
             success: false,
