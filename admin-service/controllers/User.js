@@ -369,6 +369,19 @@ async function bankAccounts(req, res){
     }
 }
 
+
+async function updateBankAccounts(req, res){
+    try {
+        return userService.updateBankAccounts(req.params.id, req.body)
+        .then(data => res.send(data));
+    } catch (err) {
+        return res.status(500).send({
+            success: false,
+            message: 'Could not process your request'
+        });
+    }
+}
+
 async function cryptoAccounts(req, res){
     try {
         return userService.cryptoAccounts(req.params.id)
@@ -399,4 +412,5 @@ module.exports = {
     mobiles,
     bankAccounts,
     cryptoAccounts,
+    updateBankAccounts
 }
