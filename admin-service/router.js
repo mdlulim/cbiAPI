@@ -71,10 +71,9 @@ module.exports.set = app => {
     app.get('/users/:id/bank_accounts', authMiddleware.checkAuth, userController.bankAccounts);
 
     /**
-   * 
    * Update user bank accounts.
    */
-    app.put('/bank_accounts/:id', authMiddleware.checkAuth, userController.updateBankAccounts);
+    app.put('/bank-accounts/:id', authMiddleware.checkAuth, userController.updateBankAccounts);
 
     /**
      * Retrieve User Crypto Accounts
