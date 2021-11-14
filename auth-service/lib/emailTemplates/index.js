@@ -197,6 +197,31 @@ const confirmEmail = data => {
     }
 };
 
+const notifyReferrer = data => {
+    const {
+        first_name,
+        referral,
+    } = data;
+    const html = `
+        <p>Hi ${first_name},</p>
+        <h3>Congratulations. You have a new referral!</h3>
+        <p>This is to notify you that you have new referral (${referral}) that joined CBI using your referral code/link.</p>
+        <p>&nbsp;</p>
+        <p style="padding-top:15px"><strong>Regards</strong>,<br />CBI Support</p>
+    `;
+    const text = `
+        Hi ${first_name}, 
+        You have a new referral!
+        This is to notify you that you have new referral (${referral}) that joined CBI using your referral code/link.
+
+        Regards, CBI Support
+    `;
+    return {
+        html,
+        text
+    }
+};
+
 module.exports = {
     welcome,
     resetPassword,
@@ -204,4 +229,5 @@ module.exports = {
     verifyLogin,
     loginNotify,
     confirmEmail,
+    notifyReferrer,
 };

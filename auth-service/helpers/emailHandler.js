@@ -36,8 +36,19 @@ async function verifyLogin(data) {
     return sendMail(from, email, 'CBI - Verify login', template);
 };
 
+async function notifyReferrer(data) {
+    const { email } = data;
+    const template = emailTemplates.notifyReferrer(data);
+    const from = {
+        name: 'CBI',
+        email: smtp.auth.user,
+    };
+    return sendMail(from, email, 'CBI - You have a new referral!', template);
+};
+
 module.exports = {
     confirmEmail,
     resetPassword,
     verifyLogin,
+    notifyReferrer,
 };
