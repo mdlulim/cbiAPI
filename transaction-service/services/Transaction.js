@@ -1,6 +1,11 @@
 const sequelize = require('../config/db');
+const { Buddy } = require('../models/Buddy');
+const { BuddyTransaction } = require('../models/BuddyTransaction');
 const { Transaction }  = require('../models/Transaction');
 const { User }  = require('../models/User');
+
+Buddy.belongsTo(User, { foreignKey: 'user_id', targetKey: 'id' });
+BuddyTransaction.belongsTo(User, { foreignKey: 'user_id', targetKey: 'id' });
 
 Transaction.belongsTo(User, { foreignKey: 'user_id', targetKey: 'id' });
 
@@ -58,6 +63,7 @@ async function count(user_id, txtype, subtype) {
         };
         let count = 0;
         if (subtype.toLowerCase() === 'buddy') {
+            where.subtype = 'TRANSFER';
             count = await BuddyTransaction.count({
                 where,
             });
