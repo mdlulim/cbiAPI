@@ -53,7 +53,8 @@ pipeline {
                     def scannerHome = tool 'sonar-scanner';
                 }
                 withSonarQubeEnv(installationName: 'cbiglobal-sonarqube') {
-                    sh "${scannerHome}/bin/sonar-scanner"
+                    echo '${scannerHome}'
+                    sh '${scannerHome}/bin/sonar-scanner --version'
                 }
             }
         }
