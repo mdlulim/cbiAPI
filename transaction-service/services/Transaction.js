@@ -31,7 +31,7 @@ async function index(user_id, query) {
     try {
         const where = {
             ...query,
-            user_id,
+            user_id: '0192c293-fc26-47f0-a764-332b44dd08b1',
         };
         const transactions = await Transaction.findAndCountAll({
             where,
