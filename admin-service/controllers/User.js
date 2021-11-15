@@ -190,7 +190,7 @@ async function update(req, res) {
 
 async function archive(req, res) {
     try {
-        return userService.archive(req.params.id)
+        return userService.update(req.params.id, {archive:true,status:"Archived"})
         .then(() => res.send({ success: true }))
         .catch(err => {
             res.send({
@@ -369,6 +369,19 @@ async function bankAccounts(req, res){
     }
 }
 
+
+async function updateBankAccounts(req, res){
+    try {
+        return userService.updateBankAccounts(req.params.id, req.body)
+        .then(data => res.send({ success: true }));
+    } catch (err) {
+        return res.status(500).send({
+            success: false,
+            message: 'Could not process your request'
+        });
+    }
+}
+
 async function cryptoAccounts(req, res){
     try {
         return userService.cryptoAccounts(req.params.id)
@@ -399,4 +412,5 @@ module.exports = {
     mobiles,
     bankAccounts,
     cryptoAccounts,
+    updateBankAccounts
 }

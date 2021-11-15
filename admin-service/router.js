@@ -71,6 +71,11 @@ module.exports.set = app => {
     app.get('/users/:id/bank_accounts', authMiddleware.checkAuth, userController.bankAccounts);
 
     /**
+   * Update user bank accounts.
+   */
+    app.put('/bank_accounts/:id', authMiddleware.checkAuth, userController.updateBankAccounts);
+
+    /**
      * Retrieve User Crypto Accounts
      * 
      * Retrieve user crypto accounts.
@@ -152,7 +157,7 @@ module.exports.set = app => {
      * 
      * Retrieve a company’s user kyc.
      */
-    app.get('/users/:id/kyc', authMiddleware.checkAuth, kycController.show);
+    app.get('/users/:id/kyc', kycController.show);
 
     /**
      * Update User's KYC
@@ -160,6 +165,8 @@ module.exports.set = app => {
      * Update a company’s user kyc.
      */
     app.put('/kyc', authMiddleware.checkAuth, kycController.update);
+
+    app.get('/kyc-level/:id', authMiddleware.checkAuth, kycController.kyc_level);
 
 
     /**
@@ -199,11 +206,11 @@ module.exports.set = app => {
      */
     app.get('/products/categories', authMiddleware.checkAuth, productController.categories);
 
-     /**
-     * Create Product Category
-     * 
-     * Create a product category belonging to CBI.
-     */
+    /**
+    * Create Product Category
+    * 
+    * Create a product category belonging to CBI.
+    */
     app.post('/products/categories', authMiddleware.checkAuth, productController.createCategory);
 
     /**
@@ -268,11 +275,11 @@ module.exports.set = app => {
      */
     app.get('/transactions/:id', authMiddleware.checkAuth, transactionController.show);
 
-     /**
-     * Update Product
-     * 
-     * Update company’s product details.
-     */
+    /**
+    * Update Product
+    * 
+    * Update company’s product details.
+    */
     app.put('/transactions/:id', authMiddleware.checkAuth, userController.updateTransaction);
 
     /**
@@ -337,7 +344,7 @@ module.exports.set = app => {
     app.get("/page_permissions", authMiddleware.checkAuth, pagePermissionController.index);
     app.post("/page_permission", authMiddleware.checkAuth, pagePermissionController.create);
     // app.get("/level/:levelId", authMiddleware.checkAuth, permissionLevelController.show);
-    app.put("/page_permission/:page_permissionId", authMiddleware.checkAuth, pagePermissionController.update);
+    app.put("/page_permissions/:id", authMiddleware.checkAuth, pagePermissionController.update);
     // app.delete("/level/:levelId", authMiddleware.checkAuth, permissionLevelController.destroy);
 
 };
