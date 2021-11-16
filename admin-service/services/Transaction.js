@@ -1,5 +1,6 @@
 const sequelize = require('../config/db');
 const { Transaction } = require('../models/Transaction');
+const { Transaction } = require('../models/');
 
 async function index(query) {
     try {
