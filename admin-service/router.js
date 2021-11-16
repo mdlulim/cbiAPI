@@ -168,6 +168,9 @@ module.exports.set = app => {
 
     app.get('/kyc-level/:id', authMiddleware.checkAuth, kycController.kyc_level);
 
+    //gets all kyc applications
+    app.get('/all-kyc/', authMiddleware.checkAuth, kycController.show_all);
+
 
     /**
      * List User Products
