@@ -86,6 +86,7 @@ async function index(query) {
                 'autorenew',
                 'expiry',
                 'deactivation_date',
+                'permission_level',
             ],
             where,
             include: [{ model: Group, where: groupWhere }],
@@ -155,6 +156,7 @@ async function show(id) {
                 'autorenew',
                 'expiry',
                 'deactivation_date',
+                'permission_level',
             ],
             where: { id },
             include: [{ model: Group }],
@@ -202,6 +204,7 @@ async function archive(id) {
         return User.update({
             status: 'Archived',
             archived: true,
+            deactivation_date:sequelize.fn('NOW'),
             updated: sequelize.fn('NOW'),
         }, { where: { id } });
     } catch (error) {
@@ -348,6 +351,7 @@ async function referrals(id) {
                 'autorenew',
                 'expiry',
                 'deactivation_date',
+                'permission_level',
             ],
             where: { sponsor: id },
             include: [{ model: Group }],
@@ -476,6 +480,18 @@ async function bankAccounts(user_id) {
     }
 }
 
+async function updateBankAccounts(user_id, data) {
+    try {
+        await BankAccount.update(data, {
+            where: { user_id }
+        });
+        return { success: true };
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request'); 
+    }
+}
+
 async function cryptoAccounts(user_id) {
     try {
         const accounts = await CryptoAccount.findAndCountAll({
@@ -530,4 +546,5 @@ module.exports = {
     cryptoAccounts,
     updateTransaction,
     findByPropertyValue,
+    updateBankAccounts
 }

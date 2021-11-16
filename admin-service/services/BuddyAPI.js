@@ -1,10 +1,13 @@
 const config = require('../config');
 const axios = require('axios');
 const { Account } = require('../models/Account');
+const { Buddy } = require('../models/Buddy');
+const { customAlphabet } = require('nanoid');
+const { buddyTransaction } = require('../models/BuddyTransction');
 
 async function lookupBalance() {
     try {
-        const response = await axios('https://staging.buddy.na/api/v2/services/cbi/lookup/balance', {
+        const response = await axios(config.buddy.base_url.staging + '/cbi/lookup/balance', {
             headers:{
                 'authenticationToken': config.buddy.authenticationToken
             }
@@ -18,8 +21,8 @@ async function lookupBalance() {
 
 async function lookupAccount(data) {
     try {
-        const response = await axios('https://staging.buddy.na/api/v2/services/cbi/lookup/account', {
-            params: { data },
+        const response = await axios(config.buddy.base_url.staging +'/cbi/lookup/account', {
+            params: { identifier: data },
             headers:{
                 'authenticationToken': config.buddy.authenticationToken
             }
@@ -39,7 +42,7 @@ async function lookupTransaction(data) {
         let perPage = data.search
         let page = data.page
 
-        const response = await axios('https://staging.buddy.na/api/v2/services/cbi/lookup/transactions', {
+        const response = await axios(config.buddy.base_url.staging + '/cbi/lookup/transactions', {
             params: { search, from, to, perPage, page },
             headers:{
                 'authenticationToken': config.buddy.authenticationToken
@@ -54,46 +57,95 @@ async function lookupTransaction(data) {
 
 async function eventTransfer(data) {
     try {
-        let reference = data.reference;
-        let identifier = data.identifier;
-        let amount = data.amount;
-        let currency = data.currency;
-        // let user_id = data.user_id;
+        const nanoid = customAlphabet('1234567890abcdef', 10);
 
-        const getBalance = await Account.find({
+        let amount = data.amount;
+        let currency = 'NAD';
+        let reference = 'BUDDY-TRANSFER-' + await nanoid();
+        let identifier = await Buddy.findOne({
             where: {
-                user_id: 'bbf83e4d-b548-43e9-90bd-fd4cd0ccea6b'
+                user_id: data.user_id
             }
         });
 
-        console.log(getBalance.available_balance);
+        if (!identifier.buddy_identifier) {
+            return {
+                message: 'CBI member does not have Buddy Account.'
+            }
+        }
+        
+
+        const getBalance = await Account.findOne({
+            where: {
+                user_id: data.user_id
+            }
+        });
+
+
+
+        const response = await axios(config.buddy.base_url.staging +'/cbi/event/transfer', {
+            method: "POST",
+            data: {
+                reference,
+                identifier: identifier.buddy_identifier,
+                amount,
+                currency,
+            },
+            headers: {
+                'authenticationToken': config.buddy.authenticationToken
+            }
+        });
+
+        try {
+            await buddyTransaction.create({
+                user_id: data.user_id,
+                note: response.data.data.data.message,
+                reference,
+                amount,
+                currency
+            })
+        } catch (error) {
+            console.error(error.message || null);
+            throw new Error('Could not reach BuddyAPI endpoint');
+
+        }
 
         if(getBalance.available_balance >= amount) {
-            newAmount = getBalance.available_balance - amount;
-            await Account.update({
-                available_balance: newAmount,
-            }, {
-                where: { user_id: 'bbf83e4d-b548-43e9-90bd-fd4cd0ccea6b' }
-            });
-
-            const response = await axios('https://staging.buddy.na/api/v2/services/cbi/event/transfer', {
-                method: "POST",
-                data: {
-                    reference,
-                    identifier,
-                    amount,
-                    currency,
-                },
-                headers: {
-                    'authenticationToken': config.buddy.authenticationToken
+            if (response.data) {
+                if(response.data.data.data.status == 'APPROVED') {
+                    let newAvaliable = getBalance.available_balance - amount;
+                    let newBalance = getBalance.balance - amount;
+                    await Account.update({
+                        balance: newBalance,
+                        available_balance: newAvaliable
+                    }, {
+                        where: { user_id: data.user_id }
+                    });
+                    await buddyTransaction.update({
+                        status: 'COMPLETED'
+                    }, {
+                        where: { user_id: data.user_id }
+                    });
+                } else {
+                    await buddyTransaction.update({
+                        status: 'PENDING'
+                    }, {
+                        where: { reference }
+                    });
                 }
-            });
-        return response.data;
+            } else {
+                return {
+                    message: 'BuddyAPI unreachable'
+                }
+            }            
         } else {
             return {
                 message: 'insufficient funds'
             }
         }
+
+        return response.data;
+
     } catch (error) {
         console.error(error.message || null);
         throw new Error('Could not process your request');

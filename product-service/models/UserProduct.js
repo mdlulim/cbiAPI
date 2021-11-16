@@ -12,6 +12,7 @@ const UserProduct = sequelize.define('user_product', {
 	start_date: Sequelize.DATE,
 	end_date: Sequelize.DATE,
 	income: Sequelize.FLOAT,
+    tokens: Sequelize.FLOAT,
     created: Sequelize.DATE,
 	status: Sequelize.STRING,
 }, {

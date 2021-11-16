@@ -44,6 +44,7 @@ const User = sequelize.define('user', {
 	referral_id: Sequelize.INTEGER,
 	expiry: Sequelize.DATE,
 	deactivation_date: Sequelize.DATE,
+	permission_level:Sequelize.INTEGER,
 	autorenew: {
         type: Sequelize.BOOLEAN,
         defaultValue: false,
