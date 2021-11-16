@@ -35,8 +35,24 @@ async function show(req, res) {
         });
     }
 }
+async function getProofOfPayment(req, res) {
+    try {
+        const files = await transactionService.getProofOfPayment(req.params.id);
+        console.log(files)
+        return res.send({
+            success: true,
+            data: files
+        });
+    } catch (error) {
+        return res.send({
+            success: false,
+            message: 'Could not process request'
+        });
+    }
+}
 
 module.exports = {
     index,
     show,
+    getProofOfPayment,
 };
