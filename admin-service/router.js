@@ -171,16 +171,6 @@ module.exports.set = app => {
     //gets all kyc applications
     app.get('/users/all-kyc/', authMiddleware.checkAuth, kycController.show_all);
 
-    [
-        {
-            firstname:"John",
-            kyc: [
-                {level_0: ''},
-                {level_1: ''}
-            ]
-        },
-        {}
-    ]
 
 
     /**
