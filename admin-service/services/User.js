@@ -9,7 +9,8 @@ const { User } = require('../models/User');
 const { Product } = require('../models/Product');
 const { UserProduct }  = require('../models/UserProduct');
 const { Transaction }  = require('../models/Transaction');
-
+const { KYC } = require('../models/KYC');
+ 
 Address.belongsTo(User, { foreignKey: 'user_id', targetKey: 'id' });
 EmailAddress.belongsTo(User, { foreignKey: 'user_id', targetKey: 'id' });
 MobileNumber.belongsTo(User, { foreignKey: 'user_id', targetKey: 'id' });
@@ -19,6 +20,8 @@ Transaction.belongsTo(User, { foreignKey: 'user_id', targetKey: 'id' });
 User.belongsTo(Group, { foreignKey: 'group_id', targetKey: 'id' });
 Product.belongsTo(UserProduct, { foreignKey: 'id', targetKey: 'product_id' });
 User.belongsTo(UserProduct, { foreignKey: 'id', targetKey: 'user_id' });
+User.hasMany(KYC, {foreignKey: 'user_id', targetKey: 'id'});
+
 
 async function create(data) {
     try {

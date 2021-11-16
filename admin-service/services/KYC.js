@@ -27,6 +27,20 @@ async function show(id) {
     }
 }
 
+async function show_all() {
+    try {
+        return KYC.findAll({
+            attributes: [''],
+            join: [],
+            group: ['user_id'],
+            order: [['level','ASC']]
+        });
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
 async function update(data, id) {
     try {
         return KYC.update(data, {
@@ -42,4 +56,5 @@ module.exports = {
     create,
     show,
     update,
+    show_all
 }
