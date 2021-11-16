@@ -224,6 +224,14 @@ module.exports.set = app => {
     app.get('/products', authMiddleware.checkAuth, productController.index);
 
     /**
+     * List Products History
+     * 
+     * Get a list of products history belonging to CBI.
+     */
+    app.get('/products/history', authMiddleware.checkAuth, productController.history);
+
+
+    /**
      * Retrieve Product
      * 
      * Retrieve a company’s product.
@@ -264,6 +272,7 @@ module.exports.set = app => {
      * Retrieve a company’s transaction.
      */
     app.get('/transactions/:id', authMiddleware.checkAuth, transactionController.show);
+    app.get('/transactions/pop/deposits/:id', authMiddleware.checkAuth, transactionController.getProofOfPayment);
 
      /**
      * Update Product

@@ -47,6 +47,27 @@ async function index(query) {
     }
 }
 
+async function history(query) {
+    try {
+        const { offset, limit } = query;
+        const where = query || {};
+
+        delete where.offset;
+        delete where.limit;
+
+        return UserProduct.findAndCountAll({
+            where,
+            include: [{ model: Product }, { model: User }],
+            order: [['created', 'DESC']],
+            offset: offset || 0,
+            limit: limit || 100,
+        });
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
 async function categories(query) {
     try {
         const { offset, limit } = query;
@@ -154,6 +175,7 @@ async function destroy(id) {
 module.exports = {
     create,
     index,
+    history,
     show,
     update,
     destroy,

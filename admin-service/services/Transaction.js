@@ -32,7 +32,19 @@ async function show(id) {
     }
 }
 
+async function getProofOfPayment(user_id) {
+    try {
+        return Transaction.findOne({
+            where: { user_id },
+        });
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
 module.exports = {
     index,
     show,
+    getProofOfPayment
 }
