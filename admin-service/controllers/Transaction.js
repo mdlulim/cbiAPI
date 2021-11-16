@@ -37,10 +37,11 @@ async function show(req, res) {
 }
 async function getProofOfPayment(req, res) {
     try {
-        const transaction = await transactionService.getProofOfPayment(req.params.id);
+        const files = await transactionService.getProofOfPayment(req.params.id);
+        console.log(files)
         return res.send({
             success: true,
-            data: transaction
+            data: files
         });
     } catch (error) {
         return res.send({

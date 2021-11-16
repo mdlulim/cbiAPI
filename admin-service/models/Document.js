@@ -8,12 +8,11 @@ const Document = sequelize.define('document', {
         primaryKey: true,
     },
 	user_id: Sequelize.UUID,
-    product_id: Sequelize.UUID,
     file: Sequelize.STRING,
     category: Sequelize.STRING,
     type: Sequelize.STRING,
     note: Sequelize.STRING,
-    status: Sequelize.STRING,
+    metadata: Sequelize.JSONB,
     created: Sequelize.DATE,
 	status: Sequelize.STRING,
 }, {

@@ -282,7 +282,8 @@ module.exports.set = app => {
      * Retrieve a company’s transaction.
      */
     app.get('/transactions/:id', authMiddleware.checkAuth, transactionController.show);
-    app.get('/transactions/pop/deposits/:id', authMiddleware.checkAuth, transactionController.getProofOfPayment);
+    
+    app.get('/pop/deposits/:id', authMiddleware.checkAuth, transactionController.getProofOfPayment);
 
     /**
     * Update Product

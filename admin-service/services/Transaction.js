@@ -1,6 +1,6 @@
 const sequelize = require('../config/db');
 const { Transaction } = require('../models/Transaction');
-const { Transaction } = require('../models/');
+const { Document } = require('../models/Document');
 
 async function index(query) {
     try {
@@ -33,13 +33,14 @@ async function show(id) {
     }
 }
 
-async function getProofOfPayment(user_id) {
+async function getProofOfPayment(txid) {
     try {
-        return Transaction.findOne({
-            where: { user_id },
+        return Document.findAndCountAll({
+            where: { 'metadata': {'txid': txid}},
+            order: [['created', 'DESC']]
         });
     } catch (error) {
-        console.error(error.message || null);
+        console.error(error || null);
         throw new Error('Could not process your request');
     }
 }
