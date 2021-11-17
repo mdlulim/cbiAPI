@@ -60,6 +60,7 @@ async function eventTransfer(data) {
         const nanoid = customAlphabet('1234567890abcdef', 10);
 
         let amount = data.amount;
+        let buddysmile = (amount * 15.3)
         let currency = 'NAD';
         let reference = 'BUDDY-TRANSFER-' + await nanoid();
         let identifier = await Buddy.findOne({
@@ -88,7 +89,7 @@ async function eventTransfer(data) {
             data: {
                 reference,
                 identifier: identifier.buddy_identifier,
-                amount,
+                buddysmile,
                 currency,
             },
             headers: {
