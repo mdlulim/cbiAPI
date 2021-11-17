@@ -4,6 +4,7 @@ var config = {};
 if (stage === 'dev') {
     // local
     config = {
+        cryptrKey: 'LfFLf8cAAABwvgp',
         port: process.env.PORT || 8080,
         dbConnectionString: 'postgresql://doadmin:bMs2X9InUxyC9DTG@db-postgresql-ams3-49623-do-user-7844381-0.b.db.ondigitalocean.com:25060/defaultdb?sslmode=require',
         saltRounds: 2,

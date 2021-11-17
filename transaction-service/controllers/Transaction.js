@@ -1,5 +1,6 @@
 const transactionService    = require('../services/Transaction');
 const activityService = require('../services/Activity');
+const currencyService = require('../services/Currency');
 const documentService = require('../services/Document');
 const userService = require('../services/User');
 const emailHandler = require('../helpers/emailHandler');
@@ -18,14 +19,48 @@ const getTxid = (subtype, autoid) => {
 
 async function create(req, res) {
     try {
+        const {
+            currency_code,
+            tx_type,
+            subtype,
+            reference,
+        } = req.body;
+
+        // get currency
+        const currency = await currencyService.show(currency_code);
         const data = {
             ...req.body,
             user_id: req.user.id,
+            currency,
         };
 
         // get user
         const user = await userService.show(req.user.id);
 
+        if (tx_type === 'credit') {
+            switch (subtype) {
+                case 'deposit':
+                    data.reference = 'Top-Up';
+                    data.note = 'CBI Wallet Top-up Request';
+                    data.destination_transaction = user.referral_id;
+                    break;
+            }
+        }
+        if (tx_type === 'debit') {
+            switch (subtype) {
+                case 'withdraw':
+                    if (reference === 'BTC-Withdrawal') {
+                        data.note = 'BTC Withdrawal Request';
+                    }
+                    if (reference === 'Bank-Withdrawal') {
+                        data.note = 'Bank Account Withdrawal Request';
+                    }
+                    data.source_transaction = user.referral_id;
+                    break;
+            }
+        }
+
+        // insert transaction
         const transaction = await transactionService.create(data);
 
         if (!transaction) {

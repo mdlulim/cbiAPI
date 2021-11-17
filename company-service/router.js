@@ -33,7 +33,7 @@ module.exports.set = app => {
      * Get a list of company crypto accounts for the current
      * user’s company.
      */
-    app.get('/bank-accounts', authMiddleware.checkAuth, companyController.cryptoAccounts);
+    app.get('/crypto-accounts', authMiddleware.checkAuth, companyController.cryptoAccounts);
 
     /**
      * Retrieve Company Settings

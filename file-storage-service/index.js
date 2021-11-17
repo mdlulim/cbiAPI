@@ -1,4 +1,4 @@
-// add application performance monitoring 
+//add application performance monitoring 
 var apm = require('elastic-apm-node').start({
      serviceName: 'file-storage-service',
      secretToken: 'K1dPeS59y0hO980e9d0ed4pI',

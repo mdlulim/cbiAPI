@@ -16,8 +16,8 @@ if (stage === 'dev') {
             },
             settings: {
                 accessKeyId: 'IXMCZZOUJ3BZGYVNDV4P',
-                accessSecretKey: 'K80qaPbYtpdyohelallkBiFC48DLp7h+LzuHSdWEEZI',
-                endpoint: 'ams3.digitaloceanspaces.com'
+                endpoint: 'ams3.digitaloceanspaces.com',
+                secretAccessKey: 'K80qaPbYtpdyohelallkBiFC48DLp7h+LzuHSdWEEZI',
             }
         }
     }
