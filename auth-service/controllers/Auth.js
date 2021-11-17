@@ -313,8 +313,10 @@ async function register(req, res) {
         let role = null;
         let sponsorId = null;
         let groupId = null;
+        let sponsor = null;
+
         if (referral_id) {
-            const sponsor = await userService.findByReferralId(referral_id);
+            sponsor = await userService.findByReferralId(referral_id);
             if (sponsor.id) {
                 isLead = false;
                 sponsorId = sponsor.id;
@@ -365,6 +367,15 @@ async function register(req, res) {
         const newUser = await userService.create(user);
 
         if (newUser && newUser.id) {
+
+            // notify upline once referral has registered
+            if (sponsor && sponsor.id) {
+                await emailHandler.notifyReferrer({
+                    first_name: sponsor.first_name,
+                    email: sponsor.email,
+                    referral: `${first_name} ${last_name} - ${first_name}`,
+                });
+            }
 
             // send activation email (if is not a lead)
             if (!isLead) {
@@ -533,7 +544,7 @@ async function passwordReset(req, res) {
         if (!user) {
             return res.status(405).send({
                 success: false,
-                message: 'Authentication error. User not found.'
+                message: 'Email address not registered.'
             });
         }
 
