@@ -89,7 +89,7 @@ async function eventTransfer(data) {
             data: {
                 reference,
                 identifier: identifier.buddy_identifier,
-                buddysmile,
+                amount: buddysmile,
                 currency,
             },
             headers: {
