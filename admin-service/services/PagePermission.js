@@ -48,21 +48,21 @@ async function index(query) {
 
 /**
  * Get a single of group that has been created.
- * @param {string} id 
+ * @param {string} page 
  * @returns 
  */
 async function show(page) {
     try {
-        const pagePermission = await PagePermission.findOne({
+        return PagePermission.findOne({
             where: { page },
         });
-        return {
-            success: true,
-            data: group,
-        };
-    } catch (err) {
-        console.log(err);
-        res.send(err);
+        // return {
+        //     success: true,
+        //     data: group,
+        // };
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
     }
 };
 
