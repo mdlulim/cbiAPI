@@ -176,7 +176,7 @@ async function tokensVerify(data) {
         await EmailAddress.update({
             is_verified: true,
             updated: sequelize.fn('NOW'),
-        });
+        }, { where: { email } });
     } else {
         const {
             id,
