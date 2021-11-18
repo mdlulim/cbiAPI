@@ -10,6 +10,17 @@ if (stage === 'dev') {
         jwtSecret: 'BbZJjyoXAdr8BUZuiKKARWimKfrSmQ6fv8kZ7OFfc',
         tokenExpireTime: '6h',
         tokenExpireHours: 6,
+        mail: {
+            smtp: {
+                host: 'mail.cbiglobal.io',
+                port: 465,
+                secure: true,
+                auth: {
+                    user: 'no-reply@cbiglobal.io',
+                    pass: 'ocJ~$m[NTj#N',
+                }
+            }
+        },
     }
 } else {
     // staging / production
