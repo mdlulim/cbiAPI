@@ -126,7 +126,7 @@ async function create(req, res) {
 
 async function index(req, res){
     try {
-        return transactionService.index(req.user.id, req.query)
+        return transactionService.index()
         .then(data => res.send(data));
     } catch (err) {
         return res.status(500).send({

@@ -365,6 +365,7 @@ module.exports.set = app => {
     app.put("/page_permissions/:id", authMiddleware.checkAuth, pagePermissionController.update);
     // app.delete("/level/:levelId", authMiddleware.checkAuth, permissionLevelController.destroy);
 
+    app.get('/alltransactions', authMiddleware.checkAuth, transactionController.allTransactions);
     // Main Account Routes 
     app.get("/business-account", authMiddleware.checkAuth, accountController.mainaccount);
 
