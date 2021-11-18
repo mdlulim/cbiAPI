@@ -118,8 +118,6 @@ const verifyLogin = data => {
         
         <body>
             <div style="
-                    display: flex; 
-                    flex-direction: column; 
                     font-family: Arial, Helvetica, sans-serif; 
                     color: darkslategray; 
                     min-width: 360px; 
