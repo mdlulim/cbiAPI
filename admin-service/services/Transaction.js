@@ -3,6 +3,9 @@ const { Transaction } = require('../models/Transaction');
 const { User } = require('../models/User');
 const { Document } = require('../models/Document');
 
+User.hasMany(Transaction, {foreignKey: 'user_id', targetKey: 'id'});
+Transaction.belongsTo(User, {foreignKey: 'user_id', targetKey: 'id'});
+
 async function index(query) {
     try {
         const { offset, limit } = query;
