@@ -530,6 +530,23 @@ async function findByPropertyValue(prop, value) {
     }
 }
 
+
+/**
+ * Get a single of group that has been created.
+ * @param {string} email 
+ * @returns 
+ */
+ async function email(email) {
+    try {
+        return User.findOne({
+            where: { email },
+        });
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+};
+
 module.exports = {
     create,
     index,
@@ -549,5 +566,6 @@ module.exports = {
     cryptoAccounts,
     updateTransaction,
     findByPropertyValue,
-    updateBankAccounts
+    updateBankAccounts,
+    email
 }
