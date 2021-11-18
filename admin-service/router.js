@@ -139,6 +139,13 @@ module.exports.set = app => {
     app.put('/users/:id/transactions', authMiddleware.checkAuth, userController.updateTransaction);
 
     /**
+     * Retrieve User' Transactions
+     * 
+     * Retrieve a company’s user transactions.
+     */
+    app.put('/users/:id/transactions/deposit', authMiddleware.checkAuth, userController.approveDeposit);
+
+    /**
      * Retrieve User's CBI Account/Wallet
      * 
      * Retrieve a company’s user account/wallet.

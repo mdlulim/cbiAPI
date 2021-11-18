@@ -32,7 +32,6 @@ async function create(req, res) {
                 message: 'Validation error. Email address is required.'
             });
         }
-        
         // validate first name
         if (!first_name) {
             return res.status(403).send({
@@ -40,7 +39,6 @@ async function create(req, res) {
                 message: 'Validation error. First name is required.'
             });
         }
-        
         // validate last name
         if (!last_name) {
             return res.status(403).send({
@@ -382,6 +380,18 @@ async function updateBankAccounts(req, res){
     }
 }
 
+async function approveDeposit(req, res){
+    try {
+        return userService.approveDeposit(req.params.id, req.body)
+        .then(data => res.send({ success: true, message: 'Account was successfully updated' }));
+    } catch (err) {
+        return res.status(500).send({
+            success: false,
+            message: 'Could not process your request'
+        });
+    }
+}
+
 async function cryptoAccounts(req, res){
     try {
         return userService.cryptoAccounts(req.params.id)
@@ -412,5 +422,6 @@ module.exports = {
     mobiles,
     bankAccounts,
     cryptoAccounts,
-    updateBankAccounts
+    updateBankAccounts,
+    approveDeposit
 }
