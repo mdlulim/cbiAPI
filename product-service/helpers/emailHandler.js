@@ -3,16 +3,31 @@ const emailTemplates = require('../lib/emailTemplates');
 const config = require('../config');
 const { smtp } = config.mail;
 
-async function autoRenewStatusChange(data) {
-    const { email } = data;
-    const template = emailTemplates.autoRenewStatusChange(data);
+async function tokenPurchaseConfirmation(data) {
+    const {
+        email, 
+        tokens,
+        product,
+    } = data;
+    const template = emailTemplates.tokenPurchaseConfirmation(data);
     const from = {
         name: 'CBI',
         email: smtp.auth.user,
     };
-    return sendMail(from, email, 'CBI - Your Profile has been successfully updated!', template);
+    return sendMail(from, email, `CBI - You have bought ${tokens} ${product.title}!`, template);
+};
+
+async function wealthCreatorConfirmation(data) {
+    const { email } = data;
+    const template = emailTemplates.wealthCreatorConfirmation(data);
+    const from = {
+        name: 'CBI',
+        email: smtp.auth.user,
+    };
+    return sendMail(from, email, 'CBI - You have subscribed to a Wealth Creator Membership!', template);
 };
 
 module.exports = {
-    autoRenewStatusChange,
+    tokenPurchaseConfirmation,
+    wealthCreatorConfirmation,
 };

@@ -102,7 +102,7 @@ module.exports.set = app => {
      * Changing this URL is required if you wish to make use
      * of your own client side UI for resetting emails.
      */
-    app.post('/password/reset/confirm', authController.passwordResetConfirm);
+    app.post('/password/reset/confirm', authMiddleware.checkAuth, authController.passwordResetConfirm);
 
     /**
      * Verify Email

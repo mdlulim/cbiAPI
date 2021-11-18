@@ -4,7 +4,7 @@ const { Fee }  = require('../models/Fee');
 
 Fee.belongsTo(Currency, { foreignKey: 'currency_code', targetKey: 'code' });
 
-async function show(tx_type, subtype) {
+async function show(tx_type, subtype, group_id) {
     try {
         const { Op } = sequelize;
         return Fee.findOne({
@@ -12,6 +12,7 @@ async function show(tx_type, subtype) {
                 tx_type: { [Op.iLike]: tx_type },
                 subtype: { [Op.iLike]: subtype },
                 archived: false,
+                group_id,
             },
             include: [{ model: Currency }]
         });

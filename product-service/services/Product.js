@@ -70,6 +70,22 @@ async function overview() {
     }
 }
 
+async function find(id) {
+    try {
+        const product = await Product.findOne({
+            where: { id },
+            include: [{ model: Currency }, { model: ProductCategory }]
+        });
+        return {
+            success: true,
+            data: product,
+        };
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
 async function show(permakey) {
     try {
         const product = await Product.findOne({
@@ -123,6 +139,7 @@ async function categories() {
 }
 
 module.exports = {
+    find,
     show,
     index,
     overview,

@@ -11,6 +11,8 @@ const { UserProduct }  = require('../models/UserProduct');
 const { Transaction }  = require('../models/Transaction');
 const { Account }  = require('../models/Account');
 
+const { KYC } = require('../models/KYC');
+ 
 Address.belongsTo(User, { foreignKey: 'user_id', targetKey: 'id' });
 EmailAddress.belongsTo(User, { foreignKey: 'user_id', targetKey: 'id' });
 MobileNumber.belongsTo(User, { foreignKey: 'user_id', targetKey: 'id' });
@@ -20,6 +22,8 @@ Transaction.belongsTo(User, { foreignKey: 'user_id', targetKey: 'id' });
 User.belongsTo(Group, { foreignKey: 'group_id', targetKey: 'id' });
 Product.belongsTo(UserProduct, { foreignKey: 'id', targetKey: 'product_id' });
 User.belongsTo(UserProduct, { foreignKey: 'id', targetKey: 'user_id' });
+User.hasMany(KYC, {foreignKey: 'user_id', targetKey: 'id'});
+
 
 async function create(data) {
     try {
@@ -567,6 +571,23 @@ async function findByPropertyValue(prop, value) {
     }
 }
 
+
+/**
+ * Get a single of group that has been created.
+ * @param {string} email 
+ * @returns 
+ */
+ async function email(email) {
+    try {
+        return User.findOne({
+            where: { email },
+        });
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+};
+
 module.exports = {
     create,
     index,
@@ -587,5 +608,6 @@ module.exports = {
     updateTransaction,
     approveDeposit,
     findByPropertyValue,
-    updateBankAccounts
+    updateBankAccounts,
+    email
 }

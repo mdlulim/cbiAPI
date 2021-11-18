@@ -1,27 +1,32 @@
+const fileAccessorService = require('../services/FileAccessor');
 const fileUploadService = require('../services/FileUpload');
 
-async function index(req, res) {
+async function upload(request, response) {
     try {
-        return res.send({
-            success: true,
-        });
+        return fileUploadService.uploader(request, response);
     } catch (error) {
-        return res.send({
+        console.log(error.message || null)
+        return response.status(500).send({
             success: false,
             message: 'Could not process request'
         });
     }
 }
 
-async function upload(req, res) {
+async function show(request, response) {
     try {
-        const response = await fileUploadService.uploader(req, res);
-        return res.send({
-            success: true,
-            data: response,
+        const { filename } = request.query;
+        if (filename) {
+            const url = await fileAccessorService.getUrl(filename);
+            return response.send(url);
+        }
+        return response.status(403).send({
+            success: false,
+            message: 'Validation error. Filename not specified.'
         });
     } catch (error) {
-        return res.send({
+        console.log(error.message || null)
+        return response.status(500).send({
             success: false,
             message: 'Could not process request'
         });
@@ -29,6 +34,6 @@ async function upload(req, res) {
 }
 
 module.exports = {
-    index,
     upload,
+    show,
 }

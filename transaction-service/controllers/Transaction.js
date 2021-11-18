@@ -1,8 +1,10 @@
 const transactionService    = require('../services/Transaction');
 const activityService = require('../services/Activity');
+const currencyService = require('../services/Currency');
 const documentService = require('../services/Document');
 const userService = require('../services/User');
 const emailHandler = require('../helpers/emailHandler');
+const { decrypt } = require('../utils');
 
 const getSubsection = (data) => {
     const {
@@ -18,14 +20,51 @@ const getTxid = (subtype, autoid) => {
 
 async function create(req, res) {
     try {
+        const {
+            currency_code,
+            tx_type,
+            subtype,
+            reference,
+        } = req.body;
+
+        // get currency
+        const currency = await currencyService.show(currency_code);
         const data = {
             ...req.body,
             user_id: req.user.id,
+            currency,
         };
 
         // get user
         const user = await userService.show(req.user.id);
 
+        if (tx_type === 'credit') {
+            switch (subtype) {
+                case 'deposit':
+                    data.reference = 'Top-Up';
+                    data.note = 'CBI Wallet Top-up Request';
+                    data.destination_transaction = user.referral_id;
+                    break;
+            }
+        }
+        if (tx_type === 'debit') {
+            switch (subtype) {
+                case 'withdraw':
+                    if (reference === 'BTC-Withdrawal') {
+                        data.note = 'BTC Withdrawal Request';
+                    }
+                    if (reference === 'Bank-Withdrawal') {
+                        data.note = 'Bank Account Withdrawal Request';
+                    }
+                    data.source_transaction = user.referral_id;
+                    break;
+            }
+        }
+
+        // insert transaction
+        data.fee = parseFloat(decrypt(req.body.fee));
+        data.amount = parseFloat(decrypt(req.body.amount));
+        data.total_amount = parseFloat(decrypt(req.body.total_amount));
         const transaction = await transactionService.create(data);
 
         if (!transaction) {
@@ -53,29 +92,14 @@ async function create(req, res) {
         // if it's a deposit
         // store POP (Proof of Payment)
         if (data.tx_type === 'credit' && data.subtype === 'deposit') {
-            if (data.file) {
-                // check there a document record already with the same txid
-                const docs = await documentService.search('note', txid);
-                if (docs && docs.length > 0) {
-                    // update record
-                    await documentService.update({
-                        file: data.file.name,
-                        metadata: JSON.stringify(data.file),
-                        status: 'Pending',
-                    }, docs[0].id);
-                } else {
-                    // insert new document record
-                    const document = {
-                        user_id: req.user.id,
-                        file: data.file.name,
-                        category: 'transactions',
-                        type: 'deposit',
-                        metadata: JSON.stringify(data.file),
-                        status: 'Pending',
-                        note: txid,
-                    };
-                    await documentService.create(document);
-                }
+            // update document/file record
+            const document = await documentService.findByCategoryType('pop', 'deposit', req.user.id);
+            if (document && document.id) {
+                await documentService.update(document.id, {
+                    metadata: JSON.stringify({
+                        txid,
+                    })
+                });
             }
 
             // send email to member
@@ -102,7 +126,7 @@ async function create(req, res) {
 
 async function index(req, res){
     try {
-        return transactionService.index(req.user.id, req.query)
+        return transactionService.index()
         .then(data => res.send(data));
     } catch (err) {
         return res.status(500).send({

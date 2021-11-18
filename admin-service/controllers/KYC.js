@@ -30,7 +30,22 @@ async function create(req, res) {
 async function show(req, res) {
     try {
         const data = await kycService.show(req.params.id);
-        console.log("data after db")
+        return res.send({
+            success: true,
+            data,
+        });
+    } catch (error) {
+        console.log(error);
+        return res.send({
+            success: false,
+            message: 'Could not process request'
+        });
+    }
+}
+
+async function show_all(req, res) {
+    try {
+        const data = await kycService.show_all();
         return res.send({
             success: true,
             data,
@@ -116,9 +131,12 @@ async function kyc_level(req, res) {
 }
 
 
+
+
 module.exports = {
     create,
     show,
     update,
-    kyc_level
+    kyc_level,
+    show_all
 };
