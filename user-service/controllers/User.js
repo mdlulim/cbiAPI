@@ -188,6 +188,25 @@ async function search(req, res) {
     }
 }
 
+async function activities(req, res) {
+    try {
+        const activities = await userService.activities(req.user.id, req.query);
+        const { count, rows } = activities;
+        return res.send({
+            success: true,
+            data: {
+                count,
+                results: rows,
+            },
+        });
+    } catch (error) {
+        return res.send({
+            success: false,
+            message: 'Could not process request'
+        });
+    }
+}
+
 module.exports = {
     profile,
     referrals,
@@ -197,4 +216,5 @@ module.exports = {
     captureKYC,
     autorenew,
     search,
+    activities,
 };
