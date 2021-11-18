@@ -34,14 +34,10 @@ async function show(id) {
     }
 }
 
-async function allTransactions(user_id, query) {
+async function allTransactions() {
     try {
-        const where = {
-            ...query,
-            user_id,
-        };
+
         const { count, rows } = await User.findAndCountAll({
-            where,
             order: [[ 'created', 'DESC' ]],
             include: Transaction
         });
