@@ -26,6 +26,16 @@ async function resetPassword(data) {
     return sendMail(from, email, 'CBI - Reset password', template);
 };
 
+async function changePassword(data) {
+    const { email } = data;
+    const template = emailTemplates.changePassword(data);
+    const from = {
+        name: 'CBI',
+        email: smtp.auth.user,
+    };
+    return sendMail(from, email, 'CBI - Password changed successfully!', template);
+};
+
 async function verifyLogin(data) {
     const { email } = data;
     const template = emailTemplates.verifyLogin(data);
@@ -36,8 +46,20 @@ async function verifyLogin(data) {
     return sendMail(from, email, 'CBI - Verify login', template);
 };
 
+async function notifyReferrer(data) {
+    const { email } = data;
+    const template = emailTemplates.notifyReferrer(data);
+    const from = {
+        name: 'CBI',
+        email: smtp.auth.user,
+    };
+    return sendMail(from, email, 'CBI - You have a new referral!', template);
+};
+
 module.exports = {
     confirmEmail,
     resetPassword,
     verifyLogin,
+    notifyReferrer,
+    changePassword,
 };

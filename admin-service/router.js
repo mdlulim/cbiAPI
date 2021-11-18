@@ -56,6 +56,9 @@ module.exports.set = app => {
      */
     app.get('/users/:id/emails', authMiddleware.checkAuth, userController.emails);
 
+    app.get('/users/email/:email', authMiddleware.checkAuth, userController.email);
+    
+
     /**
      * Retrieve User Mobiles
      * 
@@ -168,6 +171,10 @@ module.exports.set = app => {
 
     app.get('/kyc-level/:id', authMiddleware.checkAuth, kycController.kyc_level);
 
+    //gets all kyc applications
+    app.get('/users/all-kyc/', authMiddleware.checkAuth, kycController.show_all);
+
+
 
     /**
      * List User Products
@@ -234,6 +241,14 @@ module.exports.set = app => {
     app.get('/products', authMiddleware.checkAuth, productController.index);
 
     /**
+     * List Products History
+     * 
+     * Get a list of products history belonging to CBI.
+     */
+    app.get('/products/history', authMiddleware.checkAuth, productController.history);
+
+
+    /**
      * Retrieve Product
      * 
      * Retrieve a company’s product.
@@ -274,6 +289,8 @@ module.exports.set = app => {
      * Retrieve a company’s transaction.
      */
     app.get('/transactions/:id', authMiddleware.checkAuth, transactionController.show);
+    
+    app.get('/pop/deposits/:id', authMiddleware.checkAuth, transactionController.getProofOfPayment);
 
     /**
     * Update Product
@@ -342,11 +359,14 @@ module.exports.set = app => {
 
     // Page Permissions Routes
     app.get("/page_permissions", authMiddleware.checkAuth, pagePermissionController.index);
+    app.get("/page_permissions/page_name/:page", authMiddleware.checkAuth, pagePermissionController.show);
     app.post("/page_permission", authMiddleware.checkAuth, pagePermissionController.create);
     // app.get("/level/:levelId", authMiddleware.checkAuth, permissionLevelController.show);
     app.put("/page_permissions/:id", authMiddleware.checkAuth, pagePermissionController.update);
     // app.delete("/level/:levelId", authMiddleware.checkAuth, permissionLevelController.destroy);
 
     app.get('/alltransactions', authMiddleware.checkAuth, transactionController.allTransactions);
+    // Main Account Routes 
+    app.get("/business-account", authMiddleware.checkAuth, accountController.mainaccount);
 
 };

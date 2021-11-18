@@ -9,7 +9,7 @@ const depositRequestNotification = data => {
         <p>Hi ${first_name},</p>
         <h3>Deposit Request Notification</h3>
         <p>
-            This is to confirm a deposit of ${amount} ${currency_code} into your CBI Global wallet. 
+            This is to confirm a deposit request of ${amount} ${currency_code} into your CBI Global wallet. 
             Once this transaction has been verified and approved, you will be notified. Your transaction
             reference number is <strong>${reference}</strong>.
         </p>
