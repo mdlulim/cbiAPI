@@ -35,6 +35,8 @@ async function show(id) {
 
 async function update(id, data) {
     try {
+        data.status = 'Pending';
+        data.updated = sequelize.fn('NOW');
         return BankAccount.update(data, { where: { id } });
     } catch (error) {
         console.error(error.message || null);

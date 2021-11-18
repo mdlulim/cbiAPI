@@ -1,10 +1,11 @@
 const sequelize = require('../config/db');
-// const { BuddyAccount } = require('../models/BuddyAccount');
+const { Activity } = require('../models/Activity');
+const { Country } = require('../models/Country');
 const { Group } = require('../models/Group');
 const { User }  = require('../models/User');
 
 User.belongsTo(Group, { foreignKey: 'group_id', targetKey: 'id' });
-// BuddyAccount.belongsTo(User, { foreignKey: 'user_id', targetKey: 'id' });
+User.belongsTo(Country, { foreignKey: 'nationality', targetKey: 'iso' });
 
 async function create(data) {
     try {
@@ -17,7 +18,6 @@ async function create(data) {
 
 async function show(id) {
     try {
-        // const buddy = await BuddyAccount.findOne({ where: { user_id, id } })
         const user = await User.findOne({
             attributes: [
                 'id',
@@ -58,7 +58,7 @@ async function show(id) {
             where: { id },
             include: [
                 { model: Group }, 
-                // { model: BuddyAccount }
+                { model: Country }
             ],
         });
         return user;
@@ -77,7 +77,10 @@ async function findByEmail(email) {
                 archived: false,
                 status: { [Op.iLike]: 'Active' }
             },
-            include: [{ model: Group }],
+            include: [
+                { model: Group }, 
+                { model: Country }
+            ],
         });
     } catch (error) {
         console.error(error.message || null);
@@ -109,9 +112,13 @@ async function referrals(id) {
                 FROM users e
                     INNER JOIN cte_query c ON c.id = e.sponsor
             )
-            SELECT *
-            FROM cte_query
-            WHERE id != '${id}'
+            SELECT c.*, s.first_name AS "referral.first_name", s.last_name AS "referral.last_name", 
+                s.nationality AS "referral.nationality", s.referral_id AS "referral.referral_id", 
+                n.nicename AS "country.nicename", n.iso AS "country.iso"
+            FROM cte_query c
+            INNER JOIN users s ON c.sponsor = s.id
+            INNER JOIN countries n ON c.nationality = n.iso
+            WHERE c.id != '${id}'
         `;
         const options = {
             nest: true,
@@ -232,6 +239,35 @@ async function search(prop, value) {
     }
 }
 
+async function activities(user_id, query) {
+    try {
+        const { Op } = sequelize;
+        return Activity.findAndCountAll({
+            attributes: [
+                'action',
+                'description',
+                'created',
+                'section',
+                'subsection',
+                'id',
+            ],
+            where: {
+                ...query,
+                user_id,
+                action: {
+                    [Op.ne]: 'member.login.verify'
+                }
+            },
+            offset: 0,
+            limit: 5,
+            order: [[ 'created', 'DESC' ]]
+        })
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
 module.exports = {
     create,
     show,
@@ -241,4 +277,5 @@ module.exports = {
     countReferrals,
     referralsByUUID,
     search,
+    activities,
 }
