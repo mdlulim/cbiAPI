@@ -9,6 +9,7 @@ const transactionController = require('./controllers/Transaction');
 const userController = require('./controllers/User');
 const buddyAPIController = require('./controllers/BuddyAPIController');
 const buddyAccountController = require('./controllers/BuddyAccountController');
+const pagePermissionController = require('./controllers/PagePermission');
 const authMiddleware = require('./middlewares/auth');
 
 
@@ -68,6 +69,11 @@ module.exports.set = app => {
      * Retrieve user bank accounts.
      */
     app.get('/users/:id/bank_accounts', authMiddleware.checkAuth, userController.bankAccounts);
+
+    /**
+   * Update user bank accounts.
+   */
+    app.put('/bank_accounts/:id', authMiddleware.checkAuth, userController.updateBankAccounts);
 
     /**
      * Retrieve User Crypto Accounts
@@ -151,7 +157,7 @@ module.exports.set = app => {
      * 
      * Retrieve a company’s user kyc.
      */
-    app.get('/users/:id/kyc', authMiddleware.checkAuth, kycController.show);
+    app.get('/users/:id/kyc', kycController.show);
 
     /**
      * Update User's KYC
@@ -159,6 +165,13 @@ module.exports.set = app => {
      * Update a company’s user kyc.
      */
     app.put('/kyc', authMiddleware.checkAuth, kycController.update);
+
+    app.get('/kyc-level/:id', authMiddleware.checkAuth, kycController.kyc_level);
+
+    //gets all kyc applications
+    app.get('/users/all-kyc/', authMiddleware.checkAuth, kycController.show_all);
+
+
 
     /**
      * List User Products
@@ -198,6 +211,19 @@ module.exports.set = app => {
     app.get('/products/categories', authMiddleware.checkAuth, productController.categories);
 
     /**
+    * Create Product Category
+    * 
+    * Create a product category belonging to CBI.
+    */
+    app.post('/products/categories', authMiddleware.checkAuth, productController.createCategory);
+
+    /**
+     * Update Categories
+     * 
+     * Update company’s categories details.
+     */
+    app.put('/products/categories/:id', authMiddleware.checkAuth, productController.updateCategory);
+    /**
      * Create Product
      * 
      * Create a single product belonging to CBI.
@@ -210,6 +236,14 @@ module.exports.set = app => {
      * Get a list of products belonging to CBI.
      */
     app.get('/products', authMiddleware.checkAuth, productController.index);
+
+    /**
+     * List Products History
+     * 
+     * Get a list of products history belonging to CBI.
+     */
+    app.get('/products/history', authMiddleware.checkAuth, productController.history);
+
 
     /**
      * Retrieve Product
@@ -252,6 +286,15 @@ module.exports.set = app => {
      * Retrieve a company’s transaction.
      */
     app.get('/transactions/:id', authMiddleware.checkAuth, transactionController.show);
+    
+    app.get('/pop/deposits/:id', authMiddleware.checkAuth, transactionController.getProofOfPayment);
+
+    /**
+    * Update Product
+    * 
+    * Update company’s product details.
+    */
+    app.put('/transactions/:id', authMiddleware.checkAuth, userController.updateTransaction);
 
     /**
      * List Currencies
@@ -309,5 +352,16 @@ module.exports.set = app => {
     app.get("/level/:levelId", authMiddleware.checkAuth, permissionLevelController.show);
     app.put("/level/:buddyId", authMiddleware.checkAuth, permissionLevelController.update);
     app.delete("/level/:levelId", authMiddleware.checkAuth, permissionLevelController.destroy);
-    
+
+
+    // Page Permissions Routes
+    app.get("/page_permissions", authMiddleware.checkAuth, pagePermissionController.index);
+    app.post("/page_permission", authMiddleware.checkAuth, pagePermissionController.create);
+    // app.get("/level/:levelId", authMiddleware.checkAuth, permissionLevelController.show);
+    app.put("/page_permissions/:id", authMiddleware.checkAuth, pagePermissionController.update);
+    // app.delete("/level/:levelId", authMiddleware.checkAuth, permissionLevelController.destroy);
+
+    // Main Account Routes 
+    app.get("/business-account", authMiddleware.checkAuth, accountController.mainaccount);
+
 };

@@ -1,17 +1,17 @@
 // const sequelize = require('../config/db');
-const {PermissionLevel } = require('../models/PermissionLevel');
+const { PagePermission } = require('../models/PagePermission');
 
 /**
- * Create a new permission level
+ * Create a new group
  * @param {*} query 
  * @returns 
  */
 async function create(data) {
     try {
-        const permission_level = await PermissionLevel.create(data);
+        const page_permission = await PagePermission.create(data);
         return {
             success: true,
-            data: permission_level
+            data: page_permission
         };
     } catch (err) {
         console.log(err);
@@ -20,43 +20,45 @@ async function create(data) {
 };
 
 /**
- * Get a list of permission levels that have been created.
+ * Get a list of groups that have been created.
  * @param {*} query 
  * @returns 
  */
 async function index(query) {
-    console.log(query);
     try {
-        const { offset, limit } = query;
         const where = query || {};
-
-        delete where.offset;
-        delete where.limit;
-
-        return PermissionLevel.findAndCountAll({
+        const pagePermissions = await PagePermission.findAll({
             where,
             order: [['created', 'DESC']],
-            offset: offset || 0,
         });
+
+        return {
+            success: true,
+            data: {
+                next: null,
+                previous: null,
+                results: pagePermissions,
+            }
+        };
     } catch (error) {
         console.error(error.message || null);
-        throw new Error('Could not process your request');
+        throw new Error(error.message);
     }
 };
 
 /**
- * Get a single of permission level that has been created.
+ * Get a single of group that has been created.
  * @param {string} id 
  * @returns 
  */
 async function show(id) {
     try {
-        const permission_level = await PermissionLevel.findOne({
+        const pagePermission = await PagePermission.findOne({
             where: { id },
         });
         return {
             success: true,
-            data: permission_level,
+            data: group,
         };
     } catch (err) {
         console.log(err);
@@ -65,7 +67,7 @@ async function show(id) {
 };
 
 /**
- * Update the permission level’s details.
+ * Update the group’s details.
  * @param {string} id 
  * @param {object} data 
  * @returns 
@@ -73,10 +75,12 @@ async function show(id) {
 async function update(id, data) {
     
     try {
-        return PermissionLevel.update(data, {
+        
+    console.log('THABIOS '+ id);
+        return PagePermission.update(data, {
             where: { id },
         });
-        // return permission level.update(data, { where: { id } });
+        // return Group.update(data, { where: { id } });
     } catch (error) {
         console.log(error);
         res.send(err);
@@ -84,13 +88,13 @@ async function update(id, data) {
 };
 
 /**
- * Delete the permission level.
+ * Delete the group.
  * @param {string} id 
  * @returns 
  */
 async function destroy(id) {
     try {
-        await PermissionLevel.destroy({
+        await Group.destroy({
             where: { id },
         });
         return {
@@ -114,7 +118,7 @@ async function destroy(id) {
  */
  async function archive(id) {
     try {
-        return PermissionLevel.update({
+        return Group.update({
             archived: true,
             updated: sequelize.fn('NOW'),
         }, { where: { id } });

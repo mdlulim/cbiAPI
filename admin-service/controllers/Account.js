@@ -15,6 +15,22 @@ async function wallet(req, res) {
     }
 }
 
+async function mainaccount(req, res) {
+    try {
+        const account = await accountService.mainaccount();
+        return res.send({
+            success: true,
+            data: account
+        });
+    } catch (error) {
+        return res.send({
+            success: false,
+            message: 'Could not process request'
+        });
+    }
+}
+
 module.exports = {
     wallet,
+    mainaccount
 };

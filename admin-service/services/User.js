@@ -9,7 +9,8 @@ const { User } = require('../models/User');
 const { Product } = require('../models/Product');
 const { UserProduct }  = require('../models/UserProduct');
 const { Transaction }  = require('../models/Transaction');
-
+const { KYC } = require('../models/KYC');
+ 
 Address.belongsTo(User, { foreignKey: 'user_id', targetKey: 'id' });
 EmailAddress.belongsTo(User, { foreignKey: 'user_id', targetKey: 'id' });
 MobileNumber.belongsTo(User, { foreignKey: 'user_id', targetKey: 'id' });
@@ -19,6 +20,8 @@ Transaction.belongsTo(User, { foreignKey: 'user_id', targetKey: 'id' });
 User.belongsTo(Group, { foreignKey: 'group_id', targetKey: 'id' });
 Product.belongsTo(UserProduct, { foreignKey: 'id', targetKey: 'product_id' });
 User.belongsTo(UserProduct, { foreignKey: 'id', targetKey: 'user_id' });
+User.hasMany(KYC, {foreignKey: 'user_id', targetKey: 'id'});
+
 
 async function create(data) {
     try {
@@ -34,8 +37,8 @@ async function create(data) {
  * 
  * Get a list of users belonging to CBI.
  * 
- * @param {object} query 
- * @returns 
+ * @param {object} query
+ * @returns
  */
 async function index(query) {
     try {
@@ -86,6 +89,7 @@ async function index(query) {
                 'autorenew',
                 'expiry',
                 'deactivation_date',
+                'permission_level',
             ],
             where,
             include: [{ model: Group, where: groupWhere }],
@@ -155,6 +159,7 @@ async function show(id) {
                 'autorenew',
                 'expiry',
                 'deactivation_date',
+                'permission_level',
             ],
             where: { id },
             include: [{ model: Group }],
@@ -349,6 +354,7 @@ async function referrals(id) {
                 'autorenew',
                 'expiry',
                 'deactivation_date',
+                'permission_level',
             ],
             where: { sponsor: id },
             include: [{ model: Group }],
@@ -381,10 +387,10 @@ async function transactions(user_id) {
     }
 }
 
-async function updateTransaction(user_id, data) {
+async function updateTransaction(id, data) {
     try {
         await Transaction.update(data, {
-            where: { user_id }
+            where: { id }
         });
         return { success: true };
     } catch (error) {
@@ -477,6 +483,18 @@ async function bankAccounts(user_id) {
     }
 }
 
+async function updateBankAccounts(user_id, data) {
+    try {
+        await BankAccount.update(data, {
+            where: { user_id }
+        });
+        return { success: true };
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request'); 
+    }
+}
+
 async function cryptoAccounts(user_id) {
     try {
         const accounts = await CryptoAccount.findAndCountAll({
@@ -531,4 +549,5 @@ module.exports = {
     cryptoAccounts,
     updateTransaction,
     findByPropertyValue,
+    updateBankAccounts
 }

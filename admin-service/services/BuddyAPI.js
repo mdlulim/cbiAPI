@@ -7,9 +7,9 @@ const { buddyTransaction } = require('../models/BuddyTransction');
 
 async function lookupBalance() {
     try {
-        const response = await axios(config.buddy.base_url.staging + '/cbi/lookup/balance', {
+        const response = await axios(config.buddy.production.base_url + '/cbi/lookup/balance', {
             headers:{
-                'authenticationToken': config.buddy.authenticationToken
+                'authenticationToken': config.buddy.production.authenticationToken
             }
         });
         return response.data;
@@ -21,10 +21,10 @@ async function lookupBalance() {
 
 async function lookupAccount(data) {
     try {
-        const response = await axios(config.buddy.base_url.staging +'/cbi/lookup/account', {
+        const response = await axios(config.buddy.production.base_url +'/cbi/lookup/account', {
             params: { identifier: data },
             headers:{
-                'authenticationToken': config.buddy.authenticationToken
+                'authenticationToken': config.buddy.production.authenticationToken
             }
         });
         return response.data;
@@ -42,10 +42,10 @@ async function lookupTransaction(data) {
         let perPage = data.search
         let page = data.page
 
-        const response = await axios(config.buddy.base_url.staging + '/cbi/lookup/transactions', {
+        const response = await axios(config.buddy.production.base_url + '/cbi/lookup/transactions', {
             params: { search, from, to, perPage, page },
             headers:{
-                'authenticationToken': config.buddy.authenticationToken
+                'authenticationToken': config.buddy.production.authenticationToken
             }
         });
         return response.data;
@@ -60,6 +60,7 @@ async function eventTransfer(data) {
         const nanoid = customAlphabet('1234567890abcdef', 10);
 
         let amount = data.amount;
+        let buddysmile = (amount * 15.3)
         let currency = 'NAD';
         let reference = 'BUDDY-TRANSFER-' + await nanoid();
         let identifier = await Buddy.findOne({
@@ -83,16 +84,16 @@ async function eventTransfer(data) {
 
 
 
-        const response = await axios(config.buddy.base_url.staging +'/cbi/event/transfer', {
+        const response = await axios(config.buddy.production.base_url +'/cbi/event/transfer', {
             method: "POST",
             data: {
                 reference,
                 identifier: identifier.buddy_identifier,
-                amount,
+                amount: buddysmile,
                 currency,
             },
             headers: {
-                'authenticationToken': config.buddy.authenticationToken
+                'authenticationToken': config.buddy.production.authenticationToken
             }
         });
 
