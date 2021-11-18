@@ -51,10 +51,10 @@ async function index(query) {
  * @param {string} id 
  * @returns 
  */
-async function show(id) {
+async function show(page) {
     try {
         const pagePermission = await PagePermission.findOne({
-            where: { id },
+            where: { page },
         });
         return {
             success: true,

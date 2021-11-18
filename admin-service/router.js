@@ -356,6 +356,7 @@ module.exports.set = app => {
 
     // Page Permissions Routes
     app.get("/page_permissions", authMiddleware.checkAuth, pagePermissionController.index);
+    app.get("/page_permissions/page_name/:page", authMiddleware.checkAuth, pagePermissionController.show);
     app.post("/page_permission", authMiddleware.checkAuth, pagePermissionController.create);
     // app.get("/level/:levelId", authMiddleware.checkAuth, permissionLevelController.show);
     app.put("/page_permissions/:id", authMiddleware.checkAuth, pagePermissionController.update);
