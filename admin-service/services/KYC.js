@@ -30,8 +30,6 @@ async function show(id) {
 async function show_all() {
     try {
         return KYC.findAll({
-            attributes: [''],
-            join: [],
             group: ['user_id'],
             order: [['level','ASC']]
         });
