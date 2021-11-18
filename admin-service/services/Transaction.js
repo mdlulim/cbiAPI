@@ -56,6 +56,9 @@ async function allTransactions(user_id, query) {
         };
     } catch (error) {
         console.error(error.message || null);
+    }
+}
+
 async function getProofOfPayment(txid) {
     try {
         return Document.findAndCountAll({
@@ -72,5 +75,5 @@ module.exports = {
     index,
     show,
     allTransactions,
-    getProofOfPayment,
+    getProofOfPayment
 }
