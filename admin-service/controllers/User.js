@@ -345,6 +345,18 @@ async function emails(req, res){
     }
 }
 
+async function email(req, res){
+    try {
+        return userService.email(req.params.email)
+        .then(data => res.send(data));
+    } catch (err) {
+        return res.status(500).send({
+            success: false,
+            message: 'Could not process your request'
+        });
+    }
+}
+
 async function mobiles(req, res){
     try {
         return userService.mobiles(req.params.id)
@@ -412,5 +424,6 @@ module.exports = {
     mobiles,
     bankAccounts,
     cryptoAccounts,
-    updateBankAccounts
+    updateBankAccounts,
+    email
 }
