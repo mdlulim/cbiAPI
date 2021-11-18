@@ -137,7 +137,19 @@ async function create(req, res) {
 
 async function index(req, res){
     try {
-        return transactionService.index(req.user.id, req.query)
+        return transactionService.index()
+        .then(data => res.send(data));
+    } catch (err) {
+        return res.status(500).send({
+            success: false,
+            message: 'Could not process your request'
+        });
+    }
+};
+
+async function allTransactions(req, res){
+    try {
+        return transactionService.allTransactions()
         .then(data => res.send(data));
     } catch (err) {
         return res.status(500).send({
@@ -179,4 +191,5 @@ module.exports = {
     index,
     count,
     totals,
+    allTransactions
 };

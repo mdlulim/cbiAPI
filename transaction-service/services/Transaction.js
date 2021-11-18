@@ -7,7 +7,8 @@ const { User }  = require('../models/User');
 Buddy.belongsTo(User, { foreignKey: 'user_id', targetKey: 'id' });
 BuddyTransaction.belongsTo(User, { foreignKey: 'user_id', targetKey: 'id' });
 
-Transaction.belongsTo(User, { foreignKey: 'user_id', targetKey: 'id' });
+User.hasMany(Transaction, {foreignKey: 'user_id', targetKey: 'id'});
+Transaction.belongsTo(User, {foreignKey: 'user_id', targetKey: 'id'});
 
 async function create(data) {
     try {
@@ -31,13 +32,39 @@ async function index(user_id, query) {
     try {
         const where = {
             ...query,
-            user_id: '0192c293-fc26-47f0-a764-332b44dd08b1',
+            user_id,
         };
         const transactions = await Transaction.findAndCountAll({
             where,
             order: [[ 'created', 'DESC' ]],
         });
         const { count, rows } = transactions;
+        return {
+            success: true,
+            data: {
+                count,
+                next: null,
+                previous: null,
+                results: rows,
+            }
+        };
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
+async function allTransactions(user_id, query) {
+    try {
+        const where = {
+            ...query,
+            user_id,
+        };
+        const { count, rows } = await User.findAndCountAll({
+            where,
+            order: [[ 'created', 'DESC' ]],
+            include: Transaction
+        });
         return {
             success: true,
             data: {
@@ -116,4 +143,5 @@ module.exports = {
     update,
     count,
     totals,
+    allTransactions
 }
