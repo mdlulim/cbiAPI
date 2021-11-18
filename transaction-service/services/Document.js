@@ -28,6 +28,24 @@ async function search(prop, value) {
     }
 }
 
+async function findByCategoryType(category, type, user_id) {
+    try {
+        const where = {
+            category,
+            type,
+            user_id,
+            status: 'Pending',
+        };
+        return Document.findOne({
+            where,
+            order: [['created', 'DESC']],
+        });
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
 async function index(user_id) {
     try {
         return Document.findAndCountAll({
@@ -77,4 +95,5 @@ module.exports = {
     update,
     destroy,
     search,
+    findByCategoryType,
 }

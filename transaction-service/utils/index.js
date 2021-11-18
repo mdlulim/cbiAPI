@@ -1,3 +1,4 @@
+const Cryptr = require('cryptr');
 const nodemailer = require('nodemailer');
 const config     = require('../config');
 
@@ -51,6 +52,18 @@ const sendMail = async (from, recipients, subject, body, callback = null, error 
     }
 };
 
+const encrypt = (val) => {
+    const cryptr = new Cryptr(config.cryptrKey);
+    return cryptr.encrypt(val);
+}
+
+const decrypt = (encrypted) => {
+    const cryptr = new Cryptr(config.cryptrKey);
+    return cryptr.decrypt(encrypted);
+}
+
 module.exports = {
     sendMail,
+    decrypt,
+    encrypt,
 };

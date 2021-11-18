@@ -27,9 +27,15 @@ async function validate(req, res) {
     try {
         const { prop, value } = req.params;
         const user = await userService.findByPropertyValue(prop, value);
+        const data = {};
+        if (user) {
+            data.first_name = user.first_name;
+            data.last_name  = user.last_name;
+        }
         return res.send({
             success: true,
             exists: (user && user.id) ? true : false,
+            data,
         });
     } catch (error) {
         console.log(error)
@@ -43,8 +49,6 @@ async function validate(req, res) {
 async function tokensVerify(req, res) {
     try {
         const { type } = req.body;
-        const params = req.user;
-        params.type = type;
         if (type === 'login') {
             const data = await authService.verifyLogin({
                 ...req.user,
@@ -52,7 +56,25 @@ async function tokensVerify(req, res) {
             });
             return res.send(data);
         }
-        const data = await authService.tokensVerify(params);
+        if (type === 'reset-password') {
+            const data = await authService.verifyResetPassword({
+                ...req.user,
+                ...req.body
+            });
+            return res.send(data);
+        }
+        if (type === 'activation') {
+            const data = await authService.tokensVerify({
+                ...req.user,
+                ...req.body
+            });
+            return res.send(data);
+        }
+        const data = await authService.tokensVerify({
+            ...req.user,
+            ...req.body,
+            transaction: `${req.user.group_name.toLowerCase()}.${req.body.type}`,
+        });
         return res.send(data);
     } catch (error) {
         return res.send({
@@ -202,21 +224,19 @@ async function login(req, res) {
 };
 
 function cleanMobile(data) {
-    const { mobile, country } = data;
-    if (mobile) {
-        if (country.iso === 'ZA') {
-            if (mobile.indexOf('0') === 0) {
-                return country.phone_code + mobile.substr(1);
-            }
-            if (mobile.indexOf('+27') === 0) {
-                return country.phone_code + mobile.substr(3);
-            }
-            if (mobile.indexOf('27') === 0) {
-                return country.phone_code + mobile.substr(2);
-            }
+    const { mobile, phone_country } = data;
+    if (phone_country.iso === 'ZA') {
+        if (mobile.indexOf('0') === 0) {
+            return phone_country.phone_code + mobile.substr(1);
+        }
+        if (mobile.indexOf('+27') === 0) {
+            return phone_country.phone_code + mobile.substr(3);
+        }
+        if (mobile.indexOf('27') === 0) {
+            return phone_country.phone_code + mobile.substr(2);
         }
     }
-    return mobile;
+    return phone_country.phone_code + mobile;
 }
 
 function cleanEmail(email) {
@@ -237,7 +257,7 @@ async function register(req, res) {
             last_name,
             first_name,
             referral_id,
-            nationality,
+            country,
             timezone,
             marketing,
         } = req.body;
@@ -258,11 +278,11 @@ async function register(req, res) {
             });
         }
 
-        // validate nationality
-        if (!req.body.nationality) {
+        // validate country of residence
+        if (!req.body.country) {
             return res.status(403).send({
                 success: false,
-                message: 'Registration failed. Nationality is required.'
+                message: 'Registration failed. Country of residence is required.'
             });
         }
 
@@ -298,7 +318,7 @@ async function register(req, res) {
             });
         }
 
-        const mobile = (mobile) ? cleanMobile(req.body) : null;
+        const mobile = cleanMobile(req.body);
         const email = cleanEmail(req.body.email);
 
         let isLead = true;
@@ -351,7 +371,7 @@ async function register(req, res) {
             password,
             salt,
             verification: null,
-            nationality: nationality || null,
+            nationality: (country && country.iso) || null,
             timezone: timezone || null,
         };
 
@@ -373,7 +393,7 @@ async function register(req, res) {
                 await emailHandler.notifyReferrer({
                     first_name: sponsor.first_name,
                     email: sponsor.email,
-                    referral: `${first_name} ${last_name} - ${first_name}`,
+                    referral: `${first_name} ${last_name} - ${newUser.referral_id}`,
                 });
             }
 
@@ -390,7 +410,7 @@ async function register(req, res) {
             await accountService.create({
                 name: 'cbi-wallet',
                 label: 'CBI Wallet',
-                reference: referral_id,
+                reference: newUser.referral_id,
                 is_primary: true,
                 user_id: newUser.id,
             });
@@ -400,8 +420,7 @@ async function register(req, res) {
                 user_id: newUser.id,
                 email: email,
                 is_primary: true,
-                verification: user.verification,
-                token,
+                is_verified: false,
             });
 
             // create primary mobile number record
@@ -409,6 +428,7 @@ async function register(req, res) {
                 user_id: newUser.id,
                 number: mobile,
                 is_primary: true,
+                is_verified: false,
             });
 
             // create (default) notification record for the user
@@ -482,8 +502,15 @@ async function logoutAll(req, res) {
  */
 async function passwordChange(req, res) {
     try {
-        const { old_password, new_password1, new_password2, geoinfo } = req.body;
+        const { old_password, new_password1, new_password2, geoinfo, device } = req.body;
         const user = await userService.show(req.user.id);
+
+        if (old_password === new_password1) {
+            return res.status(403).send({
+                success: false,
+                message: 'Validation error. Old and new password cannot be the same.'
+            });
+        }
 
         if (!bcrypt.compareSync(old_password, user.password)) {
             return res.status(403).send({
@@ -520,10 +547,17 @@ async function passwordChange(req, res) {
             data: { device },
         });
 
+        // send email notification
+        await emailHandler.changePassword({
+            first_name: user.first_name,
+            email: user.email,
+        });
+
         return res.send({
             success: true,
         });
     } catch (error) {
+        console.log(error.message)
         return res.send({
             success: false,
             message: 'Could not process request'
@@ -561,6 +595,7 @@ async function passwordReset(req, res) {
 
         await userService.update(user.id, {
             verification,
+            verify_token: token,
             updated: sequelize.fn('NOW'),
         });
 
@@ -596,10 +631,51 @@ async function passwordReset(req, res) {
  */
 async function passwordResetConfirm(req, res) {
     try {
+        const { password1, password2, device, geoinfo } = req.body;
+
+        console.log(req.user)
+
+        const user = await userService.findByEmail(req.user.email);
+
+        if (!user) {
+            return res.status(403).send({
+                success: false,
+                message: 'Access denied.'
+            });
+        }
+
+        if (password1 !== password2) {
+            return res.status(403).send({
+                success: false,
+                message: 'Validation error. Passwords do not match.'
+            });
+        }
+
+        const salt = bcrypt.genSaltSync();
+        const password = bcrypt.hashSync(password1, salt);
+
+        await userService.update(user.id, {
+            salt,
+            password,
+            updated: sequelize.fn('NOW'),
+        });
+
+        // audit trail / activity logging
+        await activityService.addActivity({
+            user_id: user.id,
+            action: `${user.group.name}.password.change`,
+            description: `${user.group.label} changed password`,
+            ip: (geoinfo && geoinfo.IPv4) ? geoinfo.IPv4 : null,
+            section: 'Account',
+            subsection: 'Change password',
+            data: { device },
+        });
+
         return res.send({
             success: true,
         });
     } catch (error) {
+        console.log(error.message)
         return res.send({
             success: false,
             message: 'Could not process request'

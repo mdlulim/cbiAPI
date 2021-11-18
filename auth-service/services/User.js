@@ -15,7 +15,7 @@ async function create(data) {
 
 async function show(id) {
     try {
-        const user = await User.findOne(data, {
+        const user = await User.findOne({
             where: { id },
             include: [{ model: Group }],
         });
@@ -28,12 +28,12 @@ async function show(id) {
 
 async function findByEmail(email) {
     try {
-        const { Op } = sequelize;
         return User.findOne({
             where: {
                 email,
                 archived: false,
-                status: { [Op.iLike]: 'Active' }
+                blocked: false,
+                verified: true,
             },
             include: [{ model: Group }],
         });
