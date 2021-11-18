@@ -21,7 +21,7 @@ async function capture(data) {
 
 async function index(user_id) {
     try {
-        return KYC.findAndCountAll({
+        return KYC.findAll({
             where: { user_id },
             order: [['created', 'DESC']],
         });
