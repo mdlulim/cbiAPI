@@ -39,6 +39,4 @@ module.exports.set = app => {
      */
     app.get('/fees/:tx_type/:subtype', authMiddleware.checkAuth, feeController.show);
 
-    app.get('/transactions', authMiddleware.checkAuth, transactionController.allTransactions);
-
 };

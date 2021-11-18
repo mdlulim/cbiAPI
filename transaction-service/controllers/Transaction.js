@@ -147,18 +147,6 @@ async function index(req, res){
     }
 };
 
-async function allTransactions(req, res){
-    try {
-        return transactionService.allTransactions()
-        .then(data => res.send(data));
-    } catch (err) {
-        return res.status(500).send({
-            success: false,
-            message: 'Could not process your request'
-        });
-    }
-};
-
 async function count(req, res){
     try {
         const { tx_type, subtype } = req.params;
@@ -191,5 +179,4 @@ module.exports = {
     index,
     count,
     totals,
-    allTransactions
 };

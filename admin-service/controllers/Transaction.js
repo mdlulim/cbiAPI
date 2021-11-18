@@ -36,7 +36,20 @@ async function show(req, res) {
     }
 }
 
+async function allTransactions(req, res){
+    try {
+        return transactionService.allTransactions()
+        .then(data => res.send(data));
+    } catch (err) {
+        return res.status(500).send({
+            success: false,
+            message: 'Could not process your request'
+        });
+    }
+};
+
 module.exports = {
     index,
     show,
+    allTransactions
 };

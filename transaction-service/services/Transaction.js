@@ -54,32 +54,6 @@ async function index(user_id, query) {
     }
 }
 
-async function allTransactions(user_id, query) {
-    try {
-        const where = {
-            ...query,
-            user_id,
-        };
-        const { count, rows } = await User.findAndCountAll({
-            where,
-            order: [[ 'created', 'DESC' ]],
-            include: Transaction
-        });
-        return {
-            success: true,
-            data: {
-                count,
-                next: null,
-                previous: null,
-                results: rows,
-            }
-        };
-    } catch (error) {
-        console.error(error.message || null);
-        throw new Error('Could not process your request');
-    }
-}
-
 async function count(user_id, txtype, subtype) {
     try {
         const { Op } = sequelize;
@@ -143,5 +117,4 @@ module.exports = {
     update,
     count,
     totals,
-    allTransactions
 }
