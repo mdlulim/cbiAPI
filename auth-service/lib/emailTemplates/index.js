@@ -1,3 +1,5 @@
+const fs = require('fs');
+
 const welcome = data => {
     const {
         url,
@@ -101,24 +103,25 @@ const changePassword = data => {
 };
 
 const verifyLogin = data => {
+    const html = fs.readFileSync('./html/login-verification.html').toString();
     const {
         code,
         first_name,
     } = data;
-    const html = `
-        <p>Hi ${first_name},</p>
-        <p><strong>Just checking to be sure you're you.</strong></p>
-        <p>Enter the following code into the Verification Code field.</p>
-        <p><strong>${code}</strong></p>
-        <p>
-            If this login attempt was not made by you it means someone visited your account 
-            login page from an unrecognized browser. It may be an indication you have been 
-            the target of a phishing attempt and might want to consider immediately locking 
-            your account, or even moving your funds to a new account. If this wasn't you, 
-            urgently contact us on <a href="mailto:support@cbiglobal.io">support@cbiglobal.io</a>.
-        </p>
-        <p style="padding-top:15px"><strong>Regards</strong>,<br />CBI Support</p>
-    `;
+    // const html = `
+    //     <p>Hi ${first_name},</p>
+    //     <p><strong>Just checking to be sure you're you.</strong></p>
+    //     <p>Enter the following code into the Verification Code field.</p>
+    //     <p><strong>${code}</strong></p>
+    //     <p>
+    //         If this login attempt was not made by you it means someone visited your account 
+    //         login page from an unrecognized browser. It may be an indication you have been 
+    //         the target of a phishing attempt and might want to consider immediately locking 
+    //         your account, or even moving your funds to a new account. If this wasn't you, 
+    //         urgently contact us on <a href="mailto:support@cbiglobal.io">support@cbiglobal.io</a>.
+    //     </p>
+    //     <p style="padding-top:15px"><strong>Regards</strong>,<br />CBI Support</p>
+    // `;
     const text = `
         Hi ${first_name}, 
         Just checking to be sure you're you.
