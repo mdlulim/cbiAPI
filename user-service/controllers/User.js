@@ -88,7 +88,7 @@ async function update(req, res) {
 
 async function kyc(req, res) {
     try {
-        const data = await kycService.index(req.user.id);
+        const data = await kycService.index(req.params.id);
         const { count, rows } = data;
         return res.send({
             success: true,
