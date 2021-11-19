@@ -20,24 +20,25 @@ const upload = multer({
         acl: 'private',
         key: async function (request, file, cb) {
             const { category, type } = request.params;
+            const { filename } = request.query;
             const { user } = request;
-            const filename = `${category}/${type}/${user.id}/${new Date().getTime()}.${file.originalname.split('.')[1]}`;
+            const file_name = filename ? `${category}/${type}/${user.id}/${filename}` : `${category}/${type}/${user.id}/${new Date().getTime()}.${file.originalname.split('.')[1]}`;
             // store file path in database
             await documentService.create({
                 type,
                 category,
-                file: filename,
+                file: file_name,
                 user_id: user.id,
             });
             // check if profile image upload
             if (category === 'profile' && type === 'image') {
                 // update profile image
                 await userService.update({
-                    profile: filename,
+                    profile: file_name,
                     updated: new Date().toISOString(),
                 }, user.id);
             }
-            cb(null, filename);
+            cb(null, file_name);
         }
     })
 }).array('upload', 1);
@@ -52,11 +53,16 @@ async function uploader(request, response, next) {
                     message: error.message || 'error'
                 });
             }
-            return response.status(200).send({
+            const data = {
                 success: true,
                 message: 'File uploaded successfully.',
-            });
-            
+            };
+            if (request.query.filename) {
+                const { category, type } = request.params;
+                const { user } = request;
+                data.filename = `${category}/${type}/${user.id}/${request.query.filename}`;
+            }
+            return response.status(200).send(data);
         });
     } catch (error) {
         console.log(error.message || null)
