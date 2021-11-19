@@ -76,7 +76,7 @@ const kycNotification = data => {
                 <!-- Email body -->
                 <div >
                     <p>
-                        ${(level+'' ==='-1')? 'You have not qualified for any KYC Level' : 'You have qualified for KYC level <strong>'+level+'<strong>.<br/>'}
+                        ${(level+'' ==='-1')? 'You have not qualified for any KYC Level<br/>' : 'You have qualified for KYC level <strong>'+level+'<strong>.<br/>'}
                         ${(level+'' !=='3')? 'Review the comments and re-upload:': ''}
                     <p>
                     ${(level+'' !=='3')? remaining: ''}
@@ -100,7 +100,7 @@ const kycNotification = data => {
         Hi ${first_name}, 
         ${(level+'' ==='-1')? 'You have not qualified for any KYC Level' : 'You have qualified for KYC level <strong>'+level+'<strong>.<br/>'}
         ${(level+'' !=='3')? 'Please re-upload the rejected documents': ''} 
-        Regards, CBI Support
+        Cheers, CBI Support
     `;
     return {
         html,
