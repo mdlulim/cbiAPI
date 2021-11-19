@@ -80,7 +80,7 @@ async function create(req, res) {
             action: `${req.user.group_name}.transactions.${data.tx_type}.${data.subtype}`,
             section: 'Transactions',
             subsection: getSubsection(data),
-            description: `${user.first_name} made a ${data.subtype} of ${data.amount.toFixed(data.currency.divisibility)} ${data.currency.code}`,
+            description: `${user.first_name} made a ${data.subtype} of ${data.amount.toFixed(data.currency.divisibility || 4)} ${data.currency.code || 'CBI'}`,
             ip: null,
             data,
         });
@@ -111,6 +111,36 @@ async function create(req, res) {
                 currency_code: data.currency.code,
             });
         }
+
+        /**
+         * Transfer logic here
+         */
+        if (data.tx_type === 'credit' && data.subtype === 'transfer') {
+
+            // find recipient
+            const recipient = await userService.findByReferralId(req.body.recipient);
+
+            // send email to member
+            await emailHandler.transferSendNotification({
+                first_name: user.first_name,
+                email: user.email,
+                reference: txid,
+                amount: data.amount.toFixed(data.currency.divisibility),
+                currency_code: data.currency.code,
+                recipient: `${recipient.first_name} ${recipient.last_name} (${recipient.referral_id})`,
+            });
+
+            // send email to recipient
+            await emailHandler.depositRequestNotification({
+                first_name: recipient.first_name,
+                email: recipient.email,
+                amount: data.amount.toFixed(data.currency.divisibility),
+                currency_code: data.currency.code,
+                sender: `${user.first_name} ${user.last_name} (${user.referral_id})`,
+            });
+        }
+
+        
         return res.status(200).send({
             success: true,
             data: transaction,
