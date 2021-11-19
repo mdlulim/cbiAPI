@@ -62,14 +62,7 @@ async function show_all(req, res) {
 async function update(req, res) {
     try {
         const data = req.body
-        const levels_to_update = Object.keys(data.levels);
-        let updated = null
-        levels_to_update.forEach(async(i) => {
-            const id = data.levels[i].id
-            delete data.levels[i].id
-            updated = await kycService.update(data.levels[i], id);
-        });
-
+        const updated = await kycService.update(data.levels)
         const kyc_applications = await kycService.show(data.user_id);
 
         let rem = '<ul>';
