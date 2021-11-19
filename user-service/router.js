@@ -26,6 +26,8 @@ module.exports.set = app => {
 
     app.get('/referrals/:uid', authMiddleware.checkAuth, userController.referralsByUUID);
 
+    app.get('/coaches', authMiddleware.checkAuth, userController.coaches);
+
     app.post('/bank_accounts', authMiddleware.checkAuth, bankAccountController.create);
     app.get('/bank_accounts', authMiddleware.checkAuth, bankAccountController.index);
     app.get('/bank_accounts/:id', authMiddleware.checkAuth, bankAccountController.show);
