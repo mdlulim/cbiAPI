@@ -16,7 +16,7 @@ module.exports.set = app => {
      * 
      * Retrieve current user’s transactions.
      */
-    app.get('/',  transactionController.index);
+     app.get('/', authMiddleware.checkAuth, transactionController.index);
     
     /**
      * Retrieve User's Transactions
