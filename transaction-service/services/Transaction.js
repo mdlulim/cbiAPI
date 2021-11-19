@@ -69,6 +69,28 @@ async function index(user_id, query) {
     }
 }
 
+async function buddy(user_id, query) {
+    try {
+        const transactions = await BuddyTransaction.findAndCountAll({
+            where: { user_id },
+            order: [[ 'created', 'DESC' ]]
+        });
+        const { count, rows } = transactions;
+        return {
+            success: true,
+            data: {
+                count,
+                next: null,
+                previous: null,
+                results: rows,
+            }
+        };
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
 async function count(user_id, txtype, subtype) {
     try {
         const { Op } = sequelize;
@@ -129,6 +151,7 @@ async function totals(user_id, txtype, subtype) {
 module.exports = {
     create,
     index,
+    buddy,
     update,
     count,
     totals,

@@ -19,6 +19,13 @@ module.exports.set = app => {
     app.get('/', authMiddleware.checkAuth, transactionController.index);
     
     /**
+     * Retrieve User's Transactions
+     * 
+     * Retrieve current user’s transactions.
+     */
+    app.get('/buddy', authMiddleware.checkAuth, transactionController.buddy);
+    
+    /**
      * Retrieve User's Transactions Stats
      * 
      * Retrieve current user’s transactions stats.
