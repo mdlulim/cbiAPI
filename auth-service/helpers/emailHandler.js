@@ -26,6 +26,17 @@ async function resetPassword(data) {
     return sendMail(from, email, 'CBI - Reset password', template);
 };
 
+async function welcome(data) {
+    const { email } = data;
+    data.url = `${baseurl.frontend}/login`;
+    const template = emailTemplates.welcome(data);
+    const from = {
+        name: 'CBI',
+        email: smtp.auth.user,
+    };
+    return sendMail(from, email, 'Welcome to CBI Global!', template);
+};
+
 async function changePassword(data) {
     const { email } = data;
     const template = emailTemplates.changePassword(data);
@@ -62,4 +73,5 @@ module.exports = {
     verifyLogin,
     notifyReferrer,
     changePassword,
+    welcome,
 };

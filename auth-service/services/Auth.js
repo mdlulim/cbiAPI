@@ -5,6 +5,7 @@ const { EmailAddress } = require('../models/EmailAddress');
 const { User } = require('../models/User');
 const { Group } = require('../models/Group');
 const { OTPAuth } = require('../models/OTPAuth');
+const emailHandler = require('../helpers/emailHandler');
 
 const config = require('../config');
 const {
@@ -177,6 +178,14 @@ async function tokensVerify(data) {
             is_verified: true,
             updated: sequelize.fn('NOW'),
         }, { where: { email } });
+
+
+        // send welcome email
+        await emailHandler.welcome({
+            first_name: user.first_name,
+            email: user.email,
+        });
+
     } else {
         const {
             id,
