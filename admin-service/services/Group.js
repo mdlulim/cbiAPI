@@ -75,7 +75,6 @@ async function show(id) {
  */
 async function update(id, data) {
     
-    console.log('THABIOS '+id);
     try {
         return Group.update(data, {
             where: { id },

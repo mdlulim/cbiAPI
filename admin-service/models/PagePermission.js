@@ -1,14 +1,18 @@
 const Sequelize = require('sequelize');
 const sequelize = require('../config/db');
 
-const PermissionLevel = sequelize.define('permission_levels', {
+const PagePermission = sequelize.define('page_permission', {
     id: {
         type: Sequelize.UUID,
         defaultValue: Sequelize.UUIDV4,
         primaryKey: true,
     },
-	level_name: Sequelize.STRING,
-	archived: Sequelize.BOOLEAN,
+    page: Sequelize.STRING,
+    low: Sequelize.BOOLEAN,
+    basic: Sequelize.BOOLEAN,
+    medium: Sequelize.BOOLEAN,
+    high: Sequelize.BOOLEAN,
+    veryhigh: Sequelize.BOOLEAN,
     created: Sequelize.DATE,
     updated: Sequelize.DATE,
 }, {
@@ -16,5 +20,5 @@ const PermissionLevel = sequelize.define('permission_levels', {
 });
 
 module.exports = {
-    PermissionLevel,
+    PagePermission,
 }

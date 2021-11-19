@@ -47,6 +47,27 @@ async function index(query) {
     }
 }
 
+async function history(query) {
+    try {
+        const { offset, limit } = query;
+        const where = query || {};
+
+        delete where.offset;
+        delete where.limit;
+
+        return UserProduct.findAndCountAll({
+            where,
+            include: [{ model: Product }, { model: User }],
+            order: [['created', 'DESC']],
+            offset: offset || 0,
+            limit: limit || 100,
+        });
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
 async function categories(query) {
     try {
         const { offset, limit } = query;
@@ -83,11 +104,11 @@ async function show(id) {
     try {
         return Product.findOne({
             where: { id },
-            include: [{ model: Product }, { model: ProductCategory }],
+            include: [ { model: ProductCategory }],
         });
     } catch (error) {
         console.error(error.message || null);
-        throw new Error('Could not process your request');
+        throw new Error('Could not process your request in service');
     }
 }
 
@@ -110,12 +131,32 @@ async function findByPermakey(permakey) {
  * Update company’s product details.
  * 
  * @param {string} id
- * @param {string} data 
- * @returns 
+ * @param {string} data
+ * @returns
  */
 async function update(id, data) {
     try {
         return Product.update(data, { where: { id } });
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
+
+/**
+ * 
+ * Update Product
+ * 
+ * Update company’s product details.
+ * 
+ * @param {string} id
+ * @param {string} data 
+ * @returns 
+ */
+async function updateCategory(id, data) {
+    try {
+        return ProductCategory.update(data, { where: { id } });
     } catch (error) {
         console.error(error.message || null);
         throw new Error('Could not process your request');
@@ -134,6 +175,7 @@ async function destroy(id) {
 module.exports = {
     create,
     index,
+    history,
     show,
     update,
     destroy,
@@ -141,4 +183,5 @@ module.exports = {
     categories,
     createCategory,
     getMembersByProductId,
+    updateCategory,
 }

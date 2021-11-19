@@ -67,8 +67,10 @@ module.exports.set = app => {
 
     app.get('/wallet', authMiddleware.checkAuth, accountController.wallet);
 
-    app.get('/kyc', authMiddleware.checkAuth, userController.kyc);
+    app.get('/kyc/:id', authMiddleware.checkAuth, userController.kyc);
     app.post('/kyc', authMiddleware.checkAuth, userController.captureKYC);
+
+    app.get('/kyc-level/:id', authMiddleware.checkAuth, userController.kyc_level);
 
     app.get('/search/:prop/:value', authMiddleware.checkAuth, userController.search);
 };

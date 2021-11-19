@@ -26,11 +26,14 @@ if (stage === 'dev') {
             }
         },
         buddy: {
-            base_url: {
-                staging: 'https://staging.buddy.na/api/v2/services',
-                production: 'https://buddy.na/api/v2/services'
-            }, 
-            authenticationToken: Buffer.from("6b05e06a-cdcb-41dd-8e01-8dcf551e726d").toString('base64')
+            staging: {
+                base_url: 'https://staging.buddy.na/api/v2/services',
+                authenticationToken: Buffer.from("6b05e06a-cdcb-41dd-8e01-8dcf551e726d").toString('base64')
+            },
+            production: {
+                base_url: 'https://buddy.na/api/v2/services',
+                authenticationToken: Buffer.from("12ee42cc-77ed-47a0-98bc-7fcb3e4fb8ae").toString('base64')
+            }
         }
     }
 } else {
