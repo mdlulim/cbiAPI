@@ -52,8 +52,7 @@ async function uploader(request, response, next) {
                     message: error.message || 'error'
                 });
             }
-            return res.set('Access-Control-Allow-Origin', '*');
-                response.status(200).send({
+            return response.status(200).send({
                 success: true,
                 message: 'File uploaded successfully.',
             });
