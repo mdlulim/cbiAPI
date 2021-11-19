@@ -154,6 +154,7 @@ async function show(id) {
                 'getstarted',
                 'terms_agree',
                 'stars',
+                'sponsor',
                 'referral_id',
                 'autorenew',
                 'expiry',
