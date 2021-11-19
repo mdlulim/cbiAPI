@@ -102,8 +102,22 @@ async function show(permakey) {
     }
 }
 
+async function findByCode(product_code) {
+    try {
+        return Product.findOne({
+            where: { product_code },
+            include: [{ model: Currency }, { model: ProductCategory }]
+        });
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
 async function subscribe(data) {
     try {
+        data.start_date = sequelize.fn('NOW');
+        console.log(data)
         return UserProduct.create(data);
     } catch (error) {
         console.error(error.message || null);
@@ -146,4 +160,5 @@ module.exports = {
     subscribe,
     products,
     categories,
+    findByCode,
 }

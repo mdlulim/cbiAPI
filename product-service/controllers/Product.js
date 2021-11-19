@@ -38,7 +38,8 @@ async function index(req, res){
 async function subscribe(req, res){
     try {
         // get product details
-        const product = await productService.find(req.body.id);
+        const product = await productService.findByCode(req.body.product_code);
+        console.log(product)
 
         // get user
         const user = await userService.show(req.user.id);
@@ -56,6 +57,10 @@ async function subscribe(req, res){
             user_id: user.id,
             product_id: product.id,
         };
+
+        if (req.body.wc) {
+            data.end_date = moment().add(1, 'month').format('YYYY-MM-DD');
+        }
 
         // subscribe
         await productService.subscribe(data);

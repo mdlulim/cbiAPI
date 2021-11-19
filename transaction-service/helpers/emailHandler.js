@@ -15,7 +15,7 @@ async function depositRequestNotification(data) {
 
 async function transferSendNotification(data) {
     const { email } = data;
-    const template = emailTemplates.transferReceiptNotification(data);
+    const template = emailTemplates.transferSendNotification(data);
     const from = {
         name: 'CBI',
         email: smtp.auth.user,
