@@ -9,7 +9,8 @@ Buddy.belongsTo(User, { foreignKey: 'user_id', targetKey: 'id' });
 BuddyTransaction.belongsTo(User, { foreignKey: 'user_id', targetKey: 'id' });
 Document.belongsTo(User, { foreignKey: 'user_id', targetKey: 'id' });
 
-Transaction.belongsTo(User, { foreignKey: 'user_id', targetKey: 'id' });
+User.hasMany(Transaction, {foreignKey: 'user_id', targetKey: 'id'});
+Transaction.belongsTo(User, {foreignKey: 'user_id', targetKey: 'id'});
 
 async function create(data) {
     try {

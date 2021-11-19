@@ -35,8 +35,37 @@ async function show(req, res) {
         });
     }
 }
+async function getProofOfPayment(req, res) {
+    try {
+        const files = await transactionService.getProofOfPayment(req.params.id);
+        console.log(files)
+        return res.send({
+            success: true,
+            data: files
+        });
+    } catch (error) {
+        return res.send({
+            success: false,
+            message: 'Could not process request'
+        });
+    }
+}
+
+async function allTransactions(req, res){
+    try {
+        return transactionService.allTransactions()
+        .then(data => res.send(data));
+    } catch (err) {
+        return res.status(500).send({
+            success: false,
+            message: 'Could not process your request'
+        });
+    }
+};
 
 module.exports = {
     index,
     show,
+    allTransactions,
+    getProofOfPayment,
 };

@@ -12,7 +12,7 @@ const Buddy = sequelize.define('buddy_accounts', {
     updated: Sequelize.DATE,
     user_id: Sequelize.UUID,
 }, {
-    timestamps: false
+    timestamps: false 
 });
 
 module.exports = {

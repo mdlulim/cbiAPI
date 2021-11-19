@@ -81,24 +81,24 @@ async function coaches(req, res) {
 async function update(req, res) {
     try {
         return userService.update(req.user.id, req.body)
-        .then(async () => {
-            await activityService.add({
-                user_id: req.user.id,
-                action: `${req.user.group_name.toLowerCase()}.profile.update`,
-                description: `${req.user.first_name} updated profile`,
-                section: 'Account',
-                subsection: 'Profile',
-                data: { id: req.user.id, data: req.body },
-                ip: null,
+            .then(async () => {
+                await activityService.add({
+                    user_id: req.user.id,
+                    action: `${req.user.group_name.toLowerCase()}.profile.update`,
+                    description: `${req.user.first_name} updated profile`,
+                    section: 'Account',
+                    subsection: 'Profile',
+                    data: { id: req.user.id, data: req.body },
+                    ip: null,
+                });
+                return res.send({ success: true });
+            })
+            .catch(err => {
+                res.send({
+                    success: false,
+                    message: err.message,
+                });
             });
-            return res.send({ success: true });
-        })
-        .catch(err => {
-            res.send({
-                success: false,
-                message: err.message,
-            });
-        });
     } catch (error) {
         return res.send({
             success: false,
@@ -109,7 +109,7 @@ async function update(req, res) {
 
 async function kyc(req, res) {
     try {
-        const data = await kycService.index(req.user.id);
+        const data = await kycService.index(req.params.id);
         const { count, rows } = data;
         return res.send({
             success: true,
@@ -121,7 +121,7 @@ async function kyc(req, res) {
     } catch (error) {
         return res.send({
             success: false,
-            message: 'Could not process request'
+            message: error
         });
     }
 }
@@ -147,6 +147,33 @@ async function captureKYC(req, res) {
         return res.send({
             success: false,
             message: 'Could not process request' + error.message
+        });
+    }
+}
+
+async function kyc_level(req, res) {
+    try {
+        const kyc_applications = await kycService.allkyc(req.params.id);
+        let least_rejected = 10;
+        let total_verified = 0;
+
+        kyc_applications.forEach(row=>{
+            if((parseInt(row.level) < least_rejected && row.status === 'Rejected') || (parseInt(row.level) < least_rejected && row.status === 'Pending'))
+                least_rejected = parseInt(row.level)
+            if(row.verified)
+                total_verified += 1;
+        })
+
+        const kyc_level = (least_rejected === 10 && total_verified === 4) ? 3 : (least_rejected === 0 || total_verified === 0) ? -1 : least_rejected - 1
+
+        return res.send({
+            success: true,
+            data:{ kyc_level },
+        });
+    } catch (error) {
+        return res.send({
+            success: false,
+            message: error
         });
     }
 }
@@ -239,4 +266,5 @@ module.exports = {
     autorenew,
     search,
     activities,
+    kyc_level
 };
