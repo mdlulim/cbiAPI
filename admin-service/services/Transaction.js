@@ -1,5 +1,6 @@
 const sequelize = require('../config/db');
 const { Transaction } = require('../models/Transaction');
+const { User } = require('../models/User');
 const { Document } = require('../models/Document');
 
 async function index(query) {
@@ -33,6 +34,31 @@ async function show(id) {
     }
 }
 
+async function allTransactions(user_id, query) {
+    try {
+        const where = {
+            ...query,
+            user_id,
+        };
+        const { count, rows } = await User.findAndCountAll({
+            where,
+            order: [[ 'created', 'DESC' ]],
+            include: Transaction
+        });
+        return {
+            success: true,
+            data: {
+                count,
+                next: null,
+                previous: null,
+                results: rows,
+            }
+        };
+    } catch (error) {
+        console.error(error.message || null);
+    }
+}
+
 async function getProofOfPayment(txid) {
     try {
         return Document.findAndCountAll({
@@ -48,5 +74,6 @@ async function getProofOfPayment(txid) {
 module.exports = {
     index,
     show,
+    allTransactions,
     getProofOfPayment
 }

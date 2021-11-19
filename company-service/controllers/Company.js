@@ -57,10 +57,10 @@ async function currencies(req, res){
  */
 async function bankAccounts(req, res){
     try {
-        const user = await userService.show(req.user.id);
-        return companyService.bankAccounts(user.company_id)
+        return companyService.bankAccounts(req.query)
         .then(data => res.send(data));
     } catch (err) {
+        console.log(err.message);
         return res.status(500).send({
             success: false,
             message: 'Could not process your request'
@@ -80,8 +80,7 @@ async function bankAccounts(req, res){
  */
 async function cryptoAccounts(req, res){
     try {
-        const user = await userService.show(req.user.id);
-        return companyService.cryptoAccounts(user.company_id)
+        return companyService.cryptoAccounts()
         .then(data => res.send(data));
     } catch (err) {
         return res.status(500).send({

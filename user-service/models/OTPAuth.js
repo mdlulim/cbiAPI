@@ -14,6 +14,7 @@ const OTPAuth = sequelize.define('otp_auth', {
 	code: Sequelize.STRING,
 	device: Sequelize.JSONB,
 	geoinfo: Sequelize.JSONB,
+	data: Sequelize.JSONB,
 	updated: Sequelize.DATE,
 	created: Sequelize.DATE,
 	description: Sequelize.STRING,

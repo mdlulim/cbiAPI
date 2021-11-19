@@ -49,11 +49,8 @@ pipeline {
     stages {
         stage('SonarQube Analysis') {
             steps {
-                script {
-                    def scannerHome = tool 'sonar-scanner';
-                }
                 withSonarQubeEnv(installationName: 'cbiglobal-sonarqube') {
-                    sh "${scannerHome}/bin/sonar-scanner"
+                    sh '/var/lib/jenkins/tools/hudson.plugins.sonar.SonarRunnerInstallation/sonar-scanner/bin/sonar-scanner'
                 }
             }
         }

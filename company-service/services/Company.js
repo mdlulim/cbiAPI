@@ -1,10 +1,14 @@
-// const sequelize = require('../config/db');
+const sequelize = require('../config/db');
 const { Company }  = require('../models/Company');
 const { Currency } = require('../models/Currency');
 const { Setting }  = require('../models/Setting');
+const { CompanyBankAccount } = require('../models/CompanyBankAccount');
+const { CompanyCryptoAccount } = require('../models/CompanyCryptoAccount');
 
 Currency.belongsTo(Company, { foreignKey: 'company_id', targetKey: 'id' });
 Setting.belongsTo(Company, { foreignKey: 'company_id', targetKey: 'id' });
+CompanyBankAccount.belongsTo(Company, { foreignKey: 'company_id', targetKey: 'id' });
+CompanyCryptoAccount.belongsTo(Company, { foreignKey: 'company_id', targetKey: 'id' });
 
 async function profile(id) {
     try {
@@ -42,44 +46,51 @@ async function currencies(company_id) {
     }
 }
 
-async function bankAccounts(id) {
+async function bankAccounts() {
     try {
-        const company = await Company.findOne({
-            attributes: [
-                'bank_accounts'
-            ],
-            where: { id },
+        const { Op } = sequelize;
+        const bankAccounts = await CompanyBankAccount.findAndCountAll({
+            where: {
+                status: {
+                    [Op.iLike]: 'Active'
+                }
+            },
         });
+        const { count, rows } = bankAccounts;
         return {
             success: true,
             data: {
-                count: null,
+                count,
                 next: null,
                 previous: null,
-                results: company.bank_accounts || [],
+                results: rows,
             }
         };
     } catch (error) {
+        console.error('error: ');
         console.error(error.message || null);
         throw new Error('Could not process your request');
     }
 }
 
-async function cryptoAccounts(id) {
+async function cryptoAccounts() {
     try {
-        const company = await Company.findOne({
-            attributes: [
-                'crypto_accounts'
-            ],
-            where: { id },
+        const { Op } = sequelize;
+        const cryptoAccounts = await CompanyCryptoAccount.findAndCountAll({
+            where: {
+                status: {
+                    [Op.iLike]: 'Active'
+                }
+            },
         });
+        const { count, rows } = cryptoAccounts;
         return {
             success: true,
             data: {
-                count: null,
+                count,
                 next: null,
                 previous: null,
-                results: company.crypto_accounts || [],
+                results: rows,
             }
         };
     } catch (error) {

@@ -2,8 +2,9 @@ const feeService = require('../services/Fee');
 
 async function show(req, res){
     try {
+        const { group_id } = req.user;
         const { tx_type, subtype } = req.params;
-        const fee = await feeService.show(tx_type, subtype);
+        const fee = await feeService.show(tx_type, subtype, group_id);
         res.send({
             success: true,
             data: fee,

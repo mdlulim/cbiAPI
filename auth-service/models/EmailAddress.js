@@ -13,8 +13,6 @@ const EmailAddress = sequelize.define('email_address', {
     is_verified: Sequelize.BOOLEAN,
     created: Sequelize.DATE,
     updated: Sequelize.DATE,
-    verification: Sequelize.JSONB,
-    token: Sequelize.STRING,
 }, {
     timestamps: false
 });

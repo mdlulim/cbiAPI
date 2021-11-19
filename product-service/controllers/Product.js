@@ -1,10 +1,15 @@
 const moment = require('moment');
 const sequelize = require('../config/db');
+const accountService = require('../services/Account');
 const activityService = require('../services/Activity');
 const investmentService  = require('../services/Investment');
 const productService  = require('../services/Product');
 const transactionService  = require('../services/Transaction');
 const userService = require('../services/User');
+const {
+    tokenPurchaseConfirmation,
+    wealthCreatorConfirmation,
+} = require('../helpers/emailHandler');
 
 async function overview(req, res){
     try {
@@ -32,10 +37,14 @@ async function index(req, res){
 
 async function subscribe(req, res){
     try {
-        const product = req.body;
+        // get product details
+        const product = await productService.find(req.body.id);
+
+        // get user
+        const user = await userService.show(req.user.id);
 
         // validate product
-        if (!product || !product.id) {
+        if (!product) {
             return res.status(403)
             .send({
                 success: false,
@@ -44,16 +53,16 @@ async function subscribe(req, res){
         }
 
         const data = {
-            user_id: req.user.id,
-            product_id: req.body.id,
+            user_id: user.id,
+            product_id: product.id,
         };
 
         // subscribe
         await productService.subscribe(data);
 
-        let description = `${req.user.first_name} bought a product (${req.body.title})`;
+        let description = `${user.first_name} bought a product (${product.title})`;
         if (req.body.wc) {
-            description = `${req.user.first_name} became a Wealth Creator`;
+            description = `${user.first_name} became a Wealth Creator`;
         }
 
         // log activity
@@ -69,14 +78,41 @@ async function subscribe(req, res){
 
         // update user group (if wealth-creator subscription)
         if (req.body.wc) {
-            await userService.update(req.user.id, {
+            const adminFee = parseFloat(product.registration_fee);
+            const price = parseFloat(product.price);
+            const amount = adminFee + price;
+            
+            // get and update wallet balance
+            const wallet = await accountService.show(user.id);
+
+            // update wallet balance
+            await accountService.update({
+                balance: parseFloat(wallet.balance) - amount,
+                available_balance: parseFloat(wallet.available_balance) - amount,
+            }, wallet.id);
+
+            // update profile
+            await userService.update(user.id, {
                 group_id: 'c85ef2f9-d1dc-451d-b36d-9f0b111c1882',
+                expiry: moment().add(1, 'month').format('YYYY-MM-DD'),
+                autorenew: true,
+            });
+
+            // send email
+            await wealthCreatorConfirmation({
+                first_name: user.first_name,
+                email: user.email,
+            });
+        } else {
+            await tokenPurchaseConfirmation({
+                product,
+                email: user.email,
+                tokens: req.body.tokens,
+                first_name: user.first_name,
             });
         }
 
-        return res.send({
-            success: true,
-        });
+        return res.send({ success: true });
     } catch (err) {
         console.log(err.message)
         return res.status(500).send({
