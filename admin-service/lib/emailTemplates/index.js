@@ -88,7 +88,7 @@ const kycNotification = data => {
             <div>
                 <p style="text-align: center; line-height: 1.5; font-size: smaller;">
                                    &copy;2021 CBI Global<br/>
-                    <a href="">Help Centre</a>   |   <a href="">Terms and conditions</a>   |   <a href="">Security and privacy</a>
+                    <a href="https://demo.cbiglobal.io">Help Centre</a>   |   <a href="https://demo.cbiglobal.io">Terms and conditions</a>   |   <a href="https://demo.cbiglobal.io">Security and privacy</a>
                 </p>
             </div>
         </div>
