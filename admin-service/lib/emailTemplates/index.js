@@ -76,7 +76,7 @@ const kycNotification = data => {
                 <!-- Email body -->
                 <div >
                     <p>
-                        ${(level+'' ==='-1')? 'You have not qualified for any KYC Level' : 'You have qualified for KYC level <strong>'+level+'strong>.<br/>'}
+                        ${(level+'' ==='-1')? 'You have not qualified for any KYC Level' : 'You have qualified for KYC level <strong>'+level+'<strong>.<br/>'}
                         ${(level+'' !=='3')? 'Review the comments and re-upload:': ''}
                     <p>
                     ${(level+'' !=='3')? remaining: ''}
