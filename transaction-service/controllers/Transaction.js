@@ -4,6 +4,7 @@ const currencyService = require('../services/Currency');
 const documentService = require('../services/Document');
 const userService = require('../services/User');
 const emailHandler = require('../helpers/emailHandler');
+const { decrypt } = require('../utils');
 
 const getSubsection = (data) => {
     const {
@@ -61,6 +62,9 @@ async function create(req, res) {
         }
 
         // insert transaction
+        data.fee = parseFloat(decrypt(req.body.fee));
+        data.amount = parseFloat(decrypt(req.body.amount));
+        data.total_amount = parseFloat(decrypt(req.body.total_amount));
         const transaction = await transactionService.create(data);
 
         if (!transaction) {
@@ -76,7 +80,7 @@ async function create(req, res) {
             action: `${req.user.group_name}.transactions.${data.tx_type}.${data.subtype}`,
             section: 'Transactions',
             subsection: getSubsection(data),
-            description: `${user.first_name} made a ${data.subtype} of ${data.amount.toFixed(data.currency.divisibility)} ${data.currency.code}`,
+            description: `${user.first_name} made a ${data.subtype} of ${data.amount.toFixed(data.currency.divisibility || 4)} ${data.currency.code || 'CBI'}`,
             ip: null,
             data,
         });
@@ -88,29 +92,14 @@ async function create(req, res) {
         // if it's a deposit
         // store POP (Proof of Payment)
         if (data.tx_type === 'credit' && data.subtype === 'deposit') {
-            if (data.file) {
-                // check there a document record already with the same txid
-                const docs = await documentService.search('note', txid);
-                if (docs && docs.length > 0) {
-                    // update record
-                    await documentService.update({
-                        file: data.file.name,
-                        metadata: JSON.stringify(data.file),
-                        status: 'Pending',
-                    }, docs[0].id);
-                } else {
-                    // insert new document record
-                    const document = {
-                        user_id: req.user.id,
-                        file: data.file.name,
-                        category: 'transactions',
-                        type: 'deposit',
-                        metadata: JSON.stringify(data.file),
-                        status: 'Pending',
-                        note: txid,
-                    };
-                    await documentService.create(document);
-                }
+            // update document/file record
+            const document = await documentService.findByCategoryType('pop', 'deposit', req.user.id);
+            if (document && document.id) {
+                await documentService.update(document.id, {
+                    metadata: JSON.stringify({
+                        txid,
+                    })
+                });
             }
 
             // send email to member
@@ -122,6 +111,36 @@ async function create(req, res) {
                 currency_code: data.currency.code,
             });
         }
+
+        /**
+         * Transfer logic here
+         */
+        if (data.tx_type === 'credit' && data.subtype === 'transfer') {
+
+            // find recipient
+            const recipient = await userService.findByReferralId(req.body.recipient);
+
+            // send email to member
+            await emailHandler.transferSendNotification({
+                first_name: user.first_name,
+                email: user.email,
+                reference: txid,
+                amount: data.amount.toFixed(data.currency.divisibility),
+                currency_code: data.currency.code,
+                recipient: `${recipient.first_name} ${recipient.last_name} (${recipient.referral_id})`,
+            });
+
+            // send email to recipient
+            await emailHandler.depositRequestNotification({
+                first_name: recipient.first_name,
+                email: recipient.email,
+                amount: data.amount.toFixed(data.currency.divisibility),
+                currency_code: data.currency.code,
+                sender: `${user.first_name} ${user.last_name} (${user.referral_id})`,
+            });
+        }
+
+        
         return res.status(200).send({
             success: true,
             data: transaction,
@@ -137,7 +156,7 @@ async function create(req, res) {
 
 async function index(req, res){
     try {
-        return transactionService.index(req.user.id, req.query)
+        return transactionService.index()
         .then(data => res.send(data));
     } catch (err) {
         return res.status(500).send({

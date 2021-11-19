@@ -31,8 +31,21 @@ async function index(user_id) {
     }
 }
 
+async function allkyc(user_id) {
+    try {
+        return KYC.findAll({
+            where: { user_id },
+            order: [['created', 'DESC']],
+        });
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
 
 module.exports = {
     capture,
     index,
+    allkyc
 }

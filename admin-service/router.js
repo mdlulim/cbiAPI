@@ -56,6 +56,9 @@ module.exports.set = app => {
      */
     app.get('/users/:id/emails', authMiddleware.checkAuth, userController.emails);
 
+    app.get('/users/email/:email', authMiddleware.checkAuth, userController.email);
+    
+
     /**
      * Retrieve User Mobiles
      * 
@@ -137,6 +140,13 @@ module.exports.set = app => {
      * Retrieve a company’s user transactions.
      */
     app.put('/users/:id/transactions', authMiddleware.checkAuth, userController.updateTransaction);
+
+    /**
+     * Retrieve User' Transactions
+     * 
+     * Retrieve a company’s user transactions.
+     */
+    app.put('/users/:id/transactions/deposit', authMiddleware.checkAuth, userController.approveDeposit);
 
     /**
      * Retrieve User's CBI Account/Wallet
@@ -356,9 +366,14 @@ module.exports.set = app => {
 
     // Page Permissions Routes
     app.get("/page_permissions", authMiddleware.checkAuth, pagePermissionController.index);
+    app.get("/page_permissions/page_name/:page", authMiddleware.checkAuth, pagePermissionController.show);
     app.post("/page_permission", authMiddleware.checkAuth, pagePermissionController.create);
     // app.get("/level/:levelId", authMiddleware.checkAuth, permissionLevelController.show);
     app.put("/page_permissions/:id", authMiddleware.checkAuth, pagePermissionController.update);
     // app.delete("/level/:levelId", authMiddleware.checkAuth, permissionLevelController.destroy);
+
+    app.get('/alltransactions', authMiddleware.checkAuth, transactionController.allTransactions);
+    // Main Account Routes 
+    app.get("/business-account", authMiddleware.checkAuth, accountController.mainaccount);
 
 };

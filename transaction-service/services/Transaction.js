@@ -1,13 +1,16 @@
 const sequelize = require('../config/db');
 const { Buddy } = require('../models/Buddy');
 const { BuddyTransaction } = require('../models/BuddyTransaction');
+const { Document } = require('../models/Document');
 const { Transaction }  = require('../models/Transaction');
 const { User }  = require('../models/User');
 
 Buddy.belongsTo(User, { foreignKey: 'user_id', targetKey: 'id' });
 BuddyTransaction.belongsTo(User, { foreignKey: 'user_id', targetKey: 'id' });
+Document.belongsTo(User, { foreignKey: 'user_id', targetKey: 'id' });
 
-Transaction.belongsTo(User, { foreignKey: 'user_id', targetKey: 'id' });
+User.hasMany(Transaction, {foreignKey: 'user_id', targetKey: 'id'});
+Transaction.belongsTo(User, {foreignKey: 'user_id', targetKey: 'id'});
 
 async function create(data) {
     try {
@@ -29,22 +32,36 @@ async function update(data, id) {
 
 async function index(user_id, query) {
     try {
-        const where = {
-            ...query,
-            user_id,
+        const options = {
+            nest: true,
+            replacements: {},
+            type: sequelize.QueryTypes.SELECT,
         };
-        const transactions = await Transaction.findAndCountAll({
-            where,
-            order: [[ 'created', 'DESC' ]],
-        });
-        const { count, rows } = transactions;
+        const query = `
+        SELECT "transaction".*, "document"."id" AS "document.id", "document"."metadata" AS "document.metadata",
+            "document"."file" AS "document.file"
+        FROM transactions AS "transaction"
+        LEFT OUTER JOIN documents AS "document" ON ("document"."metadata"->>'txid')::TEXT = "transaction"."txid"
+        WHERE "transaction"."user_id" = '${user_id}'
+        ORDER BY "transaction"."created" DESC`;
+        const transactions = await sequelize.query(query, options);
+
+        // count transactions
+        const countQuery = `
+        SELECT COUNT(*)
+        FROM transactions AS "transaction"
+        LEFT OUTER JOIN documents AS "document" ON ("document"."metadata"->>'txid')::TEXT = "transaction"."txid"
+        WHERE "transaction"."user_id" = '${user_id}'`;
+        const count = await sequelize.query(countQuery, options);
+
+        // response
         return {
             success: true,
             data: {
                 count,
                 next: null,
                 previous: null,
-                results: rows,
+                results: transactions,
             }
         };
     } catch (error) {

@@ -24,7 +24,7 @@ function index(req, resd){
 };
 
 function show(req, res){
-    return pagePermissionService.show(req.params.id)
+    return pagePermissionService.show(req.params.page)
     .then(data => res.send(data))
     .catch(err => {
         res.send({

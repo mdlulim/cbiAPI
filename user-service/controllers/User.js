@@ -88,7 +88,7 @@ async function update(req, res) {
 
 async function kyc(req, res) {
     try {
-        const data = await kycService.index(req.user.id);
+        const data = await kycService.index(req.params.id);
         const { count, rows } = data;
         return res.send({
             success: true,
@@ -132,23 +132,22 @@ async function captureKYC(req, res) {
 
 async function kyc_level(req, res) {
     try {
-        const data = await kycService.index(req.user.id);
-        const { count, kyc_applications } = data;
+        const kyc_applications = await kycService.allkyc(req.params.id);
+        let least_rejected = 10;
+        let total_verified = 0;
 
-        const levels = Object.keys(kyc_applications);
-        let least_rejected = 10
-        levels.foreach(() => {
-            if (parseInt(level) < least_rejected && kyc_applications[level].status === 'Rejected') {
-                least_rejected = level
-            }
+        kyc_applications.forEach(row=>{
+            if((parseInt(row.level) < least_rejected && row.status === 'Rejected') || (parseInt(row.level) < least_rejected && row.status === 'Pending'))
+                least_rejected = parseInt(row.level)
+            if(row.verified)
+                total_verified += 1;
         })
-        const kyc_level = (least_rejected === 10 && kyc_applications[3].status === 'Approved') ? 3 : (least_rejected === '0') ? -1 : levels[levels.indexOf(least_rejected) - 1]
+
+        const kyc_level = (least_rejected === 10 && total_verified === 4) ? 3 : (least_rejected === 0 || total_verified === 0) ? -1 : least_rejected - 1
 
         return res.send({
             success: true,
-            data: {
-                level: kyc_level
-            },
+            data:{ kyc_level },
         });
     } catch (error) {
         return res.send({
@@ -216,6 +215,25 @@ async function search(req, res) {
     }
 }
 
+async function activities(req, res) {
+    try {
+        const activities = await userService.activities(req.user.id, req.query);
+        const { count, rows } = activities;
+        return res.send({
+            success: true,
+            data: {
+                count,
+                results: rows,
+            },
+        });
+    } catch (error) {
+        return res.send({
+            success: false,
+            message: 'Could not process request'
+        });
+    }
+}
+
 module.exports = {
     profile,
     referrals,
@@ -225,5 +243,6 @@ module.exports = {
     captureKYC,
     autorenew,
     search,
+    activities,
     kyc_level
 };

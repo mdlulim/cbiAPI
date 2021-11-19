@@ -9,6 +9,8 @@ const { User } = require('../models/User');
 const { Product } = require('../models/Product');
 const { UserProduct }  = require('../models/UserProduct');
 const { Transaction }  = require('../models/Transaction');
+const { Account }  = require('../models/Account');
+
 const { KYC } = require('../models/KYC');
  
 Address.belongsTo(User, { foreignKey: 'user_id', targetKey: 'id' });
@@ -86,6 +88,7 @@ async function index(query) {
                 'terms_agree',
                 'stars',
                 'referral_id',
+                'sponsor',
                 'autorenew',
                 'expiry',
                 'deactivation_date',
@@ -399,6 +402,42 @@ async function updateTransaction(id, data) {
     }
 }
 
+async function approveDeposit(id, data) {
+    let companyCondition    = {id: data.main.id};
+    let companyData         = {available_balance: data.main.available_balance};
+
+    let sponsorCondition    = {id: data.sponsor.id};
+    let sponsorData         = {available_balance: data.sponsor.available_balance};
+
+    let userCondition       = {id: data.user.id};
+    let userData         = {available_balance: data.user.available_balance};
+
+    let status = {status: data.status}
+    console.log(sponsorCondition)
+    try {
+        await Transaction.update(status, {
+            where: { id }
+        });
+
+        await Account.update(companyData,{
+            where : companyCondition
+        });
+
+        await Account.update(sponsorData,{
+            where : sponsorCondition
+        });
+
+        await Account.update(userData,{
+            where : userCondition
+        });
+
+        return { success: true, message: "Account was successfully updated" };
+    } catch (error) {
+        console.error(error || null);
+        throw new Error('Could not process your request');
+    }
+}
+
 async function addresses(user_id) {
     try {
         const addresses = await Address.findAndCountAll({
@@ -495,6 +534,8 @@ async function updateBankAccounts(user_id, data) {
     }
 }
 
+
+
 async function cryptoAccounts(user_id) {
     try {
         const accounts = await CryptoAccount.findAndCountAll({
@@ -530,6 +571,23 @@ async function findByPropertyValue(prop, value) {
     }
 }
 
+
+/**
+ * Get a single of group that has been created.
+ * @param {string} email 
+ * @returns 
+ */
+ async function email(email) {
+    try {
+        return User.findOne({
+            where: { email },
+        });
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+};
+
 module.exports = {
     create,
     index,
@@ -548,6 +606,8 @@ module.exports = {
     bankAccounts,
     cryptoAccounts,
     updateTransaction,
+    approveDeposit,
     findByPropertyValue,
-    updateBankAccounts
+    updateBankAccounts,
+    email
 }

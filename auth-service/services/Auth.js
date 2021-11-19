@@ -1,9 +1,11 @@
 const sequelize = require('../config/db');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+const { EmailAddress } = require('../models/EmailAddress');
 const { User } = require('../models/User');
 const { Group } = require('../models/Group');
 const { OTPAuth } = require('../models/OTPAuth');
+const emailHandler = require('../helpers/emailHandler');
 
 const config = require('../config');
 const {
@@ -59,8 +61,8 @@ async function authenticate(data) {
             throw new Error('Authentication failed. Account blocked, please contact support.');
         if (!record.verified)
             throw new Error('Authentication failed. User pending verification.');
-        if (record.status.toLowerCase() !== 'active')
-            throw new Error('Authentication failed. User pending verification.');
+        // if (record.status.toLowerCase() !== 'active')
+        //     throw new Error('Authentication failed. User pending verification.');
 
         const {
             id,
@@ -139,10 +141,21 @@ async function verify(data) {
 }
 
 async function tokensVerify(data) {
-    const { email, type } = data;
-    const user = await User.findOne({
-        where: { email }
-    });
+    const { Op } = sequelize;
+    const { id, email, type } = data;
+    let user = null;
+
+    if (id) {
+        // find user by id
+        user = await User.findOne({
+            where: { id }
+        });
+    } else if (email) {
+        // find user by email
+        user = await User.findOne({
+            where: { email }
+        });
+    }
 
     if (!user)
         throw new Error('Invalid token specified');
@@ -154,16 +167,76 @@ async function tokensVerify(data) {
 
         await User.update({
             updated: sequelize.fn('NOW'),
-            status: 'Active',
             verified: true,
             verification: {
                 email: true,
                 mobile: false,
             }
         }, { where: { email } });
+
+        await EmailAddress.update({
+            is_verified: true,
+            updated: sequelize.fn('NOW'),
+        }, { where: { email } });
+
+
+        // send welcome email
+        await emailHandler.welcome({
+            first_name: user.first_name,
+            email: user.email,
+        });
+
+    } else {
+        const {
+            id,
+            code,
+            transaction,
+        } = data;
+        const record = await OTPAuth.findOne({
+            where: {
+                code,
+                transaction,
+                user_id: id,
+                status: { [Op.iLike]: 'Pending' },
+                expiry: {
+                    [Op.gt]: sequelize.fn('NOW')
+                }
+            }
+        });
+
+        // check if found
+        if (record && record.id) {
+            await OTPAuth.destroy({ where: { id: record.id } });
+            return {
+                success: true,
+                data: {
+                    action: record.transaction
+                }
+            };
+        } else {
+            return {
+                success: false,
+            }
+        }
     }
 
     return {
+        success: true,
+    };
+}
+
+async function verifyResetPassword(data) {
+    const { code, email } = data;
+    const user = await User.findOne({
+        where: { email }
+    });
+
+    if (!user) {
+        throw new Error('Access denied.');
+    }
+
+    return {
+        auth: true,
         success: true,
     };
 }
@@ -600,4 +673,5 @@ module.exports = {
     destroyMfaToken,
     mfaVerify,
     verifyLogin,
+    verifyResetPassword,
 }
