@@ -95,33 +95,11 @@ const kycNotification = data => {
     </body>
     
     </html>
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    <p>Hi ${first_name},</p>
-        <p>
-            We have reviewed your documents and you have qualified for level ${level}.
-            
-            ${(level+'' !=='3')? 'To increase your withdrawal limit please read the following comments and re-upload ' + remaining : ''}
-        <p>
-        <p>If this request wasn't made by you, contact support urgently.</p>
-        <p style="padding-top:15px"><strong>Regards</strong>,<br />CBI Support</p>
     `;
     const text = `
         Hi ${first_name}, 
-        We have reviewed your documents and you have qualified for level ${level}
-        If this request wasn't made by you, contact support urgently. 
+        ${(level+'' ==='-1')? 'You have not qualified for any KYC Level' : 'You have qualified for KYC level <strong>'+level+'<strong>.<br/>'}
+        ${(level+'' !=='3')? 'Please re-upload the rejected documents': ''} 
         Regards, CBI Support
     `;
     return {
