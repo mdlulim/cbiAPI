@@ -1,6 +1,8 @@
 // const sequelize = require('../config/db');
 const { User } = require('../models/User');
 const { KYC } = require('../models/KYC');
+const sequelize = require('../config/db');
+
 
 KYC.belongsTo(User, { foreignKey: 'user_id', targetKey: 'id' });
 
