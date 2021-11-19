@@ -19,7 +19,7 @@ app.use(bodyParser.urlencoded({
     extended: true,
 }));
 app.use(express.static('client'));
-app.use(cors());
+app.use(cors({origin: '*'}));
 
 router.set(app);
 
