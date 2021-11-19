@@ -132,7 +132,7 @@ async function captureKYC(req, res) {
 
 async function kyc_level(req, res) {
     try {
-        const kyc_applications = await kycService.index(req.params.id);
+        const kyc_applications = await kycService.allkyc(req.params.id);
         let least_rejected = 10;
         let total_verified = 0;
 

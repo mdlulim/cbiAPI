@@ -21,6 +21,18 @@ async function capture(data) {
 
 async function index(user_id) {
     try {
+        return KYC.findAndCountAll({
+            where: { user_id },
+            order: [['created', 'DESC']],
+        });
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
+async function allkyc(user_id) {
+    try {
         return KYC.findAll({
             where: { user_id },
             order: [['created', 'DESC']],
@@ -35,4 +47,5 @@ async function index(user_id) {
 module.exports = {
     capture,
     index,
+    allkyc
 }
