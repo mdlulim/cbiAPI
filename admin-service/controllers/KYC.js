@@ -104,7 +104,7 @@ async function update(req, res) {
     }
 }
 
-async function calculate_kyc_level (kyc_applications) {
+function calculate_kyc_level (kyc_applications) {
     let least_rejected = 10;
     let total_verified = 0;
 
