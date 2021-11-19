@@ -2,15 +2,16 @@ const fileAccessorService = require('../services/FileAccessor');
 const fileUploadService = require('../services/FileUpload');
 
 async function upload(request, response) {
-    try {
-        return fileUploadService.uploader(request, response);
-    } catch (error) {
-        console.log(error.message || null)
-        return response.status(500).send({
-            success: false,
-            message: 'Could not process request'
-        });
-    }
+    return {success: false}
+    // try {
+    //     return fileUploadService.uploader(request, response);
+    // } catch (error) {
+    //     console.log(error.message || null)
+    //     return response.status(500).send({
+    //         success: false,
+    //         message: 'Could not process request'
+    //     });
+    // }
 }
 
 async function show(request, response) {
