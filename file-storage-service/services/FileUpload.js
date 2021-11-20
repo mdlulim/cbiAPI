@@ -40,7 +40,11 @@ const upload = multer({
             }
             cb(null, file_name);
         }
-    })
+    }),
+    limits: {
+        fileSize: 1024 * 1024 * 100
+    }
+
 }).array('upload', 1);
 
 async function uploader(request, response, next) {
