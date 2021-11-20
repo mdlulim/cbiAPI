@@ -14,6 +14,9 @@ const { bucket } = digitalocean.s3;
 const s3 = new aws.S3(settings);
 
 const upload = multer({
+    limits: {
+        fileSize: 104857600
+    },
     storage: multerS3({
         s3,
         bucket,
@@ -39,8 +42,7 @@ const upload = multer({
                 }, user.id);
             }
             cb(null, file_name);
-        },
-        size: 104857600
+        }
     })
 }).array('upload', 1);
 
