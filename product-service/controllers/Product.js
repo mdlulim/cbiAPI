@@ -39,7 +39,6 @@ async function subscribe(req, res){
     try {
         // get product details
         const product = await productService.findByCode(req.body.product_code);
-        console.log(product)
 
         // get user
         const user = await userService.show(req.user.id);
@@ -58,12 +57,18 @@ async function subscribe(req, res){
             product_id: product.id,
         };
 
+        // tokens
+        if (req.body.tokens) {
+            data.tokens = req.body.tokens;
+        }
+
+        // wealth creator
         if (req.body.wc) {
             data.end_date = moment().add(1, 'month').format('YYYY-MM-DD');
         }
 
         // subscribe
-        await productService.subscribe(data);
+        const userProduct = await productService.subscribe(data);
 
         let description = `${user.first_name} bought a product (${product.title})`;
         if (req.body.wc) {
@@ -80,15 +85,15 @@ async function subscribe(req, res){
             ip: null,
             data,
         });
+            
+        // get and update wallet balance
+        const wallet = await accountService.show(user.id);
 
         // update user group (if wealth-creator subscription)
         if (req.body.wc) {
             const adminFee = parseFloat(product.registration_fee);
             const price = parseFloat(product.price);
             const amount = adminFee + price;
-            
-            // get and update wallet balance
-            const wallet = await accountService.show(user.id);
 
             // update wallet balance
             await accountService.update({
@@ -109,10 +114,41 @@ async function subscribe(req, res){
                 email: user.email,
             });
         } else {
+
+            // update wallet balance
+            const totalAmount = parseFloat(req.body.amount);
+            await accountService.update({
+                balance: parseFloat(wallet.balance) - totalAmount,
+                available_balance: parseFloat(wallet.available_balance) - totalAmount,
+            }, wallet.id);
+
+            // insert transaction
+            const transaction = await transactionService.create({
+                tx_type: 'debit',
+                subtype: 'product',
+                user_id: user.id,
+                amount: totalAmount,
+                reference: `Buy-${product.product_code}`,
+                note: `Bought ${product.title}`,
+                total_amount: totalAmount,
+                currency: product.currency,
+                status: 'Completed',
+                metadata: {
+                    entity: 'user_products',
+                    refid: userProduct.id,
+                }
+            });
+
+            // update transaction
+            const txid = product.product_code + transaction.auto_id;
+            await transactionService.update({ txid }, transaction.id);
+            
+            // send token purchase email
             await tokenPurchaseConfirmation({
                 product,
                 email: user.email,
                 tokens: req.body.tokens,
+                amount: req.body.amount,
                 first_name: user.first_name,
             });
         }

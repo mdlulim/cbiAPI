@@ -117,7 +117,6 @@ async function findByCode(product_code) {
 async function subscribe(data) {
     try {
         data.start_date = sequelize.fn('NOW');
-        console.log(data)
         return UserProduct.create(data);
     } catch (error) {
         console.error(error.message || null);

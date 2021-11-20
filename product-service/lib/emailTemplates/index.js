@@ -1,5 +1,6 @@
 const tokenPurchaseConfirmation = data => {
     const {
+        amount,
         tokens,
         product,
         first_name,
