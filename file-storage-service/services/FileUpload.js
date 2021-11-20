@@ -14,10 +14,13 @@ const { bucket } = digitalocean.s3;
 const s3 = new aws.S3(settings);
 
 const upload = multer({
+    limits: {
+        fileSize: 104857600
+    },
     storage: multerS3({
         s3,
         bucket,
-        acl: 'private',
+        acl: 'public-read-write',
         key: async function (request, file, cb) {
             const { category, type } = request.params;
             const { filename } = request.query;
@@ -40,11 +43,7 @@ const upload = multer({
             }
             cb(null, file_name);
         }
-    }),
-    limits: {
-        fileSize: 1024 * 1024 * 100
-    }
-
+    })
 }).array('upload', 1);
 
 async function uploader(request, response, next) {
