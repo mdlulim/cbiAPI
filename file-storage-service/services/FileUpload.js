@@ -69,6 +69,7 @@ async function uploader(request, response, next) {
             return response.status(200).send(data);
         });
     } catch (error) {
+        console.log('test')
         console.log(error.message || null)
         return res.status(500).send({
             success: false,
