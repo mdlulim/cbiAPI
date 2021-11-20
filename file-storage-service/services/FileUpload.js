@@ -50,6 +50,7 @@ async function uploader(request, response, next) {
     try {
         return upload(request, response, function (error) {
             if (error) {
+                console.log('test')
                 console.log(error);
                 return response.status(403).send({
                     success: false,
