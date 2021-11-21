@@ -10,6 +10,12 @@ if (stage === 'dev') {
         jwtSecret: 'BbZJjyoXAdr8BUZuiKKARWimKfrSmQ6fv8kZ7OFfc',
         tokenExpireTime: '6h',
         tokenExpireHours: 6,
+        products: {
+            CBIx7: 'CBIX7',
+            WC: 'WC',
+            FP: 'FP',
+            FX: 'FX',
+        },
         mail: {
             smtp: {
                 host: 'mail.cbiglobal.io',

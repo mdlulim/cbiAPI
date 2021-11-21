@@ -27,7 +27,18 @@ async function wealthCreatorConfirmation(data) {
     return sendMail(from, email, 'CBI - You have subscribed to a Wealth Creator Membership!', template);
 };
 
+async function productPurchaseConfirmation(data) {
+    const { email, product } = data;
+    const template = emailTemplates.productPurchaseConfirmation(data);
+    const from = {
+        name: 'CBI',
+        email: smtp.auth.user,
+    };
+    return sendMail(from, email, `CBI - You have successfully bought ${product.title}!`, template);
+};
+
 module.exports = {
     tokenPurchaseConfirmation,
     wealthCreatorConfirmation,
+    productPurchaseConfirmation,
 };
