@@ -42,11 +42,12 @@ async function index(user_id) {
     }
 }
 
-async function overview() {
+async function overview(query) {
     try {
         const { Op } = sequelize;
         const products = await Product.findAndCountAll({
             include: [{ model: Currency }, { model: ProductCategory }],
+            order: [['sort_order', 'ASC']],
             where: {
                 archived: false,
                 status: {
@@ -128,6 +129,7 @@ async function products(category_id) {
     try {
         return Product.findAndCountAll({
             where: { category_id },
+            order: [['sort_order', 'ASC']],
             include: [{
                 model: Currency
             }, {
