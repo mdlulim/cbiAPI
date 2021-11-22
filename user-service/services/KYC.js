@@ -1,5 +1,6 @@
 const sequelize = require('../config/db');
 const { KYC } = require('../models/KYC');
+const { Address } = require('../models/Address');
 
 async function capture(data) {
     try {
@@ -7,12 +8,16 @@ async function capture(data) {
         const result = await sequelize.transaction(async (t) => {
 
             data.forEach(async(level) => {
-                await KYC.insertOrUpdate(level, {transaction: t} )
+                if(level.level==='1'){
+                    await Address.insertOrUpdate(level.address, { transaction: t });
+                    delete level.address;
+                }
+                await KYC.insertOrUpdate(level, {transaction: t} );
             });
-            return
+            return;
         });
 
-        return result
+        return result;
     } catch (error) {
         console.error(error.message || null);
         throw new Error('Could not process your request');
