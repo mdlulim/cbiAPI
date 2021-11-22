@@ -239,7 +239,7 @@ async function search(prop, value) {
     }
 }
 
-async function activities(user_id, query) {
+async function activities(user, query) {
     try {
         const { Op } = sequelize;
         return Activity.findAndCountAll({
@@ -253,9 +253,9 @@ async function activities(user_id, query) {
             ],
             where: {
                 ...query,
-                user_id,
+                user_id: user.id,
                 action: {
-                    [Op.ne]: 'member.login.verify'
+                    [Op.ne]: `${user.group_name}.login.verify`
                 }
             },
             offset: 0,
