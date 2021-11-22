@@ -238,7 +238,7 @@ async function search(req, res) {
 
 async function activities(req, res) {
     try {
-        const activities = await userService.activities(req.user.id, req.query);
+        const activities = await userService.activities(req.user, req.query);
         const { count, rows } = activities;
         return res.send({
             success: true,
