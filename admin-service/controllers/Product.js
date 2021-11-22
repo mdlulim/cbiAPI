@@ -94,14 +94,15 @@ async function index(req, res) {
 async function history(req, res) {
     try {
         const products = await productService.history(req.query);
-        const { count, rows } = products;
+        const { count, rows } = products[0];
+        console.log(products[0])
         return res.send({
             success: true,
             data: {
                 count,
                 next: null,
                 previous: null,
-                results: rows,
+                results: products[0],
             }
         });
     } catch (error) {
