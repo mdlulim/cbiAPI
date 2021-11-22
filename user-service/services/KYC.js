@@ -6,14 +6,13 @@ async function capture(data) {
     try {
 
         const result = await sequelize.transaction(async (t) => {
-
-            data.forEach(async(level) => {
+            for (const level of data) {
                 if(level.level==='1'){
                     await Address.insertOrUpdate(level.address, { transaction: t });
                     delete level.address;
                 }
                 await KYC.insertOrUpdate(level, {transaction: t} );
-            });
+            };
             return;
         });
 
