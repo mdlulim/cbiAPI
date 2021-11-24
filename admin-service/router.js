@@ -149,6 +149,13 @@ module.exports.set = app => {
     app.put('/users/:id/transactions/deposit', authMiddleware.checkAuth, userController.approveDeposit);
 
     /**
+     * Retrieve User' Transactions
+     * 
+     * Retrieve a company’s user transaction credit.
+     */
+    app.post('/users/:id/transactions/credit', authMiddleware.checkAuth, transactionController.debitCreditUserAccount);
+
+    /**
      * Retrieve User's CBI Account/Wallet
      * 
      * Retrieve a company’s user account/wallet.

@@ -23,6 +23,16 @@ async function kycNotification(data) {
     return sendMail(from, email, 'CBI - KYC Approval ', template);
 };
 
+async function depositRequestNotification(data) {
+    const { email } = data;
+    const template = emailTemplates.depositRequestNotification(data);
+    const from = {
+        name: 'CBI',
+        email: smtp.auth.user,
+    };
+    return sendMail(from, email, 'CBI - Deposit Request Notification', template);
+};
+
 
 module.exports = {
     newUser,
