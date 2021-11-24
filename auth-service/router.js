@@ -44,6 +44,16 @@ module.exports.set = app => {
     app.post('/login', authController.login);
 
     /**
+     * Social Login
+     * 
+     * Login a user with the social logins (Google, Facebook, Apple).
+     * A successful login will return the user’s
+     * details and a token that can be used for
+     * subsequent requests.
+     */
+    app.post('/social/login', authController.socialLogin);
+
+    /**
      * Authenticate Token
      */
     app.post('/refresh', authMiddleware.checkAuth, authController.refresh);

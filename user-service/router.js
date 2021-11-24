@@ -23,6 +23,8 @@ module.exports.set = app => {
 
     app.get('/activities', authMiddleware.checkAuth, userController.activities);
 
+    app.get('/devices', authMiddleware.checkAuth, userController.devices);
+
     app.get('/commissions/:type/total', authMiddleware.checkAuth, commissionController.total);
 
     app.get('/referrals/:uid', authMiddleware.checkAuth, userController.referralsByUUID);

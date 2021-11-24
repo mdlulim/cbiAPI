@@ -3,6 +3,7 @@ const { Activity } = require('../models/Activity');
 const { Country } = require('../models/Country');
 const { Group } = require('../models/Group');
 const { User }  = require('../models/User');
+const { UserDevice }  = require('../models/UserDevice');
 
 User.belongsTo(Group, { foreignKey: 'group_id', targetKey: 'id' });
 User.belongsTo(Country, { foreignKey: 'nationality', targetKey: 'iso' });
@@ -268,6 +269,18 @@ async function activities(user, query) {
     }
 }
 
+async function devices(user_id) {
+    try {
+        return UserDevice.findAndCountAll({
+            where: { user_id },
+            order: [[ 'created', 'DESC' ]]
+        })
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
 module.exports = {
     create,
     show,
@@ -278,4 +291,5 @@ module.exports = {
     referralsByUUID,
     search,
     activities,
+    devices,
 }
