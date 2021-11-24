@@ -98,7 +98,7 @@ async function login(req, res) {
     try {
         const data = await authService.authenticate(req.body);
         const { device, geoinfo } = req.body;
-        const { token, user } = data;
+        const { token, user, newDeviceLogin } = data;
         const { group, email, first_name } = user;
         delete req.body.password;
 
@@ -169,6 +169,108 @@ async function login(req, res) {
             email,
             id: user.id,
             time: new Date(),
+            newDeviceLogin,
+        };
+        const verifyToken = jwt.sign(payload, jwtSecret, {
+            expiresIn: '15m',
+        });
+
+        // generate otp code
+        const code = rn({
+            min: 1000,
+            max: 9999,
+            integer: true,
+        });
+        const authRecord = {
+            user_id: user.id,
+            device: device || {},
+            geoinfo: geoinfo || {},
+            type: 'OTP',
+            description: `${group.label} verify login`,
+            expiry: moment().add(15, 'minutes').format('YYYY-MM-DD HH:mm:ss'),
+            transaction,
+            code,
+            verifyToken,
+        };
+
+        // delete previous otp login attemps/records
+        // and insert a new record
+        await authService.deleteOtp(user.id);
+        await authService.createOtp(authRecord);
+
+        // update user's last login status
+        await userService.update(user.id, {
+            last_login: sequelize.fn('NOW'),
+            blocked: false,
+            login_attempts: 0,
+        });
+
+        // send verify login email
+        await emailHandler.verifyLogin({
+            first_name,
+            email,
+            code,
+        });
+
+        return res.send({
+            success: true,
+            data: {
+                admin: group.name === 'admin',
+                token: verifyToken,
+            },
+        });
+
+    } catch (err) {
+        return errorHandler.error(err, res);
+    }
+};
+
+/**
+ * Login
+ * Login a user with the credentials provided. A successful login will return the user’s details 
+ * and a token that can be used for subsequent requests.
+ * 
+ * NOTE: If multi-factor authentication is enabled, see the OTP verify endpoint for how to 
+ *  verify OTPs after login.
+ * @param {object} req 
+ * @param {object} res 
+ */
+async function socialLogin(req, res) {
+    try {
+        // validate post data
+        if (!req.body.googleId || !req.body.email) {
+            throw new Error('Authentication failed.');
+        }
+
+        const data = await authService.socialAuth(req.body);
+        const { device, geoinfo } = req.body;
+        const { user, newDeviceLogin } = data;
+        const { group, email, first_name } = user;
+
+        // admin users are not allowed social login
+        if (group.name === 'admin') {
+            throw new Error('Access denied.');
+        }
+
+        // log user activity
+        const transaction = `${group.name}.social.login.verify`;
+        await activityService.addActivity({
+            user_id: user.id,
+            action: transaction,
+            description: `${group.label} verify social login`,
+            data: req.body,
+            ip: (geoinfo && geoinfo.IPv4) ? geoinfo.IPv4 : null,
+            section: 'Auth',
+            subsection: 'Verify Social Login',
+            data: req.body,
+        });
+
+        // auth (jwt) token
+        const payload = {
+            email,
+            id: user.id,
+            time: new Date(),
+            newDeviceLogin,
         };
         const verifyToken = jwt.sign(payload, jwtSecret, {
             expiresIn: '15m',
@@ -964,6 +1066,7 @@ module.exports = {
     validate,
     tokensVerify,
     login,
+    socialLogin,
     register,
     logout,
     logoutAll,
