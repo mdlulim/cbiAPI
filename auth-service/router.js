@@ -69,6 +69,16 @@ module.exports.set = app => {
     app.post('/register', authController.register);
 
     /**
+     * Social Register
+     * 
+     * Register a user with the socials (Google, Facebook, Apple).
+     * A successful registration will return the user’s
+     * details and a token that can be used for
+     * subsequent requests.
+     */
+    app.post('/social/register', authController.socialRegister);
+
+    /**
      * Logout
      * 
      * Logs the current user out and invalidates the

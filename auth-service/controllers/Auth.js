@@ -238,7 +238,7 @@ async function login(req, res) {
 async function socialLogin(req, res) {
     try {
         // validate post data
-        if (!req.body.googleId || !req.body.email) {
+        if ((!req.body.googleId && !req.body.userID) || !req.body.email) {
             throw new Error('Authentication failed.');
         }
 
@@ -312,6 +312,7 @@ async function socialLogin(req, res) {
             email,
             code,
         });
+        
         return res.send({
             success: true,
             data: {
@@ -553,6 +554,169 @@ async function register(req, res) {
         }
     } catch (err) {
         return errorHandler.error(err, res);
+    }
+}
+
+
+/**
+ * Social Register
+ * Register a user with socials. A successful registration will return 
+ * the user’s details and a token that can be used for subsequent requests.
+ * @param {object} req 
+ * @param {object} res 
+ */
+async function socialRegister(req, res) {
+    try {
+        const {
+            last_name,
+            first_name,
+            referral_id,
+            geoinfo,
+            timezone,
+        } = req.body;
+
+        // validate email address
+        if (!req.body.email) {
+            return res.status(403).send({
+                success: false,
+                message: 'Registration failed. Email address is required.'
+            });
+        }
+        
+        const email = cleanEmail(req.body.email);
+
+        let isLead = true;
+        const exists = await userService.findByEmail(email);
+        if (exists) {
+            return res.status(403).send({
+                success: false,
+                message: 'Registration failed. User with this email address already registered.'
+            });
+        }
+
+        let role = null;
+        let sponsorId = null;
+        let groupId = null;
+        let sponsor = null;
+
+        if (referral_id) {
+            sponsor = await userService.findByReferralId(referral_id);
+            if (sponsor.id) {
+                isLead = false;
+                sponsorId = sponsor.id;
+                role = await groupService.findByPropertyValue('name', 'member');
+                groupId = role.id;
+            }
+        }
+
+        // lead check and assign respective role
+        if (isLead) {
+            role = await groupService.findByPropertyValue('name', 'lead');
+            groupId = role.id;
+        }
+
+        const userPwd = generator.generate({ length: 8 }).toUpperCase();
+        const code    = generator.generate({ length: 4, numbers: true }).toUpperCase();
+        const token   = jwt.sign({
+            code,
+            email,
+        }, jwtSecret, {
+            expiresIn: '30m'
+        });
+
+        const salt = bcrypt.genSaltSync();
+        const password = bcrypt.hashSync(userPwd, salt);
+        const user = {
+            salt,
+            email,
+            password,
+            mobile: null,
+            username: email,
+            group_id: groupId,
+            verification: null,
+            sponsor: sponsorId,
+            timezone: timezone || null,
+            last_name: last_name || null,
+            first_name: first_name || null,
+            nationality: (geoinfo && geoinfo.country_code) || null,
+            metadata: {
+                geoinfo,
+            }
+        };
+
+        if (!isLead) {
+            user.verification = {
+                token,
+                email: false,
+                mobile: false,
+            };
+        }
+
+        // create user
+        const newUser = await userService.create(user);
+
+        if (newUser && newUser.id) {
+
+            // notify upline once referral has registered
+            if (sponsor && sponsor.id) {
+                await emailHandler.notifyReferrer({
+                    first_name: sponsor.first_name,
+                    email: sponsor.email,
+                    referral: `${first_name} ${last_name} - ${newUser.referral_id}`,
+                });
+            }
+
+            // send activation email (if is not a lead)
+            if (!isLead) {
+                await emailHandler.confirmEmail({
+                    userPassword: userPwd,
+                    socialSignup: true,
+                    first_name,
+                    email,
+                    token,
+                });
+            }
+            
+            // create user cbi wallet
+            await accountService.create({
+                is_primary: true,
+                name: 'cbi-wallet',
+                label: 'CBI Wallet',
+                user_id: newUser.id,
+                reference: newUser.referral_id,
+            });
+
+            // create primary email address record
+            await emailAddressService.create({
+                email: email,
+                is_primary: true,
+                is_verified: false,
+                user_id: newUser.id,
+            });
+
+            // create (default) notification record for the user
+            await notificationService.create({
+                user_id: newUser.id,
+                activity: 'Marketing & Communication',
+                description: 'Get the latest promotions, updates and tips',
+                sms: false,
+                email: false,
+                push: false,
+            });
+
+            // response
+            return res.send({
+                success: true,
+                lead: isLead,
+            });
+        } else {
+            throw new Error('Request could not be processed, please try again or contact support.');
+        }
+    } catch (error) {
+        return res.send({
+            success: false,
+            message: 'Could not process request'
+        });
     }
 }
 
@@ -1068,6 +1232,7 @@ module.exports = {
     login,
     socialLogin,
     register,
+    socialRegister,
     logout,
     logoutAll,
     passwordChange,
