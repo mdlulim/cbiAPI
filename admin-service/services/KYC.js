@@ -33,6 +33,7 @@ async function show_all() {
     try {
         return KYC.findAll({
             attributes: [[sequelize.fn('DISTINCT', sequelize.col('user_id')) ,'user_id'], 'level', 'data'],
+            where: { status: 'Pending'}
         });
     } catch (error) {
         console.error(error.message || null);
