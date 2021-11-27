@@ -31,10 +31,7 @@ async function show(id) {
 
 async function show_all() {
     try {
-        return KYC.findAll({
-            // attributes: [[sequelize.fn('DISTINCT', sequelize.col('user_id')) ,'user_id'], 'level', 'data'],
-            where: { status: 'Pending' }
-        });
+        return KYC.findAll();
     } catch (error) {
         console.error(error.message || null);
         throw new Error('Could not process your request');
