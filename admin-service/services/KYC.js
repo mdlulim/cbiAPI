@@ -31,11 +31,10 @@ async function show(id) {
 
 async function show_all() {
     try {
-        const data = await KYC.findAll({
+        return KYC.findAll({
             attributes: [[sequelize.fn('DISTINCT', sequelize.col('user_id')) ,'user_id']],
             where: { status: 'Pending'}
         });
-        return data;
 
         // return User.findAll({
         //     where: {
