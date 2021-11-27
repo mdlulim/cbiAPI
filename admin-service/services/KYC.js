@@ -38,7 +38,7 @@ async function show_all() {
 
         return User.findAll({
             where: {
-                user_id: data
+                id: data
             }
         })
     } catch (error) {
