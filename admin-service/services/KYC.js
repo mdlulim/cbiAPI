@@ -31,16 +31,22 @@ async function show(id) {
 
 async function show_all() {
     try {
-        return KYC.findAll({
+        const data = await KYC.findAll({
             attributes: [[sequelize.fn('DISTINCT', sequelize.col('user_id')) ,'user_id']],
             where: { status: 'Pending'}
         });
 
-        // return User.findAll({
-        //     where: {
-        //         id: data
-        //     }
-        // })
+        let dataArr = []
+
+        data.forEach(row=>{
+            dataArr.push(row.user_id)
+        })
+
+        return User.findAll({
+            where: {
+                id: dataArr
+            }
+        })
     } catch (error) {
         console.error(error.message || null);
         throw new Error('Could not process your request');
