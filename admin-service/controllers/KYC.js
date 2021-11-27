@@ -51,7 +51,7 @@ async function show_all(req, res) {
             data,
         });
     } catch (error) {
-        console.log(error, " before db");
+        console.log(error);
         return res.send({
             success: false,
             message: 'Could not process request'
