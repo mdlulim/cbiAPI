@@ -37,7 +37,9 @@ async function show_all() {
         });
 
         return User.findAll({
-            user_id: data
+            where: {
+                user_id: data
+            }
         })
     } catch (error) {
         console.error(error.message || null);
