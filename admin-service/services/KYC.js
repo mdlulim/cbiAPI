@@ -35,12 +35,13 @@ async function show_all() {
             attributes: [[sequelize.fn('DISTINCT', sequelize.col('user_id')) ,'user_id']],
             where: { status: 'Pending'}
         });
+        return data;
 
-        return User.findAll({
-            where: {
-                id: data
-            }
-        })
+        // return User.findAll({
+        //     where: {
+        //         id: data
+        //     }
+        // })
     } catch (error) {
         console.error(error.message || null);
         throw new Error('Could not process your request');
