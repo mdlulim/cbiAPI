@@ -33,7 +33,7 @@ async function show_all() {
     try {
         return KYC.findAll();
     } catch (error) {
-        console.error(error.message || null);
+        console.error(error.message || null, " database level");
         throw new Error('Could not process your request');
     }
 }
