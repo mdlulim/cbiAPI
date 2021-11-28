@@ -1,5 +1,0 @@
-{
-    "resource": "/v1/users",
-    "path": "/v1/users",
-    "httpMethod": "GET"
-}
