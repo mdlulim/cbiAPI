@@ -88,8 +88,8 @@ pipeline {
                            gitCommit = env.GIT_COMMIT.substring(0,8)
                            unixTime = (new Date().time / 1000) as Integer
                            branchName = env.GIT_BRANCH.replace('/', '-').substring(7)
-                           authTag = "${branchName}-${gitCommit}-${unixTime}"
-                           authImage = "${dockerRepoHost}/buddy-service:${buddyTag}"
+                           buddyTag = "${branchName}-${gitCommit}-${unixTime}"
+                           buddyImage = "${dockerRepoHost}/buddy-service:${buddyTag}"
                         }
                         sh "docker build -t ${buddyImage} ./buddy-service"
                     }                    
