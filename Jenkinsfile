@@ -91,7 +91,7 @@ pipeline {
                            authTag = "${branchName}-${gitCommit}-${unixTime}"
                            authImage = "${dockerRepoHost}/buddy-service:${buddyTag}"
                         }
-                        sh "docker build -t ${authImage} ./buddy-service"
+                        sh "docker build -t ${buddyImage} ./buddy-service"
                     }                    
                 }
                 stage('company-service') {
