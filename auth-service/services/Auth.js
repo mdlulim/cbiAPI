@@ -81,6 +81,7 @@ async function authenticate(data) {
             prompt_change_password,
             permissions,
             id_number,
+            permission_level,
             last_login,
             created,
             updated,
@@ -92,6 +93,7 @@ async function authenticate(data) {
             last_name,
             first_name,
             group_name: group.name,
+            permission_level,
             time: new Date()
         };
         var token = jwt.sign(payload, config.jwtSecret, {
@@ -117,6 +119,7 @@ async function authenticate(data) {
                 timezone,
                 metadata,
                 group_id,
+                permission_level,
                 created,
                 updated,
                 prompt_change_password,
