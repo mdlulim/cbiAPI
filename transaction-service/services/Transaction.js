@@ -2,6 +2,7 @@ const sequelize = require('../config/db');
 const { Buddy } = require('../models/Buddy');
 const { BuddyTransaction } = require('../models/BuddyTransaction');
 const { Document } = require('../models/Document');
+const { KYCLimit } = require('../models/KYCLimit');
 const { Transaction }  = require('../models/Transaction');
 const { User }  = require('../models/User');
 
@@ -42,7 +43,7 @@ async function index(user_id, query) {
             "document"."file" AS "document.file"
         FROM transactions AS "transaction"
         LEFT OUTER JOIN documents AS "document" ON ("document"."metadata"->>'txid')::TEXT = "transaction"."txid"
-        WHERE "transaction"."user_id" = '${user_id}'
+        WHERE "transaction"."user_id" = '${user_id}' AND "transaction"."status" NOT iLIKE 'Pending'
         ORDER BY "transaction"."created" DESC`;
         const transactions = await sequelize.query(query, options);
 
@@ -51,7 +52,7 @@ async function index(user_id, query) {
         SELECT COUNT(*)
         FROM transactions AS "transaction"
         LEFT OUTER JOIN documents AS "document" ON ("document"."metadata"->>'txid')::TEXT = "transaction"."txid"
-        WHERE "transaction"."user_id" = '${user_id}'`;
+        WHERE "transaction"."user_id" = '${user_id}' AND "transaction"."status" NOT iLIKE 'Pending'`;
         const count = await sequelize.query(countQuery, options);
 
         // response
@@ -62,6 +63,28 @@ async function index(user_id, query) {
                 next: null,
                 previous: null,
                 results: transactions,
+            }
+        };
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
+async function buddy(user_id, query) {
+    try {
+        const transactions = await BuddyTransaction.findAndCountAll({
+            where: { user_id },
+            order: [[ 'created', 'DESC' ]]
+        });
+        const { count, rows } = transactions;
+        return {
+            success: true,
+            data: {
+                count,
+                next: null,
+                previous: null,
+                results: rows,
             }
         };
     } catch (error) {
@@ -127,10 +150,29 @@ async function totals(user_id, txtype, subtype) {
     }
 }
 
+async function limits(kyc_level) {
+    try {
+        return KYCLimit.findOne({
+            attributes: [
+                'level',
+                'withdrawal_limit',
+            ],
+            where: {
+                level: kyc_level,
+            },
+        });
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
 module.exports = {
     create,
     index,
+    buddy,
     update,
     count,
     totals,
+    limits,
 }

@@ -57,6 +57,27 @@ async function referralsByUUID(req, res) {
     }
 }
 
+async function coaches(req, res) {
+    try {
+        const user = await userService.show(req.user.id);
+        const firstLevelCoach = await userService.show(user.sponsor);
+        const secondLevelCoach = await userService.show(firstLevelCoach.sponsor);
+        return res.send({
+            success: true,
+            data: {
+                first: firstLevelCoach,
+                second: secondLevelCoach
+            },
+        });
+    } catch (error) {
+        console.log(error.message);
+        return res.send({
+            success: false,
+            message: 'Could not process request'
+        });
+    }
+}
+
 async function update(req, res) {
     try {
         return userService.update(req.user.id, req.body)
@@ -217,7 +238,7 @@ async function search(req, res) {
 
 async function activities(req, res) {
     try {
-        const activities = await userService.activities(req.user.id, req.query);
+        const activities = await userService.activities(req.user, req.query);
         const { count, rows } = activities;
         return res.send({
             success: true,
@@ -234,15 +255,37 @@ async function activities(req, res) {
     }
 }
 
+async function devices(req, res) {
+    try {
+        const devices = await userService.devices(req.user.id);
+        const { count, rows } = devices;
+        return res.send({
+            success: true,
+            data: {
+                count,
+                results: rows,
+            },
+        });
+    } catch (error) {
+        console.log(error.message);
+        return res.send({
+            success: false,
+            message: 'Could not process request'
+        });
+    }
+}
+
 module.exports = {
     profile,
     referrals,
     referralsByUUID,
+    coaches,
     update,
     kyc,
     captureKYC,
     autorenew,
     search,
     activities,
+    devices,
     kyc_level
 };

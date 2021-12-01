@@ -1,5 +1,6 @@
 const moment = require('moment');
 const sequelize = require('../config/db');
+const config = require('../config');
 const accountService = require('../services/Account');
 const activityService = require('../services/Activity');
 const investmentService  = require('../services/Investment');
@@ -9,11 +10,12 @@ const userService = require('../services/User');
 const {
     tokenPurchaseConfirmation,
     wealthCreatorConfirmation,
+    productPurchaseConfirmation,
 } = require('../helpers/emailHandler');
 
 async function overview(req, res){
     try {
-        return productService.overview()
+        return productService.overview(req.query)
         .then(data => res.send(data));
     } catch (err) {
         return res.status(500).send({
@@ -38,10 +40,16 @@ async function index(req, res){
 async function subscribe(req, res){
     try {
         // get product details
-        const product = await productService.find(req.body.id);
+        const product = await productService.findByCode(req.body.product_code);
 
         // get user
         const user = await userService.show(req.user.id);
+
+        // product check
+        const isWC    = config.products.WC === product.product_category.code;
+        // const isFP    = config.products.FP === product.product_category.code;
+        const isFX    = config.products.FX === product.product_category.code;
+        const isCBIx7 = config.products.CBIx7 === product.product_category.code;
 
         // validate product
         if (!product) {
@@ -57,33 +65,45 @@ async function subscribe(req, res){
             product_id: product.id,
         };
 
+        if (isCBIx7) {
+            // tokens
+            if (req.body.tokens) {
+                data.tokens = req.body.tokens;
+            }
+        }
+
+        // wealth creator
+        if (isWC) {
+            data.end_date = moment().add(1, 'month').format('YYYY-MM-DD');
+        }
+
         // subscribe
-        await productService.subscribe(data);
+        const userProduct = await productService.subscribe(data);
 
         let description = `${user.first_name} bought a product (${product.title})`;
-        if (req.body.wc) {
+        if (isWC) {
             description = `${user.first_name} became a Wealth Creator`;
         }
 
         // log activity
         await activityService.addActivity({
             user_id: req.user.id,
-            action: req.body.wc ? 'wealth-creator.subscribe' : `${req.user.group_name}.products.buy`,
+            action: isWC ? 'wealth-creator.subscribe' : `${req.user.group_name}.products.buy`,
             section: 'Products',
             subsection: 'Buy',
             description,
             ip: null,
             data,
         });
+            
+        // get and update wallet balance
+        const wallet = await accountService.show(user.id);
 
         // update user group (if wealth-creator subscription)
-        if (req.body.wc) {
-            const adminFee = parseFloat(product.registration_fee);
-            const price = parseFloat(product.price);
-            const amount = adminFee + price;
-            
-            // get and update wallet balance
-            const wallet = await accountService.show(user.id);
+        if (isWC) {
+            var adminFee = parseFloat(product.registration_fee);
+            var price = parseFloat(product.price);
+            var amount = adminFee + price;
 
             // update wallet balance
             await accountService.update({
@@ -98,21 +118,137 @@ async function subscribe(req, res){
                 autorenew: true,
             });
 
+            // insert transaction
+            var transaction = await transactionService.create({
+                tx_type: 'debit',
+                subtype: 'product',
+                user_id: user.id,
+                fee: adminFee,
+                amount: price,
+                reference: `${product.product_code}-Subscription`,
+                note: `Subscribed to ${product.title} product`,
+                total_amount: amount,
+                currency: product.currency,
+                status: 'Completed',
+                metadata: {
+                    entity: 'user_products',
+                    refid: userProduct.id,
+                }
+            });
+
+            // update transaction
+            var txid = product.product_code + transaction.auto_id;
+            await transactionService.update({ txid }, transaction.id);
+
             // send email
             await wealthCreatorConfirmation({
                 first_name: user.first_name,
                 email: user.email,
             });
-        } else {
+        }
+        
+        // CBIx7
+        if (isCBIx7) {
+
+            // update wallet balance
+            var totalAmount = parseFloat(req.body.amount);
+            await accountService.update({
+                balance: parseFloat(wallet.balance) - totalAmount,
+                available_balance: parseFloat(wallet.available_balance) - totalAmount,
+            }, wallet.id);
+
+            // insert transaction
+            var transaction = await transactionService.create({
+                tx_type: 'debit',
+                subtype: 'product',
+                user_id: user.id,
+                amount: totalAmount,
+                reference: `Buy-${product.product_code}`,
+                note: `Bought ${product.title}`,
+                total_amount: totalAmount,
+                currency: product.currency,
+                status: 'Completed',
+                metadata: {
+                    entity: 'user_products',
+                    refid: userProduct.id,
+                }
+            });
+
+            // update transaction
+            var txid = product.product_code + transaction.auto_id;
+            await transactionService.update({ txid }, transaction.id);
+            
+            // send token purchase confirmation email
             await tokenPurchaseConfirmation({
                 product,
                 email: user.email,
                 tokens: req.body.tokens,
+                amount: req.body.amount,
                 first_name: user.first_name,
             });
         }
+        
+        // Fraxions
+        if (isFX) {
+            var feeAmount = 0;
+            if (Object.keys(product.fees).length > 0) {
+                Object.keys(product.fees).map(key => {
+                    feeAmount += parseFloat(product.fees[key]);
+                });
+            }
+            var totalAmount = parseFloat(product.price) + feeAmount;
 
+            // balance check
+            if (wallet.available_balance && parseFloat(wallet.available_balance) >= totalAmount) {
+
+                // update wallet balance
+                await accountService.update({
+                    balance: parseFloat(wallet.balance) - totalAmount,
+                    available_balance: parseFloat(wallet.available_balance) - totalAmount,
+                }, wallet.id);
+
+                // insert transaction
+                var transaction = await transactionService.create({
+                    tx_type: 'debit',
+                    subtype: 'product',
+                    user_id: user.id,
+                    fee: feeAmount,
+                    amount: parseFloat(product.price),
+                    reference: `Buy-${product.product_code}`,
+                    note: `Bought ${product.title}`,
+                    total_amount: totalAmount,
+                    currency: product.currency,
+                    status: 'Completed',
+                    metadata: {
+                        entity: 'user_products',
+                        refid: userProduct.id,
+                    }
+                });
+    
+                // update transaction
+                var txid = product.product_code + transaction.auto_id;
+                await transactionService.update({ txid }, transaction.id);
+            
+                // send product purchase confirmation email
+                await productPurchaseConfirmation({
+                    product,
+                    email: user.email,
+                    amount: totalAmount,
+                    first_name: user.first_name,
+                });
+
+            } else {
+                return res.status(403)
+                .send({
+                    success: false,
+                    message: 'Failed to process request. Insufficient balance!'
+                });
+            }
+        }
+
+        // response
         return res.send({ success: true });
+
     } catch (err) {
         console.log(err.message)
         return res.status(500).send({
@@ -124,6 +260,8 @@ async function subscribe(req, res){
 
 async function invest(req, res){
     try {
+        // get user
+        const user = await userService.show(req.user.id);
 
         // retrieve product by id
         const product = await productService.show(req.body.id);
@@ -137,10 +275,8 @@ async function invest(req, res){
             });
         }
 
-        const {
-            amount,
-        } = req.body;
-
+        // amount
+        const amount = parseFloat(req.body.amount);
         const {
             id,
             fees,
@@ -160,7 +296,7 @@ async function invest(req, res){
         const data = {
             fees,
             metadata,
-            user_id: req.user.id,
+            user_id: user.id,
             product_id: id,
             daily_interest,
             invested_amount: amount,
@@ -172,13 +308,13 @@ async function invest(req, res){
         const response = await investmentService.create(data);
         await productService.subscribe({
             ...req.body,
-            user_id: req.user.id,
+            user_id: user.id,
             product_id: id,
         });
 
         if (response) {
             // retrive user wallet
-            const wallet = await transactionService.wallet(req.user.id);
+            const wallet = await transactionService.wallet(user.id);
             const {
                 balance,
                 available_balance,
@@ -186,14 +322,14 @@ async function invest(req, res){
             
             // deduct funds from user wallet
             await transactionService.debit({
-                balance: balance - amount,
-                available_balance: available_balance - amount,
+                balance: parseFloat(balance) - amount,
+                available_balance: parseFloat(available_balance) - amount,
                 updated: sequelize.fn('NOW'),
             }, wallet.id)
     
             // log activities
             await activityService.addActivity({
-                user_id: req.user.id,
+                user_id: user.id,
                 action: `${req.user.group_name}.account.debit`,
                 section: 'Account',
                 subsection: 'Debit',
@@ -202,10 +338,10 @@ async function invest(req, res){
                 data,
             });
 
-            let description = `${req.user.first_name} invested in a product (${title})`;
+            let description = `${user.first_name} invested in a product (${title})`;
 
             await activityService.addActivity({
-                user_id: req.user.id,
+                user_id: user.id,
                 action: `${req.user.group_name}.products.invest`,
                 section: 'Products',
                 subsection: 'Invest',
@@ -213,9 +349,16 @@ async function invest(req, res){
                 ip: null,
                 data,
             });
-
-            // send confirmation email
+            
+            // send product purchase confirmation email
+            await productPurchaseConfirmation({
+                product,
+                amount: amount,
+                email: user.email,
+                first_name: user.first_name,
+            });
     
+            // send response
             return res.send({
                 success: true,
             });

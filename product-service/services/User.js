@@ -52,11 +52,10 @@ async function index(query) {
 
 async function show(id) {
     try {
-        const user = await User.findOne(data, {
+        return User.findOne({
             where: { id },
             include: [{ model: Group }],
         });
-        return user;
     } catch (error) {
         console.error(error.message || null);
         throw new Error('Could not process your request');

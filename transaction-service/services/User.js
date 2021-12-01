@@ -99,8 +99,21 @@ async function show(id) {
     }
 }
 
+async function findByReferralId(referral_id) {
+    try {
+        return User.findOne({
+            where: { referral_id },
+            include: [{ model: Group }],
+        });
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
 module.exports = {
     create,
     index,
     show,
+    findByReferralId,
 }

@@ -202,31 +202,74 @@ const autoRenewStatusChange = data => {
         status,
         first_name,
     } = data;
+    // const html = `
+    //     <p>Hi ${first_name},</p>
+    //     <h3>Your Profile has been successfully updated!</h3>
+    //     <p>This is notify you that your Wealth Creator Auto-Renew Status has been updated to <strong>${status}</strong></p>
+    //     <p>
+    //         If this attempt was not made by you it means someone visited your account. 
+    //         It may be an indication you have been 
+    //         the target of a phishing attempt and might want to consider immediately locking 
+    //         your account, or even moving your funds to a new account. If this wasn't you, 
+    //         urgently contact us on <a href="mailto:support@cbiglobal.io">support@cbiglobal.io</a>.
+    //     </p>
+    //     <p style="padding-top:15px"><strong>Regards</strong>,<br />CBI Support</p>
+    // `;
     const html = `
-        <p>Hi ${first_name},</p>
-        <h3>Your Profile has been successfully updated!</h3>
-        <p>This is notify you that your Wealth Creator Auto-Renew Status has been updated to <strong>${status}</strong></p>
-        <p>
-            If this attempt was not made by you it means someone visited your account. 
-            It may be an indication you have been 
-            the target of a phishing attempt and might want to consider immediately locking 
-            your account, or even moving your funds to a new account. If this wasn't you, 
-            urgently contact us on <a href="mailto:support@cbiglobal.io">support@cbiglobal.io</a>.
-        </p>
-        <p style="padding-top:15px"><strong>Regards</strong>,<br />CBI Support</p>
-    `;
-    const text = `
-        Hi ${first_name}, 
-        Your Profile has been successfully updated!
-        This is notify you that your Wealth Creator Auto-Renew Status has been updated to ${status}.
-        If this attempt was not made by you it means someone visited your account. 
-        It may be an indication you have been 
-        the target of a phishing attempt and might want to consider immediately locking 
-        your account, or even moving your funds to a new account. If this wasn't you, 
-        urgently contact us on support@cbiglobal.io.
+    <!DOCTYPE html>
+    <html lang="en">
 
-        Regards, CBI Support
-    `;
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Document</title>
+    </head>
+
+    <body>
+        <div style="
+                font-family: Arial, Helvetica, sans-serif; 
+                color: darkslategray; 
+                min-width: 360px; 
+                max-width: 600px; 
+                margin: 0 auto;
+                line-height: 1.5;">
+            <div style="padding: 20px 0; margin-bottom: 20px; background-image: linear-gradient(310deg,#141727,#3a416f); color: white; ">
+                <div style="display: flex; flex-direction: column; align-items: center;">
+                    <img src="https://cdn-cbigold.ams3.digitaloceanspaces.com/public/email/CDC3837FF1DF9ADC1FF459D0278FD.png" style="height: 50px;" alt="">
+                </div>
+                <!-- Email topic -->
+                <p style="line-height: 2; text-align: center;">
+                    Hi ${first_name}, </br />
+                </p>
+                <h2 style="text-align: center;">WC Auto Renewal</h2>
+            </div>
+            <div style="margin: 0 5%; border-bottom: 1px solid grey;">
+                <!-- Email body -->
+                <div>
+                    <p>
+                    <p>Your Wealth Creator Auto-Renew Status has been changed to:
+                        <strong>${status}</strong>
+                    </p>
+                    <p>If this request isn't authorized by you, <a href="mailto:support@cbiglobal.io" style="text-decoration: none;">contact
+                            support</a></p>
+                    <p style="padding-top:50px"><strong>Cheers</strong>,<br />CBI Support</p>
+                    </p>
+                </div>
+
+            </div>
+            <!-- Email footer -->
+            <div>
+                <p style="text-align: center; line-height: 1.5; font-size: smaller;">
+                                &copy;2021 CBI Global<br/>
+                    <a href="https://demo.cbiglobal.io">Help Centre</a>   |   <a href="https://demo.cbiglobal.io">Terms and conditions</a>   |   <a href="https://demo.cbiglobal.io">Security and privacy</a>
+                </p>
+            </div>
+        </div>
+    </body>
+
+    </html>`;
+    const text = ``;
     return {
         html,
         text

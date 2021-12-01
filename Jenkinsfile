@@ -16,6 +16,7 @@ releaseTag = ''
 // blank values that are filled in by pipeline steps below:
 adminImage = ''
 authImage = ''
+buddyImage = ''
 companyImage = ''
 contentImage = ''
 productImage = ''
@@ -27,6 +28,7 @@ fileImage = ''
 // blank values that are filled in by pipeline steps below: 
 adminTag = ''
 authTag = ''
+buddyTag = ''
 companyTag = ''
 contentTag = ''
 productTag = ''
@@ -78,6 +80,18 @@ pipeline {
                            authImage = "${dockerRepoHost}/auth-service:${authTag}"
                         }
                         sh "docker build -t ${authImage} ./auth-service"
+                    }                    
+                }
+                stage('buddy-service') {
+                    steps {
+                        script {
+                           gitCommit = env.GIT_COMMIT.substring(0,8)
+                           unixTime = (new Date().time / 1000) as Integer
+                           branchName = env.GIT_BRANCH.replace('/', '-').substring(7)
+                           buddyTag = "${branchName}-${gitCommit}-${unixTime}"
+                           buddyImage = "${dockerRepoHost}/buddy-service:${buddyTag}"
+                        }
+                        sh "docker build -t ${buddyImage} ./buddy-service"
                     }                    
                 }
                 stage('company-service') {
@@ -158,6 +172,7 @@ pipeline {
             steps {
                 sh "docker push ${adminImage}"
                 sh "docker push ${authImage}"
+                sh "docker push ${buddyImage}"
                 sh "docker push ${companyImage}"
                 sh "docker push ${contentImage}"
                 sh "docker push ${productImage}"
@@ -168,7 +183,7 @@ pipeline {
         }
         stage('Remove Local Docker Image') {
             steps {
-                sh "docker rmi ${adminImage} ${authImage} ${companyImage} ${contentImage} ${productImage} ${transactionImage} ${userImage} ${fileImage}"
+                sh "docker rmi ${adminImage} ${authImage} ${buddyImage} ${companyImage} ${contentImage} ${productImage} ${transactionImage} ${userImage} ${fileImage}"
             }
         }
         stage('Update GitOps repo for ArgoCD') {
@@ -180,6 +195,7 @@ pipeline {
                             case 'cbigold-api-develop':
                                 sh("cd cbigold/overlays/develop && kustomize edit set image registry.digitalocean.com/cbiglobal/admin-service:${adminTag}");
                                 sh("cd cbigold/overlays/develop && kustomize edit set image registry.digitalocean.com/cbiglobal/auth-service:${authTag}");
+                                sh("cd cbigold/overlays/develop && kustomize edit set image registry.digitalocean.com/cbiglobal/buddy-service:${buddyTag}");
                                 sh("cd cbigold/overlays/develop && kustomize edit set image registry.digitalocean.com/cbiglobal/company-service:${companyTag}");
                                 sh("cd cbigold/overlays/develop && kustomize edit set image registry.digitalocean.com/cbiglobal/content-service:${contentTag}");
                                 sh("cd cbigold/overlays/develop && kustomize edit set image registry.digitalocean.com/cbiglobal/product-service:${productTag}");
@@ -190,32 +206,35 @@ pipeline {
                             case 'cbigold-api-production':
                                 sh("cd cbigold/overlays/production && kustomize edit set image registry.digitalocean.com/cbiglobal/admin-service:${adminTag}");
                                 sh("cd cbigold/overlays/production && kustomize edit set image registry.digitalocean.com/cbiglobal/auth-service:${authTag}");
+                                sh("cd cbigold/overlays/production && kustomize edit set image registry.digitalocean.com/cbiglobal/buddy-service:${buddyTag}");
                                 sh("cd cbigold/overlays/production && kustomize edit set image registry.digitalocean.com/cbiglobal/company-service:${companyTag}");
                                 sh("cd cbigold/overlays/production && kustomize edit set image registry.digitalocean.com/cbiglobal/content-service:${contentTag}");
                                 sh("cd cbigold/overlays/production && kustomize edit set image registry.digitalocean.com/cbiglobal/product-service:${productTag}");
                                 sh("cd cbigold/overlays/production && kustomize edit set image registry.digitalocean.com/cbiglobal/transaction-service:${transactionTag}");
                                 sh("cd cbigold/overlays/production && kustomize edit set image registry.digitalocean.com/cbiglobal/user-service:${userTag}");
-                                sh("cd cbigold/overlays/develop && kustomize edit set image registry.digitalocean.com/cbiglobal/file-storage-service:${fileTag}");
+                                sh("cd cbigold/overlays/production && kustomize edit set image registry.digitalocean.com/cbiglobal/file-storage-service:${fileTag}");
                                 break;
                             case 'cbigold-api-qa':
                                 sh("cd cbigold/overlays/qa && kustomize edit set image registry.digitalocean.com/cbiglobal/admin-service:${adminTag}");
                                 sh("cd cbigold/overlays/qa && kustomize edit set image registry.digitalocean.com/cbiglobal/auth-service:${authTag}");
+                                sh("cd cbigold/overlays/qa && kustomize edit set image registry.digitalocean.com/cbiglobal/buddy-service:${buddyTag}");
                                 sh("cd cbigold/overlays/qa && kustomize edit set image registry.digitalocean.com/cbiglobal/company-service:${companyTag}");
                                 sh("cd cbigold/overlays/qa && kustomize edit set image registry.digitalocean.com/cbiglobal/content-service:${contentTag}");
                                 sh("cd cbigold/overlays/qa && kustomize edit set image registry.digitalocean.com/cbiglobal/product-service:${productTag}");
                                 sh("cd cbigold/overlays/qa && kustomize edit set image registry.digitalocean.com/cbiglobal/transaction-service:${transactionTag}");
                                 sh("cd cbigold/overlays/qa && kustomize edit set image registry.digitalocean.com/cbiglobal/user-service:${userTag}");
-                                sh("cd cbigold/overlays/develop && kustomize edit set image registry.digitalocean.com/cbiglobal/file-storage-service:${fileTag}");
+                                sh("cd cbigold/overlays/qa && kustomize edit set image registry.digitalocean.com/cbiglobal/file-storage-service:${fileTag}");
                                 break;
                             case 'cbigold-api-staging':
                                 sh("cd cbigold/overlays/staging && kustomize edit set image registry.digitalocean.com/cbiglobal/admin-service:${adminTag}");
                                 sh("cd cbigold/overlays/staging && kustomize edit set image registry.digitalocean.com/cbiglobal/auth-service:${authTag}");
+                                sh("cd cbigold/overlays/staging && kustomize edit set image registry.digitalocean.com/cbiglobal/buddy-service:${buddyTag}");
                                 sh("cd cbigold/overlays/staging && kustomize edit set image registry.digitalocean.com/cbiglobal/company-service:${companyTag}");
                                 sh("cd cbigold/overlays/staging && kustomize edit set image registry.digitalocean.com/cbiglobal/content-service:${contentTag}");
                                 sh("cd cbigold/overlays/staging && kustomize edit set image registry.digitalocean.com/cbiglobal/product-service:${productTag}");
                                 sh("cd cbigold/overlays/staging && kustomize edit set image registry.digitalocean.com/cbiglobal/transaction-service:${transactionTag}");
                                 sh("cd cbigold/overlays/staging && kustomize edit set image registry.digitalocean.com/cbiglobal/user-service:${userTag}");
-                                sh("cd cbigold/overlays/develop && kustomize edit set image registry.digitalocean.com/cbiglobal/file-storage-service:${fileTag}");
+                                sh("cd cbigold/overlays/staging && kustomize edit set image registry.digitalocean.com/cbiglobal/file-storage-service:${fileTag}");
                                 break;
                             default:
                                 echo 'No Kustomize application found';

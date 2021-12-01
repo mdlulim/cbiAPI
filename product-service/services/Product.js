@@ -42,11 +42,12 @@ async function index(user_id) {
     }
 }
 
-async function overview() {
+async function overview(query) {
     try {
         const { Op } = sequelize;
         const products = await Product.findAndCountAll({
             include: [{ model: Currency }, { model: ProductCategory }],
+            order: [['sort_order', 'ASC']],
             where: {
                 archived: false,
                 status: {
@@ -102,8 +103,21 @@ async function show(permakey) {
     }
 }
 
+async function findByCode(product_code) {
+    try {
+        return Product.findOne({
+            where: { product_code },
+            include: [{ model: Currency }, { model: ProductCategory }]
+        });
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
 async function subscribe(data) {
     try {
+        data.start_date = sequelize.fn('NOW');
         return UserProduct.create(data);
     } catch (error) {
         console.error(error.message || null);
@@ -115,6 +129,7 @@ async function products(category_id) {
     try {
         return Product.findAndCountAll({
             where: { category_id },
+            order: [['sort_order', 'ASC']],
             include: [{
                 model: Currency
             }, {
@@ -146,4 +161,5 @@ module.exports = {
     subscribe,
     products,
     categories,
+    findByCode,
 }

@@ -6,6 +6,7 @@ const generator = require('generate-password');
 const config = require('../config');
 const sequelize = require('../config/db');
 const authService = require('../services/Auth');
+const otpService = require('../services/OTPAuth');
 const userService = require('../services/User');
 const groupService = require('../services/Group');
 const accountService = require('../services/Account');
@@ -16,6 +17,7 @@ const errorHandler = require('../helpers/errorHandler');
 const activityService = require('../services/Activity');
 const sessionService = require('../services/Session');
 const emailHandler = require('../helpers/emailHandler');
+const { sendOTPAuth } = require('../helpers/smsHandler');
 
 const {
     jwtSecret,
@@ -84,6 +86,94 @@ async function tokensVerify(req, res) {
     }
 }
 
+async function tokensVerifyResend(req, res) {
+    try {
+        const {
+            type,
+            device,
+            geoinfo,
+            newDeviceLogin,
+        } = req.body;
+
+        if (type === 'login') {
+
+            const user = await userService.show(req.user.id);
+    
+            if (!user) {
+                throw new Error('Access denied.');
+            }
+    
+            // auth (jwt) token
+            const { email, group, first_name } = user;
+            const payload = {
+                email,
+                id: user.id,
+                time: new Date(),
+                newDeviceLogin,
+            };
+            const verifyToken = jwt.sign(payload, jwtSecret, {
+                expiresIn: '15m',
+            });
+    
+            // generate otp code
+            const code = rn({
+                min: 1000,
+                max: 9999,
+                integer: true,
+            });
+
+            const transaction = `${group.name}.login.verify`;
+            const authRecord = {
+                user_id: user.id,
+                device: device || {},
+                geoinfo: geoinfo || {},
+                type: 'OTP',
+                description: `${group.label} verify login`,
+                expiry: moment().add(15, 'minutes').format('YYYY-MM-DD HH:mm:ss'),
+                transaction,
+                code,
+                verifyToken,
+            };
+    
+            // delete previous otp login attemps/records
+            // and insert a new record
+            await authService.deleteOtp(user.id);
+            await authService.createOtp(authRecord);
+    
+            // update user's last login status
+            await userService.update(user.id, {
+                last_login: sequelize.fn('NOW'),
+                blocked: false,
+                login_attempts: 0,
+            });
+    
+            // send verify login email
+            await emailHandler.verifyLogin({
+                first_name,
+                email,
+                code,
+            });
+    
+            return res.send({
+                success: true,
+                data: {
+                    admin: group.name === 'admin',
+                    token: verifyToken,
+                },
+            });
+        }
+    
+        return res.send({
+            success: true,
+        });
+    } catch (error) {
+        return res.send({
+            success: false,
+            message: error.message || 'Could not process request'
+        });
+    }
+}
+
 /**
  * Login
  * Login a user with the credentials provided. A successful login will return the user’s details 
@@ -98,7 +188,7 @@ async function login(req, res) {
     try {
         const data = await authService.authenticate(req.body);
         const { device, geoinfo } = req.body;
-        const { token, user } = data;
+        const { token, user, newDeviceLogin } = data;
         const { group, email, first_name } = user;
         delete req.body.password;
 
@@ -169,6 +259,7 @@ async function login(req, res) {
             email,
             id: user.id,
             time: new Date(),
+            newDeviceLogin,
         };
         const verifyToken = jwt.sign(payload, jwtSecret, {
             expiresIn: '15m',
@@ -210,6 +301,108 @@ async function login(req, res) {
             email,
             code,
         });
+
+        return res.send({
+            success: true,
+            data: {
+                admin: group.name === 'admin',
+                token: verifyToken,
+            },
+        });
+
+    } catch (err) {
+        return errorHandler.error(err, res);
+    }
+};
+
+/**
+ * Login
+ * Login a user with the credentials provided. A successful login will return the user’s details 
+ * and a token that can be used for subsequent requests.
+ * 
+ * NOTE: If multi-factor authentication is enabled, see the OTP verify endpoint for how to 
+ *  verify OTPs after login.
+ * @param {object} req 
+ * @param {object} res 
+ */
+async function socialLogin(req, res) {
+    try {
+        // validate post data
+        if ((!req.body.googleId && !req.body.userID) || !req.body.email) {
+            throw new Error('Authentication failed.');
+        }
+
+        const data = await authService.socialAuth(req.body);
+        const { device, geoinfo } = req.body;
+        const { user, newDeviceLogin } = data;
+        const { group, email, first_name } = user;
+
+        // admin users are not allowed social login
+        if (group.name === 'admin') {
+            throw new Error('Access denied.');
+        }
+
+        // log user activity
+        const transaction = `${group.name}.social.login.verify`;
+        await activityService.addActivity({
+            user_id: user.id,
+            action: transaction,
+            description: `${group.label} verify social login`,
+            data: req.body,
+            ip: (geoinfo && geoinfo.IPv4) ? geoinfo.IPv4 : null,
+            section: 'Auth',
+            subsection: 'Verify Social Login',
+            data: req.body,
+        });
+
+        // auth (jwt) token
+        const payload = {
+            email,
+            id: user.id,
+            time: new Date(),
+            newDeviceLogin,
+        };
+        const verifyToken = jwt.sign(payload, jwtSecret, {
+            expiresIn: '15m',
+        });
+
+        // generate otp code
+        const code = rn({
+            min: 1000,
+            max: 9999,
+            integer: true,
+        });
+        const authRecord = {
+            user_id: user.id,
+            device: device || {},
+            geoinfo: geoinfo || {},
+            type: 'OTP',
+            description: `${group.label} verify login`,
+            expiry: moment().add(15, 'minutes').format('YYYY-MM-DD HH:mm:ss'),
+            transaction,
+            code,
+            verifyToken,
+        };
+
+        // delete previous otp login attemps/records
+        // and insert a new record
+        await authService.deleteOtp(user.id);
+        await authService.createOtp(authRecord);
+
+        // update user's last login status
+        await userService.update(user.id, {
+            last_login: sequelize.fn('NOW'),
+            blocked: false,
+            login_attempts: 0,
+        });
+
+        // send verify login email
+        await emailHandler.verifyLogin({
+            first_name,
+            email,
+            code,
+        });
+        
         return res.send({
             success: true,
             data: {
@@ -451,6 +644,169 @@ async function register(req, res) {
         }
     } catch (err) {
         return errorHandler.error(err, res);
+    }
+}
+
+
+/**
+ * Social Register
+ * Register a user with socials. A successful registration will return 
+ * the user’s details and a token that can be used for subsequent requests.
+ * @param {object} req 
+ * @param {object} res 
+ */
+async function socialRegister(req, res) {
+    try {
+        const {
+            last_name,
+            first_name,
+            referral_id,
+            geoinfo,
+            timezone,
+        } = req.body;
+
+        // validate email address
+        if (!req.body.email) {
+            return res.status(403).send({
+                success: false,
+                message: 'Registration failed. Email address is required.'
+            });
+        }
+        
+        const email = cleanEmail(req.body.email);
+
+        let isLead = true;
+        const exists = await userService.findByEmail(email);
+        if (exists) {
+            return res.status(403).send({
+                success: false,
+                message: 'Registration failed. User with this email address already registered.'
+            });
+        }
+
+        let role = null;
+        let sponsorId = null;
+        let groupId = null;
+        let sponsor = null;
+
+        if (referral_id) {
+            sponsor = await userService.findByReferralId(referral_id);
+            if (sponsor.id) {
+                isLead = false;
+                sponsorId = sponsor.id;
+                role = await groupService.findByPropertyValue('name', 'member');
+                groupId = role.id;
+            }
+        }
+
+        // lead check and assign respective role
+        if (isLead) {
+            role = await groupService.findByPropertyValue('name', 'lead');
+            groupId = role.id;
+        }
+
+        const userPwd = generator.generate({ length: 8 }).toUpperCase();
+        const code    = generator.generate({ length: 4, numbers: true }).toUpperCase();
+        const token   = jwt.sign({
+            code,
+            email,
+        }, jwtSecret, {
+            expiresIn: '30m'
+        });
+
+        const salt = bcrypt.genSaltSync();
+        const password = bcrypt.hashSync(userPwd, salt);
+        const user = {
+            salt,
+            email,
+            password,
+            mobile: null,
+            username: email,
+            group_id: groupId,
+            verification: null,
+            sponsor: sponsorId,
+            timezone: timezone || null,
+            last_name: last_name || null,
+            first_name: first_name || null,
+            nationality: (geoinfo && geoinfo.country_code) || null,
+            metadata: {
+                geoinfo,
+            }
+        };
+
+        if (!isLead) {
+            user.verification = {
+                token,
+                email: false,
+                mobile: false,
+            };
+        }
+
+        // create user
+        const newUser = await userService.create(user);
+
+        if (newUser && newUser.id) {
+
+            // notify upline once referral has registered
+            if (sponsor && sponsor.id) {
+                await emailHandler.notifyReferrer({
+                    first_name: sponsor.first_name,
+                    email: sponsor.email,
+                    referral: `${first_name} ${last_name} - ${newUser.referral_id}`,
+                });
+            }
+
+            // send activation email (if is not a lead)
+            if (!isLead) {
+                await emailHandler.confirmEmail({
+                    userPassword: userPwd,
+                    socialSignup: true,
+                    first_name,
+                    email,
+                    token,
+                });
+            }
+            
+            // create user cbi wallet
+            await accountService.create({
+                is_primary: true,
+                name: 'cbi-wallet',
+                label: 'CBI Wallet',
+                user_id: newUser.id,
+                reference: newUser.referral_id,
+            });
+
+            // create primary email address record
+            await emailAddressService.create({
+                email: email,
+                is_primary: true,
+                is_verified: false,
+                user_id: newUser.id,
+            });
+
+            // create (default) notification record for the user
+            await notificationService.create({
+                user_id: newUser.id,
+                activity: 'Marketing & Communication',
+                description: 'Get the latest promotions, updates and tips',
+                sms: false,
+                email: false,
+                push: false,
+            });
+
+            // response
+            return res.send({
+                success: true,
+                lead: isLead,
+            });
+        } else {
+            throw new Error('Request could not be processed, please try again or contact support.');
+        }
+    } catch (error) {
+        return res.send({
+            success: false,
+            message: 'Could not process request'
+        });
     }
 }
 
@@ -960,11 +1316,109 @@ async function refresh(req, res) {
     }
 }
 
+async function otp(req, res) {
+    try {
+        // get user
+        const user = await userService.show(req.user.id);
+
+        // destroy all old OTP records
+        await otpService.destroyAll({
+            user_id: user.id,
+        });
+
+        // create/log OTP record
+        const otpRecord = {
+            ...req.body,
+            user_id: user.id,
+        };
+        const otp = await otpService.create(otpRecord);
+
+        // send OTP auth
+        if (otp.code) {
+            const mobile = user.mobile.replace('+', '');
+            await sendOTPAuth(mobile, otp.code);
+        }
+
+        // response
+        return res.send({ success: true });
+    } catch (error) {
+        console.log(error.message)
+        return res.status(500).send({
+            success: false,
+            message: 'Could not process request. Authentication failed'
+        });
+    }
+}
+
+async function otpResend(req, res) {
+    try {
+        // get user
+        const user = await userService.show(req.user.id);
+
+        // destroy all old OTP records
+        await otpService.destroyAll({
+            user_id: user.id,
+        });
+
+        // create/log OTP record
+        const otpRecord = {
+            ...req.body,
+            user_id: user.id,
+        };
+        const otp = await otpService.create(otpRecord);
+
+        // send OTP auth
+        if (otp.code) {
+            const mobile = user.mobile.replace('+', '');
+            await sendOTPAuth(mobile, otp.code);
+        }
+
+        // response
+        return res.send({ success: true });
+    } catch (error) {
+        console.log(error.message)
+        return res.status(500).send({
+            success: false,
+            message: 'Could not process request. Authentication failed'
+        });
+    }
+}
+
+async function otpVerify(req, res) {
+    try {
+        // get otp record
+        const { code, transaction } = req.body;
+        const otp = await otpService.show({
+            code,
+            transaction,
+        });
+
+        if (otp && otp.id) {
+            // destroy all old OTP records
+            await otpService.destroyAll({
+                user_id: req.user.id,
+            });
+            return res.send({ success: true });
+        }
+
+        return res.send({ success: false });
+    } catch (error) {
+        console.log(error.message)
+        return res.status(500).send({
+            success: false,
+            message: 'Could not process request. Authentication failed'
+        });
+    }
+}
+
 module.exports = {
     validate,
     tokensVerify,
+    tokensVerifyResend,
     login,
+    socialLogin,
     register,
+    socialRegister,
     logout,
     logoutAll,
     passwordChange,
@@ -984,4 +1438,7 @@ module.exports = {
     destroyMfaToken,
     mfaVerify,
     refresh,
+    otp,
+    otpResend,
+    otpVerify,
 }

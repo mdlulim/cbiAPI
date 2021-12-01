@@ -1,4 +1,5 @@
 const accountController = require('./controllers/Account');
+const addressController = require('./controllers/Address');
 const bankAccountController = require('./controllers/BankAccount');
 const beneficiaryController = require('./controllers/Beneficiary');
 const commissionController = require('./controllers/Commission');
@@ -22,9 +23,19 @@ module.exports.set = app => {
 
     app.get('/activities', authMiddleware.checkAuth, userController.activities);
 
+    app.get('/devices', authMiddleware.checkAuth, userController.devices);
+
     app.get('/commissions/:type/total', authMiddleware.checkAuth, commissionController.total);
 
     app.get('/referrals/:uid', authMiddleware.checkAuth, userController.referralsByUUID);
+
+    app.get('/coaches', authMiddleware.checkAuth, userController.coaches);
+
+    app.post('/addresses', authMiddleware.checkAuth, addressController.create);
+    app.get('/addresses', authMiddleware.checkAuth, addressController.index);
+    app.get('/addresses/:id', authMiddleware.checkAuth, addressController.show);
+    app.put('/addresses/:id', authMiddleware.checkAuth, addressController.update);
+    app.delete('/addresses/:id', authMiddleware.checkAuth, addressController.destroy);
 
     app.post('/bank_accounts', authMiddleware.checkAuth, bankAccountController.create);
     app.get('/bank_accounts', authMiddleware.checkAuth, bankAccountController.index);

@@ -12,7 +12,7 @@ async function confirmEmail(data) {
         name: 'CBI',
         email: smtp.auth.user,
     };
-    return sendMail(from, email, 'CBI - Confirm your email address', template);
+    return sendMail(from, email, 'Confirm your email address', template);
 };
 
 async function resetPassword(data) {
@@ -23,7 +23,18 @@ async function resetPassword(data) {
         name: 'CBI',
         email: smtp.auth.user,
     };
-    return sendMail(from, email, 'CBI - Reset password', template);
+    return sendMail(from, email, 'Reset password', template);
+};
+
+async function welcome(data) {
+    const { email } = data;
+    data.url = `${baseurl.frontend}/login`;
+    const template = emailTemplates.welcome(data);
+    const from = {
+        name: 'CBI',
+        email: smtp.auth.user,
+    };
+    return sendMail(from, email, 'Welcome to CBI Global!', template);
 };
 
 async function changePassword(data) {
@@ -33,7 +44,7 @@ async function changePassword(data) {
         name: 'CBI',
         email: smtp.auth.user,
     };
-    return sendMail(from, email, 'CBI - Password changed successfully!', template);
+    return sendMail(from, email, 'Password changed successfully!', template);
 };
 
 async function verifyLogin(data) {
@@ -43,7 +54,7 @@ async function verifyLogin(data) {
         name: 'CBI',
         email: smtp.auth.user,
     };
-    return sendMail(from, email, 'CBI - Verify login', template);
+    return sendMail(from, email, 'Verify login - Do not share this sign-in confirmation code with anyone', template);
 };
 
 async function notifyReferrer(data) {
@@ -53,7 +64,17 @@ async function notifyReferrer(data) {
         name: 'CBI',
         email: smtp.auth.user,
     };
-    return sendMail(from, email, 'CBI - You have a new referral!', template);
+    return sendMail(from, email, 'You have a new referral!', template);
+};
+
+async function loginNotify(data) {
+    const { email } = data;
+    const template = emailTemplates.loginNotify(data);
+    const from = {
+        name: 'CBI',
+        email: smtp.auth.user,
+    };
+    return sendMail(from, email, 'Sign-in Notification', template);
 };
 
 module.exports = {
@@ -62,4 +83,6 @@ module.exports = {
     verifyLogin,
     notifyReferrer,
     changePassword,
+    loginNotify,
+    welcome,
 };

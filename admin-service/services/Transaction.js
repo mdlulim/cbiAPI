@@ -4,6 +4,9 @@ const { User } = require('../models/User');
 const { Document } = require('../models/Document');
 const { Account }  = require('../models/Account');
 
+User.hasMany(Transaction, {foreignKey: 'user_id', targetKey: 'id'});
+Transaction.belongsTo(User, {foreignKey: 'user_id', targetKey: 'id'});
+
 async function index(query) {
     try {
         const { offset, limit } = query;
@@ -48,7 +51,6 @@ async function creditWallet(id, data) {
     try {
         const account =  await Account.findOne({where : {id: data.account_id}});
         const mainAccount =  await Account.findOne({where : {id: '3cf7d2c0-80e1-4264-9f2f-6487fd1680c2'}});
-        
             if(account){
                 let credit = {available_balance: parseFloat(account.available_balance)+parseFloat(data.amount)};
                 let accountCondition = {id: data.account_id}
@@ -101,12 +103,8 @@ async function update(data, id) {
 
 async function allTransactions(user_id, query) {
     try {
-        const where = {
-            ...query,
-            user_id,
-        };
+
         const { count, rows } = await User.findAndCountAll({
-            where,
             order: [[ 'created', 'DESC' ]],
             include: Transaction
         });

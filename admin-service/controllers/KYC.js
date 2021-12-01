@@ -62,13 +62,8 @@ async function show_all(req, res) {
 async function update(req, res) {
     try {
         const data = req.body
-        const levels_to_update = Object.keys(data.levels);
-        let updated = null
-        levels_to_update.forEach(async(i) => {
-            const id = data.levels[i].id
-            delete data.levels[i].id
-            updated = await kycService.update(data.levels[i], id);
-        });
+        const updated = await kycService.update(data.levels)
+        const kyc_applications = await kycService.show(data.user_id);
 
         let rem = '<ul>';
         data.rejected_docs.forEach( item => {
@@ -82,7 +77,7 @@ async function update(req, res) {
         const notified = await kycNotification({
             first_name:data.last_name,
             remaining:rem,
-            level:data.kyc,
+            level:calculate_kyc_level(kyc_applications),
             email: data.email   
         })
 
@@ -102,25 +97,28 @@ async function update(req, res) {
     }
 }
 
+function calculate_kyc_level (kyc_applications) {
+    let least_rejected = 10;
+    let total_verified = 0;
+
+    kyc_applications.forEach(row=>{
+        if((parseInt(row.level) < least_rejected && row.status === 'Rejected') || (parseInt(row.level) < least_rejected && row.status === 'Pending'))
+            least_rejected = parseInt(row.level)
+        if(row.verified)
+            total_verified += 1;
+    })
+
+    const kyc_level = (least_rejected === 10 && total_verified === 4) ? 3 : (least_rejected === 0 || total_verified === 0) ? -1 : least_rejected - 1
+    return kyc_level
+}
 
 async function kyc_level(req, res) {
     try {
         const kyc_applications = await kycService.show(req.params.id);
-        let least_rejected = 10;
-        let total_verified = 0;
-
-        kyc_applications.forEach(row=>{
-            if((parseInt(row.level) < least_rejected && row.status === 'Rejected') || (parseInt(row.level) < least_rejected && row.status === 'Pending'))
-                least_rejected = parseInt(row.level)
-            if(row.verified)
-                total_verified += 1;
-        })
-
-        const kyc_level = (least_rejected === 10 && total_verified === 4) ? 3 : (least_rejected === 0 || total_verified === 0) ? -1 : least_rejected - 1
-
+        
         return res.send({
             success: true,
-            data:{ kyc_level },
+            data:{ kyc_level: calculate_kyc_level(kyc_applications) },
         });
     } catch (error) {
         return res.send({
