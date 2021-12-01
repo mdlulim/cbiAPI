@@ -31,6 +31,11 @@ module.exports.set = app => {
     /**
      * Verify Token
      */
+    app.post('/tokens/verify/resend', authMiddleware.checkAuth, authController.tokensVerifyResend);
+
+    /**
+     * Verify Token
+     */
     app.post('/tokens/verify', authMiddleware.checkAuth, authController.tokensVerify);
 
     /**
@@ -42,6 +47,16 @@ module.exports.set = app => {
      * subsequent requests.
      */
     app.post('/login', authController.login);
+
+    /**
+     * Social Login
+     * 
+     * Login a user with the social logins (Google, Facebook, Apple).
+     * A successful login will return the user’s
+     * details and a token that can be used for
+     * subsequent requests.
+     */
+    app.post('/social/login', authController.socialLogin);
 
     /**
      * Authenticate Token
@@ -57,6 +72,16 @@ module.exports.set = app => {
      * subsequent requests.
      */
     app.post('/register', authController.register);
+
+    /**
+     * Social Register
+     * 
+     * Register a user with the socials (Google, Facebook, Apple).
+     * A successful registration will return the user’s
+     * details and a token that can be used for
+     * subsequent requests.
+     */
+    app.post('/social/register', authController.socialRegister);
 
     /**
      * Logout
@@ -102,7 +127,7 @@ module.exports.set = app => {
      * Changing this URL is required if you wish to make use
      * of your own client side UI for resetting emails.
      */
-    app.post('/password/reset/confirm', authController.passwordResetConfirm);
+    app.post('/password/reset/confirm', authMiddleware.checkAuth, authController.passwordResetConfirm);
 
     /**
      * Verify Email
@@ -218,4 +243,8 @@ module.exports.set = app => {
      * process, as well as verifying a token after login.
      */
     app.post('/mfa/verify', authMiddleware.checkAuth, authController.mfaVerify);
+
+    app.post('/otp', authMiddleware.checkAuth, authController.otp);
+    app.post('/otp/resend', authMiddleware.checkAuth, authController.otpResend);
+    app.post('/otp/verify', authMiddleware.checkAuth, authController.otpVerify);
 };

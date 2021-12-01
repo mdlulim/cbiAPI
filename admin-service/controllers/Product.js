@@ -90,6 +90,30 @@ async function index(req, res) {
         });
     }
 }
+
+async function history(req, res) {
+    try {
+        const products = await productService.history(req.query);
+        const { count, rows } = products[0];
+        console.log(products[0])
+        return res.send({
+            success: true,
+            data: {
+                count,
+                next: null,
+                previous: null,
+                results: products[0],
+            }
+        });
+    } catch (error) {
+        console.log(error.message)
+        return res.send({
+            success: false,
+            message: 'Could not process request'
+        });
+    }
+}
+
 async function getMembersByProductId(req, res) {
     try {
         const members = await productService.getMembersByProductId(req.params.id);
@@ -219,6 +243,7 @@ module.exports = {
     createCategory,
     create,
     index,
+    history,
     show,
     update,
     destroy,

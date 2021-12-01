@@ -8,6 +8,9 @@ const User = require('../models/User');
 Product.belongsTo(Currency, { foreignKey: 'currency_code', targetKey: 'code' });
 Product.belongsTo(ProductCategory, { foreignKey: 'category_id', targetKey: 'id' });
 
+Product.belongsTo(UserProduct, { foreignKey: 'id', targetKey: 'product_id' });
+//User.belongsTo(UserProduct, { foreignKey: 'id', targetKey: 'user_id' });
+
 async function createCategory(data) {
     try {
         return ProductCategory.create(data);
@@ -45,6 +48,49 @@ async function index(query) {
         console.error(error.message || null);
         throw new Error('Could not process your request');
     }
+}
+
+async function history(query) {
+    try {
+
+        return sequelize.query("SELECT users.first_name, users.last_name, users.referral_id, users.id, user_products.id, user_products.user_id, user_products.product_id, user_products.created, user_products.status, user_products.start_date, user_products.end_date, user_products.income,"+
+        "user_products.tokens, products.id, products.title, products.type, products.category_title, products.category_id, products.fees"+
+        " FROM public.user_products"+
+        " LEFT JOIN users"+
+        " ON user_products.user_id = users.id"+
+        " LEFT JOIN products"+
+        " ON user_products.product_id = products.id"+
+        " ORDER BY created DESC"
+                );
+
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+    // try {
+    //     const { offset, limit } = query;
+    //     const where = query || {};
+    //     const userWhere = {};
+
+    //     delete where.offset;
+    //     delete where.limit;
+
+    //     if (where.user) {
+    //         userWhere.id = where.user;
+    //         delete where.user;
+    //     }
+
+    //     return UserProduct.findAndCountAll({
+    //         where,
+    //         include: [{ model: User }],
+    //         order: [['created', 'DESC']],
+    //         offset: offset || 0,
+    //         limit: limit || 100,
+    //     });
+    // } catch (error) {
+    //     console.error(error.message || null);
+    //     throw new Error('Could not process your request');
+    // }
 }
 
 async function categories(query) {
@@ -154,6 +200,7 @@ async function destroy(id) {
 module.exports = {
     create,
     index,
+    history,
     show,
     update,
     destroy,

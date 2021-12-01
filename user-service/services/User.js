@@ -1,10 +1,12 @@
 const sequelize = require('../config/db');
-// const { BuddyAccount } = require('../models/BuddyAccount');
+const { Activity } = require('../models/Activity');
+const { Country } = require('../models/Country');
 const { Group } = require('../models/Group');
 const { User }  = require('../models/User');
+const { UserDevice }  = require('../models/UserDevice');
 
 User.belongsTo(Group, { foreignKey: 'group_id', targetKey: 'id' });
-// BuddyAccount.belongsTo(User, { foreignKey: 'user_id', targetKey: 'id' });
+User.belongsTo(Country, { foreignKey: 'nationality', targetKey: 'iso' });
 
 async function create(data) {
     try {
@@ -17,7 +19,6 @@ async function create(data) {
 
 async function show(id) {
     try {
-        // const buddy = await BuddyAccount.findOne({ where: { user_id, id } })
         const user = await User.findOne({
             attributes: [
                 'id',
@@ -58,7 +59,7 @@ async function show(id) {
             where: { id },
             include: [
                 { model: Group }, 
-                // { model: BuddyAccount }
+                { model: Country }
             ],
         });
         return user;
@@ -77,7 +78,10 @@ async function findByEmail(email) {
                 archived: false,
                 status: { [Op.iLike]: 'Active' }
             },
-            include: [{ model: Group }],
+            include: [
+                { model: Group }, 
+                { model: Country }
+            ],
         });
     } catch (error) {
         console.error(error.message || null);
@@ -97,22 +101,73 @@ async function update(id, data) {
 
 async function referrals(id) {
     try {
+        // const sql = `
+        // WITH RECURSIVE cte_query
+        // AS
+        //     (
+        //         SELECT p.id, p.referral_id, p.email, p.first_name, p.last_name, p.nationality, p.status, p.sponsor
+        //         FROM users p
+        //         WHERE p.id = '${id}'
+        //         UNION ALL
+        //         SELECT e.id, e.referral_id, e.email, e.first_name, e.last_name, e.nationality, e.status, e.sponsor
+        //         FROM users e
+        //             INNER JOIN cte_query c ON c.id = e.sponsor
+        //     )
+        //     SELECT c.*, s.first_name AS "referral.first_name", s.last_name AS "referral.last_name", 
+        //         s.nationality AS "referral.nationality", s.referral_id AS "referral.referral_id", 
+        //         n.nicename AS "country.nicename", n.iso AS "country.iso"
+        //     FROM cte_query c
+        //     INNER JOIN users s ON c.sponsor = s.id
+        //     INNER JOIN countries n ON c.nationality = n.iso
+        //     WHERE c.id != '${id}'
+        // `;
         const sql = `
-        WITH RECURSIVE cte_query
-        AS
-            (
-                SELECT p.id, p.referral_id, p.email, p.first_name, p.last_name, p.nationality, p.status, p.sponsor
-                FROM users p
-                WHERE p.id = '${id}'
-                UNION ALL
-                SELECT e.id, e.referral_id, e.email, e.first_name, e.last_name, e.nationality, e.status, e.sponsor
-                FROM users e
-                    INNER JOIN cte_query c ON c.id = e.sponsor
-            )
-            SELECT *
-            FROM cte_query
-            WHERE id != '${id}'
-        `;
+        WITH RECURSIVE descendant AS (
+            SELECT  id,
+                    first_name,
+                    last_name,
+                    referral_id,
+                    sponsor,
+                    status,
+                    nationality,
+                    email,
+                    0 AS level
+            FROM users
+            WHERE id = '${id}'
+        
+            UNION ALL
+        
+            SELECT  ft.id,
+                    ft.first_name,
+                    ft.last_name,
+                    ft.referral_id,
+                    ft.sponsor,
+                    ft.status,
+                    ft.nationality,
+                    ft.email,
+                    level + 1
+            FROM users ft
+        JOIN descendant d
+        ON ft.sponsor = d.id
+        )
+        
+        SELECT  d.id,
+                d.first_name,
+                d.last_name,
+                d.referral_id,
+                d.status,
+                d.nationality,
+                d.email,
+                a.id AS "referral.id",
+                a.first_name AS "referral.first_name",
+                a.last_name AS "referral.last_name",
+                a.referral_id AS "referral.referral_id",
+                d.level,
+                n.nicename AS "country.nicename", n.iso AS "country.iso"
+        FROM descendant d
+        LEFT JOIN users a ON d.sponsor = a.id
+        INNER JOIN countries n ON d.nationality = n.iso
+        ORDER BY level, "referral.id"`;
         const options = {
             nest: true,
             type: sequelize.QueryTypes.SELECT
@@ -232,6 +287,50 @@ async function search(prop, value) {
     }
 }
 
+async function activities(user, query) {
+    try {
+        const { Op } = sequelize;
+        return Activity.findAndCountAll({
+            attributes: [
+                'action',
+                'description',
+                'created',
+                'section',
+                'subsection',
+                'id',
+            ],
+            where: {
+                ...query,
+                user_id: user.id,
+                action: {
+                    [Op.or]: {
+                        [Op.ne]: `${user.group_name}.login.verify`,
+                        [Op.ne]: `${user.group_name}.social.login.verify`
+                    }
+                }
+            },
+            offset: 0,
+            limit: 5,
+            order: [[ 'created', 'DESC' ]]
+        })
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
+async function devices(user_id) {
+    try {
+        return UserDevice.findAndCountAll({
+            where: { user_id },
+            order: [[ 'created', 'DESC' ]]
+        })
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
 module.exports = {
     create,
     show,
@@ -241,4 +340,6 @@ module.exports = {
     countReferrals,
     referralsByUUID,
     search,
+    activities,
+    devices,
 }

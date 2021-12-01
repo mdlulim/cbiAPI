@@ -1,9 +1,12 @@
 const sequelize = require('../config/db');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+const { EmailAddress } = require('../models/EmailAddress');
 const { User } = require('../models/User');
+const { UserDevice } = require('../models/UserDevice');
 const { Group } = require('../models/Group');
 const { OTPAuth } = require('../models/OTPAuth');
+const emailHandler = require('../helpers/emailHandler');
 
 const config = require('../config');
 const {
@@ -17,6 +20,7 @@ const sessionService = require('../services/Session');
 
 User.belongsTo(Group, { foreignKey: 'group_id', targetKey: 'id' });
 OTPAuth.belongsTo(User, { foreignKey: 'user_id', targetKey: 'id' });
+UserDevice.belongsTo(User, { foreignKey: 'user_id', targetKey: 'id' });
 
 async function createOtp(data) {
     return OTPAuth.create(data);
@@ -27,7 +31,7 @@ async function deleteOtp(user_id) {
 }
 
 async function authenticate(data) {
-    const { user, password } = data;
+    const { user, password, device, geoinfo } = data;
     const { Op } = sequelize;
     return User.findOne({
         where: {
@@ -59,8 +63,133 @@ async function authenticate(data) {
             throw new Error('Authentication failed. Account blocked, please contact support.');
         if (!record.verified)
             throw new Error('Authentication failed. User pending verification.');
-        if (record.status.toLowerCase() !== 'active')
+        // if (record.status.toLowerCase() !== 'active')
+        //     throw new Error('Authentication failed. User pending verification.');
+
+        /**
+         * Validate user's device and/or location
+         */
+        var newDeviceLogin = true;
+        if (device && device.browser) {
+            // Check device
+            const { browser, is_mobile } = device;
+            const userDevice = await UserDevice.findOne({
+                ipv4: geoinfo.IPv4,
+                is_mobile,
+                browser,
+            });
+            if (userDevice) {
+                newDeviceLogin = false;
+                if (userDevice.blacklisted) {
+                    throw new Error('Authentication failed. Access denied.');
+                }
+            }
+        }
+
+        const {
+            id,
+            email,
+            group,
+            mobile,
+            profile,
+            language,
+            group_id,
+            username,
+            last_name,
+            first_name,
+            birth_date,
+            nationality,
+            timezone,
+            metadata,
+            prompt_change_password,
+            permissions,
+            id_number,
+            permission_level,
+            last_login,
+            created,
+            updated,
+        } = record;
+        const payload = {
+            id,
+            username,
+            group_id,
+            last_name,
+            first_name,
+            group_name: group.name,
+            permission_level,
+            time: new Date()
+        };
+        var token = jwt.sign(payload, config.jwtSecret, {
+            expiresIn: config.tokenExpireTime
+        });
+        return {
+            token,
+            user: {
+                id,
+                group,
+                email,
+                mobile,
+                profile,
+                username,
+                last_name,
+                first_name,
+                birth_date,
+                nationality,
+                permissions,
+                last_login,
+                id_number,
+                language,
+                timezone,
+                metadata,
+                group_id,
+                permission_level,
+                created,
+                updated,
+                prompt_change_password,
+            },
+            newDeviceLogin,
+        };
+    });
+}
+
+async function socialAuth(data) {
+    const { email, device, geoinfo } = data;
+    const { Op } = sequelize;
+    return User.findOne({
+        where: {
+            email: { [Op.iLike]: email },
+            archived: false,
+        },
+        include: [{ model: Group }],
+    }).then(async record => {
+        if (!record)
+            throw new Error('Authentication failed. User not found.');
+        if (record.blocked)
+            throw new Error('Authentication failed. Account blocked, please contact support.');
+        if (!record.verified)
             throw new Error('Authentication failed. User pending verification.');
+        // if (record.status.toLowerCase() !== 'active')
+        //     throw new Error('Authentication failed. User pending verification.');
+
+        /**
+         * Validate user's device and/or location
+         */
+        var newDeviceLogin = true;
+        if (device && device.browser) {
+            // Check device
+            const { browser, is_mobile } = device;
+            const userDevice = await UserDevice.findOne({
+                ipv4: geoinfo.IPv4,
+                is_mobile,
+                browser,
+            });
+            if (userDevice) {
+                newDeviceLogin = false;
+                if (userDevice.blacklisted) {
+                    throw new Error('Authentication failed. Access denied.');
+                }
+            }
+        }
 
         const {
             id,
@@ -119,6 +248,7 @@ async function authenticate(data) {
                 created,
                 updated,
                 prompt_change_password,
+                newDeviceLogin,
             }
         };
     });
@@ -139,10 +269,21 @@ async function verify(data) {
 }
 
 async function tokensVerify(data) {
-    const { email, type } = data;
-    const user = await User.findOne({
-        where: { email }
-    });
+    const { Op } = sequelize;
+    const { id, email, type } = data;
+    let user = null;
+
+    if (id) {
+        // find user by id
+        user = await User.findOne({
+            where: { id }
+        });
+    } else if (email) {
+        // find user by email
+        user = await User.findOne({
+            where: { email }
+        });
+    }
 
     if (!user)
         throw new Error('Invalid token specified');
@@ -154,13 +295,57 @@ async function tokensVerify(data) {
 
         await User.update({
             updated: sequelize.fn('NOW'),
-            status: 'Active',
             verified: true,
             verification: {
                 email: true,
                 mobile: false,
             }
         }, { where: { email } });
+
+        await EmailAddress.update({
+            is_verified: true,
+            updated: sequelize.fn('NOW'),
+        }, { where: { email } });
+
+
+        // send welcome email
+        await emailHandler.welcome({
+            first_name: user.first_name,
+            email: user.email,
+        });
+
+    } else {
+        const {
+            id,
+            code,
+            transaction,
+        } = data;
+        const record = await OTPAuth.findOne({
+            where: {
+                code,
+                transaction,
+                user_id: id,
+                status: { [Op.iLike]: 'Pending' },
+                expiry: {
+                    [Op.gt]: sequelize.fn('NOW')
+                }
+            }
+        });
+
+        // check if found
+        if (record && record.id) {
+            await OTPAuth.destroy({ where: { id: record.id } });
+            return {
+                success: true,
+                data: {
+                    action: record.transaction
+                }
+            };
+        } else {
+            return {
+                success: false,
+            }
+        }
     }
 
     return {
@@ -168,8 +353,24 @@ async function tokensVerify(data) {
     };
 }
 
+async function verifyResetPassword(data) {
+    const { code, email } = data;
+    const user = await User.findOne({
+        where: { email }
+    });
+
+    if (!user) {
+        throw new Error('Access denied.');
+    }
+
+    return {
+        auth: true,
+        success: true,
+    };
+}
+
 async function verifyLogin(data) {
-    const { code, id, geoinfo, device } = data;
+    const { code, id, geoinfo, device, newDeviceLogin } = data;
     const otpAuth = await OTPAuth.findOne({
         where: { code, user_id: id }
     });
@@ -234,6 +435,76 @@ async function verifyLogin(data) {
                 login_attempts: 0,
             }
         });
+
+        // If new device login
+        // notify user
+        if (device && device.browser) {
+            // Check device (again)
+            const {
+                IPv4,
+                city,
+                country_code,
+                country_name,
+                latitude,
+                longitude,
+                postal,
+                state,
+            } = geoinfo;
+            const {
+                browser,
+                os_name,
+                os_version,
+                is_mobile,
+            } = device;
+            const location = `${city}, ${state} - ${country_name} ${postal}`;
+            const userDevice = await UserDevice.findOne({
+                ipv4: IPv4,
+                is_mobile,
+                browser,
+            });
+            if (userDevice) {
+                if (userDevice.blacklisted) {
+                    throw new Error('Authentication failed. Access denied.');
+                }
+            }
+
+            if (newDeviceLogin) {
+                // insert new device
+                await UserDevice.create({
+                    browser,
+                    location,
+                    latitude,
+                    longitude,
+                    country_code,
+                    country_name,
+                    ipv4: IPv4,
+                    user_id: user.id,
+                    last_login: sequelize.fn('NOW'),
+                    device: `${os_name} ${os_version}`,
+                    is_mobile,
+                    token,
+                });
+    
+                // send notification email
+                const lockToken = jwt.sign({
+                    id,
+                    referral_id: user.referral_id,
+                }, jwtSecret, {
+                    expiresIn: tokenExpireTime
+                });
+
+                // send
+                await emailHandler.loginNotify({
+                    browser,
+                    location,
+                    first_name,
+                    email: user.email,
+                    ipaddress: IPv4 || null,
+                    os: `${os_name} ${os_version}`,
+                    url: `https://demo.cbiglobal.io/lock-account/${user.referral_id}&expires=${new Date().getTime()}&token=${lockToken}`,
+                });
+            }
+        }
 
         // delete otp record
         await OTPAuth.destroy({ where: { id: otpAuth.id } });
@@ -600,4 +871,6 @@ module.exports = {
     destroyMfaToken,
     mfaVerify,
     verifyLogin,
+    verifyResetPassword,
+    socialAuth,
 }

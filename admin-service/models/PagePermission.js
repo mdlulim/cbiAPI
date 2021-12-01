@@ -12,6 +12,7 @@ const PagePermission = sequelize.define('page_permission', {
     basic: Sequelize.BOOLEAN,
     medium: Sequelize.BOOLEAN,
     high: Sequelize.BOOLEAN,
+    veryhigh: Sequelize.BOOLEAN,
     created: Sequelize.DATE,
     updated: Sequelize.DATE,
 }, {

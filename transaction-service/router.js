@@ -16,7 +16,14 @@ module.exports.set = app => {
      * 
      * Retrieve current user’s transactions.
      */
-    app.get('/',  transactionController.index);
+     app.get('/', authMiddleware.checkAuth, transactionController.index);
+    
+    /**
+     * Retrieve User's Transactions
+     * 
+     * Retrieve current user’s transactions.
+     */
+    app.get('/buddy', authMiddleware.checkAuth, transactionController.buddy);
     
     /**
      * Retrieve User's Transactions Stats
@@ -38,5 +45,12 @@ module.exports.set = app => {
      * Retrieve transaction fees by type.
      */
     app.get('/fees/:tx_type/:subtype', authMiddleware.checkAuth, feeController.show);
+    
+    /**
+     * Retrieve Transaction Limits
+     * 
+     * Retrieve transaction limits by kyc level.
+     */
+    app.get('/limits', authMiddleware.checkAuth, transactionController.limits);
 
 };
