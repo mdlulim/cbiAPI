@@ -45,5 +45,12 @@ module.exports.set = app => {
      * Retrieve transaction fees by type.
      */
     app.get('/fees/:tx_type/:subtype', authMiddleware.checkAuth, feeController.show);
+    
+    /**
+     * Retrieve Transaction Limits
+     * 
+     * Retrieve transaction limits by kyc level.
+     */
+    app.get('/limits', authMiddleware.checkAuth, transactionController.limits);
 
 };

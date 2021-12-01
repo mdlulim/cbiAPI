@@ -257,10 +257,34 @@ async function totals(req, res){
     }
 };
 
+async function limits(req, res){
+    try {
+        const user = await userService.show(req.user.id);
+        if (user.kyc && user.kyc.level) {
+            const limits = await transactionService.limits(user.kyc.level);
+            return res.send({
+                success: true,
+                data: limits,
+            });
+        }
+        return res.send({
+            success: true,
+            data: null,
+        });
+    } catch (err) {
+        console.log(err.message)
+        return res.status(500).send({
+            success: false,
+            message: 'Could not process your request'
+        });
+    }
+};
+
 module.exports = {
     create,
     index,
     buddy,
     count,
     totals,
+    limits,
 };

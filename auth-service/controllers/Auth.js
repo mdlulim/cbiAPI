@@ -6,6 +6,7 @@ const generator = require('generate-password');
 const config = require('../config');
 const sequelize = require('../config/db');
 const authService = require('../services/Auth');
+const otpService = require('../services/OTPAuth');
 const userService = require('../services/User');
 const groupService = require('../services/Group');
 const accountService = require('../services/Account');
@@ -16,6 +17,7 @@ const errorHandler = require('../helpers/errorHandler');
 const activityService = require('../services/Activity');
 const sessionService = require('../services/Session');
 const emailHandler = require('../helpers/emailHandler');
+const { sendOTPAuth } = require('../helpers/smsHandler');
 
 const {
     jwtSecret,
@@ -76,6 +78,94 @@ async function tokensVerify(req, res) {
             transaction: `${req.user.group_name.toLowerCase()}.${req.body.type}`,
         });
         return res.send(data);
+    } catch (error) {
+        return res.send({
+            success: false,
+            message: error.message || 'Could not process request'
+        });
+    }
+}
+
+async function tokensVerifyResend(req, res) {
+    try {
+        const {
+            type,
+            device,
+            geoinfo,
+            newDeviceLogin,
+        } = req.body;
+
+        if (type === 'login') {
+
+            const user = await userService.show(req.user.id);
+    
+            if (!user) {
+                throw new Error('Access denied.');
+            }
+    
+            // auth (jwt) token
+            const { email, group, first_name } = user;
+            const payload = {
+                email,
+                id: user.id,
+                time: new Date(),
+                newDeviceLogin,
+            };
+            const verifyToken = jwt.sign(payload, jwtSecret, {
+                expiresIn: '15m',
+            });
+    
+            // generate otp code
+            const code = rn({
+                min: 1000,
+                max: 9999,
+                integer: true,
+            });
+
+            const transaction = `${group.name}.login.verify`;
+            const authRecord = {
+                user_id: user.id,
+                device: device || {},
+                geoinfo: geoinfo || {},
+                type: 'OTP',
+                description: `${group.label} verify login`,
+                expiry: moment().add(15, 'minutes').format('YYYY-MM-DD HH:mm:ss'),
+                transaction,
+                code,
+                verifyToken,
+            };
+    
+            // delete previous otp login attemps/records
+            // and insert a new record
+            await authService.deleteOtp(user.id);
+            await authService.createOtp(authRecord);
+    
+            // update user's last login status
+            await userService.update(user.id, {
+                last_login: sequelize.fn('NOW'),
+                blocked: false,
+                login_attempts: 0,
+            });
+    
+            // send verify login email
+            await emailHandler.verifyLogin({
+                first_name,
+                email,
+                code,
+            });
+    
+            return res.send({
+                success: true,
+                data: {
+                    admin: group.name === 'admin',
+                    token: verifyToken,
+                },
+            });
+        }
+    
+        return res.send({
+            success: true,
+        });
     } catch (error) {
         return res.send({
             success: false,
@@ -1226,9 +1316,105 @@ async function refresh(req, res) {
     }
 }
 
+async function otp(req, res) {
+    try {
+        // get user
+        const user = await userService.show(req.user.id);
+
+        // destroy all old OTP records
+        await otpService.destroyAll({
+            user_id: user.id,
+        });
+
+        // create/log OTP record
+        const otpRecord = {
+            ...req.body,
+            user_id: user.id,
+        };
+        const otp = await otpService.create(otpRecord);
+
+        // send OTP auth
+        if (otp.code) {
+            const mobile = user.mobile.replace('+', '');
+            await sendOTPAuth(mobile, otp.code);
+        }
+
+        // response
+        return res.send({ success: true });
+    } catch (error) {
+        console.log(error.message)
+        return res.status(500).send({
+            success: false,
+            message: 'Could not process request. Authentication failed'
+        });
+    }
+}
+
+async function otpResend(req, res) {
+    try {
+        // get user
+        const user = await userService.show(req.user.id);
+
+        // destroy all old OTP records
+        await otpService.destroyAll({
+            user_id: user.id,
+        });
+
+        // create/log OTP record
+        const otpRecord = {
+            ...req.body,
+            user_id: user.id,
+        };
+        const otp = await otpService.create(otpRecord);
+
+        // send OTP auth
+        if (otp.code) {
+            const mobile = user.mobile.replace('+', '');
+            await sendOTPAuth(mobile, otp.code);
+        }
+
+        // response
+        return res.send({ success: true });
+    } catch (error) {
+        console.log(error.message)
+        return res.status(500).send({
+            success: false,
+            message: 'Could not process request. Authentication failed'
+        });
+    }
+}
+
+async function otpVerify(req, res) {
+    try {
+        // get otp record
+        const { code, transaction } = req.body;
+        const otp = await otpService.show({
+            code,
+            transaction,
+        });
+
+        if (otp && otp.id) {
+            // destroy all old OTP records
+            await otpService.destroyAll({
+                user_id: req.user.id,
+            });
+            return res.send({ success: true });
+        }
+
+        return res.send({ success: false });
+    } catch (error) {
+        console.log(error.message)
+        return res.status(500).send({
+            success: false,
+            message: 'Could not process request. Authentication failed'
+        });
+    }
+}
+
 module.exports = {
     validate,
     tokensVerify,
+    tokensVerifyResend,
     login,
     socialLogin,
     register,
@@ -1252,4 +1438,7 @@ module.exports = {
     destroyMfaToken,
     mfaVerify,
     refresh,
+    otp,
+    otpResend,
+    otpVerify,
 }

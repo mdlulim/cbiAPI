@@ -31,6 +31,11 @@ module.exports.set = app => {
     /**
      * Verify Token
      */
+    app.post('/tokens/verify/resend', authMiddleware.checkAuth, authController.tokensVerifyResend);
+
+    /**
+     * Verify Token
+     */
     app.post('/tokens/verify', authMiddleware.checkAuth, authController.tokensVerify);
 
     /**
@@ -238,4 +243,8 @@ module.exports.set = app => {
      * process, as well as verifying a token after login.
      */
     app.post('/mfa/verify', authMiddleware.checkAuth, authController.mfaVerify);
+
+    app.post('/otp', authMiddleware.checkAuth, authController.otp);
+    app.post('/otp/resend', authMiddleware.checkAuth, authController.otpResend);
+    app.post('/otp/verify', authMiddleware.checkAuth, authController.otpVerify);
 };
