@@ -14,7 +14,6 @@ const BankAccount = sequelize.define('bank_account', {
     bank_name: Sequelize.STRING,
     bank_code: Sequelize.STRING,
     branch_code: Sequelize.STRING,
-    branch_name: Sequelize.STRING,
     currency_code: Sequelize.STRING,
     swift: Sequelize.STRING,
     iban: Sequelize.STRING,

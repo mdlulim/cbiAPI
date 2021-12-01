@@ -201,6 +201,7 @@ const verifyLogin = data => {
                     <div>
                         <p>Your verification code is:</p>
                         <p style="font-size: 2.5em;"><strong>${code}</strong></p>
+                        <p>Use this code to sign into your CBI account. CBI will never ask you to share this code with anyone. If you are signing in on web, make sure you are on cbiglobal.io.</p>
         
                         <p>If this request isn't authorized by you, <a href="mailto:support@cbiglobal.io" style="text-decoration: none;">contact
                                 support</a></p>
