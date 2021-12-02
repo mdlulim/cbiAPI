@@ -3,6 +3,7 @@ const { Activity } = require('../models/Activity');
 const { Country } = require('../models/Country');
 const { Group } = require('../models/Group');
 const { User }  = require('../models/User');
+const { UserDevice }  = require('../models/UserDevice');
 
 User.belongsTo(Group, { foreignKey: 'group_id', targetKey: 'id' });
 User.belongsTo(Country, { foreignKey: 'nationality', targetKey: 'iso' });
@@ -100,26 +101,73 @@ async function update(id, data) {
 
 async function referrals(id) {
     try {
+        // const sql = `
+        // WITH RECURSIVE cte_query
+        // AS
+        //     (
+        //         SELECT p.id, p.referral_id, p.email, p.first_name, p.last_name, p.nationality, p.status, p.sponsor
+        //         FROM users p
+        //         WHERE p.id = '${id}'
+        //         UNION ALL
+        //         SELECT e.id, e.referral_id, e.email, e.first_name, e.last_name, e.nationality, e.status, e.sponsor
+        //         FROM users e
+        //             INNER JOIN cte_query c ON c.id = e.sponsor
+        //     )
+        //     SELECT c.*, s.first_name AS "referral.first_name", s.last_name AS "referral.last_name", 
+        //         s.nationality AS "referral.nationality", s.referral_id AS "referral.referral_id", 
+        //         n.nicename AS "country.nicename", n.iso AS "country.iso"
+        //     FROM cte_query c
+        //     INNER JOIN users s ON c.sponsor = s.id
+        //     INNER JOIN countries n ON c.nationality = n.iso
+        //     WHERE c.id != '${id}'
+        // `;
         const sql = `
-        WITH RECURSIVE cte_query
-        AS
-            (
-                SELECT p.id, p.referral_id, p.email, p.first_name, p.last_name, p.nationality, p.status, p.sponsor
-                FROM users p
-                WHERE p.id = '${id}'
-                UNION ALL
-                SELECT e.id, e.referral_id, e.email, e.first_name, e.last_name, e.nationality, e.status, e.sponsor
-                FROM users e
-                    INNER JOIN cte_query c ON c.id = e.sponsor
-            )
-            SELECT c.*, s.first_name AS "referral.first_name", s.last_name AS "referral.last_name", 
-                s.nationality AS "referral.nationality", s.referral_id AS "referral.referral_id", 
+        WITH RECURSIVE descendant AS (
+            SELECT  id,
+                    first_name,
+                    last_name,
+                    referral_id,
+                    sponsor,
+                    status,
+                    nationality,
+                    email,
+                    0 AS level
+            FROM users
+            WHERE id = '${id}'
+        
+            UNION ALL
+        
+            SELECT  ft.id,
+                    ft.first_name,
+                    ft.last_name,
+                    ft.referral_id,
+                    ft.sponsor,
+                    ft.status,
+                    ft.nationality,
+                    ft.email,
+                    level + 1
+            FROM users ft
+        JOIN descendant d
+        ON ft.sponsor = d.id
+        )
+        
+        SELECT  d.id,
+                d.first_name,
+                d.last_name,
+                d.referral_id,
+                d.status,
+                d.nationality,
+                d.email,
+                a.id AS "referral.id",
+                a.first_name AS "referral.first_name",
+                a.last_name AS "referral.last_name",
+                a.referral_id AS "referral.referral_id",
+                d.level,
                 n.nicename AS "country.nicename", n.iso AS "country.iso"
-            FROM cte_query c
-            INNER JOIN users s ON c.sponsor = s.id
-            INNER JOIN countries n ON c.nationality = n.iso
-            WHERE c.id != '${id}'
-        `;
+        FROM descendant d
+        LEFT JOIN users a ON d.sponsor = a.id
+        INNER JOIN countries n ON d.nationality = n.iso
+        ORDER BY level, "referral.id"`;
         const options = {
             nest: true,
             type: sequelize.QueryTypes.SELECT
@@ -255,11 +303,26 @@ async function activities(user, query) {
                 ...query,
                 user_id: user.id,
                 action: {
-                    [Op.ne]: `${user.group_name}.login.verify`
+                    [Op.or]: {
+                        [Op.ne]: `${user.group_name}.login.verify`,
+                        [Op.ne]: `${user.group_name}.social.login.verify`
+                    }
                 }
             },
             offset: 0,
             limit: 5,
+            order: [[ 'created', 'DESC' ]]
+        })
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
+async function devices(user_id) {
+    try {
+        return UserDevice.findAndCountAll({
+            where: { user_id },
             order: [[ 'created', 'DESC' ]]
         })
     } catch (error) {
@@ -278,4 +341,5 @@ module.exports = {
     referralsByUUID,
     search,
     activities,
+    devices,
 }

@@ -201,6 +201,7 @@ const verifyLogin = data => {
                     <div>
                         <p>Your verification code is:</p>
                         <p style="font-size: 2.5em;"><strong>${code}</strong></p>
+                        <p>Use this code to sign into your CBI account. CBI will never ask you to share this code with anyone. If you are signing in on web, make sure you are on cbiglobal.io.</p>
         
                         <p>If this request isn't authorized by you, <a href="mailto:support@cbiglobal.io" style="text-decoration: none;">contact
                                 support</a></p>
@@ -248,24 +249,78 @@ const loginNotify = data => {
         location,
     } = data;
     const html = `
-        <p>Hi ${first_name},</p>
-        <p>We noticed a recent sign-in to your account using ${browser} on ${os} from ${location} (IP: ${ipaddress}).</p>
-        <p>
-            Don't recognise this activity?<br/>
-            Contact support urgently to lock your account.
-        </p>
-        <p style="padding-top:15px"><strong>Regards</strong>,<br />CBI Support</p>
-        <p>
-            Questions? Learn more about <a href="${url}">securing your account</a>.
-        </p>
-    `;
-    const text = `
-        Hi ${first_name}, 
-        We noticed a recent sign-in to your account using ${browser} on ${os} from ${location} (IP: ${ipaddress}).
-        Don't recognise this activity?
-        Regards, CBI Support 
-        Questions? Learn more about securing your account on ${url}.
-    `;
+    <!DOCTYPE html>
+    <html lang="en">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Document</title>
+    </head>
+
+    <body>
+        <div style="
+                font-family: Arial, Helvetica, sans-serif; 
+                color: darkslategray; 
+                min-width: 360px; 
+                max-width: 600px; 
+                margin: 0 auto;
+                line-height: 1.5;">
+            <div style="padding: 20px 0; margin-bottom: 20px; background-image: linear-gradient(310deg,#141727,#3a416f);color: white;">
+                <div style="text-align: center;">
+                    <img src="https://cdn-cbigold.ams3.digitaloceanspaces.com/public/email/CDC3837FF1DF9ADC1FF459D0278FD.png" style="height: 50px;" alt="" />
+                </div>
+                <!-- Email topic -->
+                <p style="line-height: 2; text-align: center;">
+                    Hi ${first_name}, </br />
+                </p>
+                <h2 style="text-align: center;">Login Attempt</h2>
+            </div>
+            <div style="margin: 0 5%; border-bottom: 1px solid grey;">
+                <!-- Email body -->
+                <div>
+                    <p>We detected a sign-in to your CBI Global account from a new device or in a new location</a></p>
+                    <p>
+                    <table>
+                        <tbody>
+                            <tr>
+                                <td><strong>IP:</strong></td>
+                                <td>${ipaddress}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Browser:</strong></td>
+                                <td>${browser}</td>
+                            </tr>
+                            <tr>
+                                <td style="padding-right: 40px;"><strong>Operating System:</strong></td>
+                                <td>${os}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Location:</strong></td>
+                                <td>${location}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    </p>
+                    <p style="padding-top:50px"><strong>Cheers</strong>,<br />CBI Support</p>
+                    <p>
+                        Questions? Learn more about <a href="${url}">securing your account</a>.
+                    </p>
+                </div>
+            </div>
+            <!-- Email footer -->
+            <div>
+                <p style="text-align: center; line-height: 1.5; font-size: smaller;">
+                    &copy;2021 CBI Global<br />
+                    <a href="http://demo.cbiglobal.io/">Help Centre</a> | <a href="http://demo.cbiglobal.io/">Terms and conditions</a> | <a href="http://demo.cbiglobal.io/">Security and privacy</a>
+                </p>
+            </div>
+        </div>
+    </body>
+    </html>`;
+    const text = ``;
     return {
         html,
         text

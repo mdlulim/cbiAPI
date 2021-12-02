@@ -255,6 +255,26 @@ async function activities(req, res) {
     }
 }
 
+async function devices(req, res) {
+    try {
+        const devices = await userService.devices(req.user.id);
+        const { count, rows } = devices;
+        return res.send({
+            success: true,
+            data: {
+                count,
+                results: rows,
+            },
+        });
+    } catch (error) {
+        console.log(error.message);
+        return res.send({
+            success: false,
+            message: 'Could not process request'
+        });
+    }
+}
+
 module.exports = {
     profile,
     referrals,
@@ -266,5 +286,6 @@ module.exports = {
     autorenew,
     search,
     activities,
+    devices,
     kyc_level
 };

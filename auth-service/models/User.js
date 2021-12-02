@@ -40,6 +40,7 @@ const User = sequelize.define('user', {
 	getstarted: Sequelize.BOOLEAN,
 	sponsor: Sequelize.UUID,
 	referral_id: Sequelize.INTEGER,
+	permission_level:Sequelize.INTEGER,
 	expiry: Sequelize.DATE,
 	autorenew: {
         type: Sequelize.BOOLEAN,

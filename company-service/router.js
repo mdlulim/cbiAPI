@@ -1,7 +1,8 @@
-const authMiddleware    = require('./middlewares/auth');
-const companyController = require('./controllers/Company');
-const countryController = require('./controllers/Country');
-const settingController = require('./controllers/Setting');
+const authMiddleware      = require('./middlewares/auth');
+const broadcastController = require('./controllers/Broadcast');
+const companyController   = require('./controllers/Company');
+const countryController   = require('./controllers/Country');
+const settingController   = require('./controllers/Setting');
 
 module.exports.set = app => {
     /**
@@ -48,4 +49,10 @@ module.exports.set = app => {
      * 
      */
     app.get('/countries', authMiddleware.checkAuth, countryController.index);
+
+    /**
+     * Retrieve Broadcasts
+     * 
+     */
+    app.get('/broadcasts', authMiddleware.checkAuth, broadcastController.index);
 };

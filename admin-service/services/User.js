@@ -403,6 +403,18 @@ async function updateTransaction(id, data) {
     }
 }
 
+// async function debitWallet(id, data) {
+//     try {
+//         await Transaction.update(data, {
+//             where: { id }
+//         });
+//         return { success: true };
+//     } catch (error) {
+//         console.error(error.message || null);
+//         throw new Error('Could not process your request');
+//     }
+// }
+
 async function approveDeposit(id, data) {
     let companyCondition    = {id: data.main.id};
     let companyData         = {available_balance: data.main.available_balance};
@@ -610,5 +622,5 @@ module.exports = {
     approveDeposit,
     findByPropertyValue,
     updateBankAccounts,
-    email
+    email,
 }

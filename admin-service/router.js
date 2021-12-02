@@ -149,6 +149,13 @@ module.exports.set = app => {
     app.put('/users/:id/transactions/deposit', authMiddleware.checkAuth, userController.approveDeposit);
 
     /**
+     * Retrieve User' Transactions
+     * 
+     * Retrieve a company’s user transaction credit.
+     */
+    app.post('/users/:id/transactions/credit', authMiddleware.checkAuth, transactionController.debitCreditUserAccount);
+
+    /**
      * Retrieve User's CBI Account/Wallet
      * 
      * Retrieve a company’s user account/wallet.
@@ -179,7 +186,7 @@ module.exports.set = app => {
     app.get('/kyc-level/:id', authMiddleware.checkAuth, kycController.kyc_level);
 
     //gets all kyc applications
-    app.get('/users/all-kyc/', authMiddleware.checkAuth, kycController.show_all);
+    app.get('/all-kyc/', authMiddleware.checkAuth, kycController.show_all);
 
 
 
