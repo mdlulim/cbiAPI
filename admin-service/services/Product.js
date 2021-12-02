@@ -137,6 +137,17 @@ async function show(id) {
     }
 }
 
+async function showCategory(id) {
+    try {
+        return ProductCategory.findOne({
+            where: { id },
+        });
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request in service');
+    }
+}
+
 async function findByPermakey(permakey) {
     try {
         return Product.findOne({
@@ -209,4 +220,5 @@ module.exports = {
     createCategory,
     getMembersByProductId,
     updateCategory,
+    showCategory,
 }

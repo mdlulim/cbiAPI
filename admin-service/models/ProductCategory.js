@@ -10,7 +10,7 @@ const ProductCategory = sequelize.define('product_category', {
     title: Sequelize.STRING,
 	description: Sequelize.STRING,
     code: Sequelize.STRING,
-    inputField: Sequelize.JSONB,
+    inputFields: Sequelize.JSONB,
     
 }, {
     timestamps: false
