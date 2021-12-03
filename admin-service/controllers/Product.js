@@ -154,6 +154,22 @@ async function show(req, res) {
     }
 }
 
+async function showCategory(req, res) {
+    try {
+        const category = await productService.showCategory(req.params.id);
+        return res.send({
+            success: true,
+            data: category
+        });
+    } catch (error) {
+        console.log(error)
+        return res.send({
+            success: false,
+            message: 'Could not process request'
+        });
+    }
+}
+
 async function update(req, res) {
     try {
         const data = req.body;
@@ -250,6 +266,6 @@ module.exports = {
     categories,
     getMembersByProductId,
     categories,
-    updateCategory
-    
+    updateCategory,
+    showCategory,
 };
