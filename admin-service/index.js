@@ -3,7 +3,7 @@
     serviceName: 'admin-service',
     secretToken: 'K1dPeS59y0hO980e9d0ed4pI',
     serverUrl: 'https://apm-server-apm-http.default.svc.cluster.local:8200',
-    environment: 'development',
+    environment: (NODE_ENV === 'production') ? 'production' : 'development',
     verifyServerCert: false
     })
 
