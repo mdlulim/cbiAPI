@@ -1,5 +1,4 @@
 config = {
-    cryptrKey: 'LfFLf8cAAABwvgp',
     port: process.env.PORT || 8080,
     dbConnectionString: 'postgresql://develop:6MO4vuw9fpn3dvfa@db-postgresql-ams3-49623-do-user-7844381-0.b.db.ondigitalocean.com:25060/qa?sslmode=require',
     saltRounds: 2,

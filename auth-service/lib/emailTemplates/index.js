@@ -1,3 +1,7 @@
+const config = require('../../config');
+const { baseurl } = config;
+const { frontend } = baseurl;
+
 const welcome = data => {
     const {
         url,
@@ -53,7 +57,7 @@ const welcome = data => {
                 <div>
                     <p style="text-align: center; line-height: 1.5; font-size: smaller;">
                         &copy;2021 CBI Global<br />
-                        <a href="http://demo.cbiglobal.io/">Help Centre</a> | <a href="http://demo.cbiglobal.io/">Terms and conditions</a> | <a href="http://demo.cbiglobal.io/">Security and privacy</a>
+                        <a href="${frontend}">Help Centre</a> | <a href="${frontend}">Terms and conditions</a> | <a href="${frontend}">Security and privacy</a>
                     </p>
                 </div>
             </div>
@@ -146,7 +150,7 @@ const changePassword = data => {
             <div>
                 <p style="text-align: center; line-height: 1.5; font-size: smaller;">
                     &copy;2021 CBI Global<br />
-                    <a href="http://demo.cbiglobal.io/">Help Centre</a> | <a href="http://demo.cbiglobal.io/">Terms and conditions</a> | <a href="http://demo.cbiglobal.io/">Security and privacy</a>
+                    <a href="${frontend}">Help Centre</a> | <a href="${frontend}">Terms and conditions</a> | <a href="${frontend}">Security and privacy</a>
                 </p>
             </div>
         </div>
@@ -212,7 +216,7 @@ const verifyLogin = data => {
                 <div>
                     <p style="text-align: center; line-height: 1.5; font-size: smaller;">
                         &copy;2021 CBI Global<br />
-                        <a href="http://demo.cbiglobal.io/">Help Centre</a> | <a href="http://demo.cbiglobal.io/">Terms and conditions</a> | <a href="http://demo.cbiglobal.io/">Security and privacy</a>
+                        <a href="${frontend}">Help Centre</a> | <a href="${frontend}">Terms and conditions</a> | <a href="${frontend}">Security and privacy</a>
                     </p>
                 </div>
             </div>
@@ -314,7 +318,7 @@ const loginNotify = data => {
             <div>
                 <p style="text-align: center; line-height: 1.5; font-size: smaller;">
                     &copy;2021 CBI Global<br />
-                    <a href="http://demo.cbiglobal.io/">Help Centre</a> | <a href="http://demo.cbiglobal.io/">Terms and conditions</a> | <a href="http://demo.cbiglobal.io/">Security and privacy</a>
+                    <a href="${frontend}">Help Centre</a> | <a href="${frontend}">Terms and conditions</a> | <a href="${frontend}">Security and privacy</a>
                 </p>
             </div>
         </div>
@@ -407,7 +411,7 @@ const notifyReferrer = data => {
             <div>
                 <p style="text-align: center; line-height: 1.5; font-size: smaller;">
                     &copy;2021 CBI Global<br />
-                    <a href="http://demo.cbiglobal.io/">Help Centre</a> | <a href="http://demo.cbiglobal.io/">Terms and conditions</a> | <a href="http://demo.cbiglobal.io/">Security and privacy</a>
+                    <a href="${frontend}">Help Centre</a> | <a href="${frontend}">Terms and conditions</a> | <a href="${frontend}">Security and privacy</a>
                 </p>
             </div>
         </div>
