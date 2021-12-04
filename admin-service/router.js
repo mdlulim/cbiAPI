@@ -228,6 +228,13 @@ module.exports.set = app => {
     app.get('/products/categories', authMiddleware.checkAuth, productController.categories);
 
     /**
+     * Get Product Category
+     * 
+     * Get a list of products belonging to CBI.
+     */
+    app.get('/products/categories/:id', authMiddleware.checkAuth, productController.showCategory);
+
+    /**
     * Create Product Category
     * 
     * Create a product category belonging to CBI.
