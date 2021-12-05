@@ -167,6 +167,12 @@ async function referrals(id) {
         FROM descendant d
         LEFT JOIN users a ON d.sponsor = a.id
         INNER JOIN countries n ON d.nationality = n.iso
+        WHERE d.level <= (
+            SELECT s.value::INT
+            FROM settings s
+            WHERE s.category = 'system' AND s.subcategory = 'config' AND s.key = 'max_referral_levels'
+            LIMIT 1
+        )
         ORDER BY level, "referral.id"`;
         const options = {
             nest: true,
