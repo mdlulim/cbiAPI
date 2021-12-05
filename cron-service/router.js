@@ -4,5 +4,7 @@ const cronController = require('./controllers/Cron');
 module.exports.set = app => {
     app.get('/', cronController.index);
     
-    app.post('/wc-autorenew', cronController.autorenew);
+    app.get('/wc-autorenew', cronController.autorenew);
+    
+    app.get('/wc-autorenew/notify', cronController.autorenewNotify);
 };

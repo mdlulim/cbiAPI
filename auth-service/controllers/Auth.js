@@ -625,14 +625,26 @@ async function register(req, res) {
             });
 
             // create (default) notification record for the user
-            await notificationService.create({
+            const notifications = [];
+            notifications.push({
                 user_id: newUser.id,
+                key: 'marketing-communication',
                 activity: 'Marketing & Communication',
                 description: 'Get the latest promotions, updates and tips',
                 sms: marketing || false,
                 email: marketing || false,
                 push: marketing || false,
             });
+            notifications.push({
+                user_id: newUser.id,
+                key: 'account-activity-updates',
+                activity: 'Account Activity & Updates',
+                description: 'Get notified about your account activity and updates. Choose the type(s) of notification to get notified with.',
+                sms: true,
+                email: true,
+                push: true,
+            });
+            await notificationService.create(notifications);
 
             // response
             return res.send({
