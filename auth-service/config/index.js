@@ -1,39 +1,7 @@
-var stage = 'dev';
-var config = {};
-
-if (stage === 'dev') {
-    // local
-    config = {
-        port: process.env.PORT || 8080,
-        dbConnectionString: 'postgresql://doadmin:bMs2X9InUxyC9DTG@db-postgresql-ams3-49623-do-user-7844381-0.b.db.ondigitalocean.com:25060/defaultdb?sslmode=require',
-        saltRounds: 2,
-        jwtSecret: 'BbZJjyoXAdr8BUZuiKKARWimKfrSmQ6fv8kZ7OFfc',
-        tokenExpireTime: '6h',
-        tokenExpireHours: 6,
-        baseurl: {
-            admin: 'http://admin.cbiglobal.io',
-            frontend: 'http://demo.cbiglobal.io',
-        },
-        mail: {
-            smtp: {
-                host: 'mail.cbiglobal.io',
-                port: 465,
-                secure: true,
-                auth: {
-                    user: 'no-reply@cbiglobal.io',
-                    pass: 'ocJ~$m[NTj#N',
-                }
-            }
-        },
-        smsApi: {
-            baseUrl: 'https://sms.api.sinch.com/xms/v1/',
-            servicePlanID: '2774eff8837d47148f4a0671a2412785',
-            apiKey: 'f2bc6930ae434c17b84235a58e2df77f',
-            senderID: '447537432321',
-        },
-    }
+if (process.env.NODE_ENV === 'production') {
+    module.exports = require('./prod')
+} else if (process.env.NODE_ENV === 'qa') {
+    module.exports = require('./qa')
 } else {
-    // staging / production
+    module.exports = require('./dev')
 }
-
-module.exports = config;

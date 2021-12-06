@@ -1,18 +1,7 @@
-var stage = 'dev';
-var config = {};
-
-if (stage === 'dev') {
-    // local
-    config = {
-        port: process.env.PORT || 8080,
-        dbConnectionString: 'postgresql://doadmin:bMs2X9InUxyC9DTG@db-postgresql-ams3-49623-do-user-7844381-0.b.db.ondigitalocean.com:25060/defaultdb?sslmode=require',
-        saltRounds: 2,
-        jwtSecret: 'BbZJjyoXAdr8BUZuiKKARWimKfrSmQ6fv8kZ7OFfc',
-        tokenExpireTime: '6h',
-        tokenExpireHours: 6,
-    }
+if (process.env.NODE_ENV === 'production') {
+    module.exports = require('./prod')
+} else if (process.env.NODE_ENV === 'qa') {
+    module.exports = require('./qa')
 } else {
-    // staging / production
+    module.exports = require('./dev')
 }
-
-module.exports = config;

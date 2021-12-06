@@ -10,10 +10,12 @@ const emailHandler = require('../helpers/emailHandler');
 
 const config = require('../config');
 const {
+    baseurl,
     jwtSecret,
     tokenExpireHours,
     tokenExpireTime,
 } = config;
+const { frontend } = baseurl;
 
 const activityService = require('../services/Activity');
 const sessionService = require('../services/Session');
@@ -501,7 +503,7 @@ async function verifyLogin(data) {
                     email: user.email,
                     ipaddress: IPv4 || null,
                     os: `${os_name} ${os_version}`,
-                    url: `https://demo.cbiglobal.io/lock-account/${user.referral_id}&expires=${new Date().getTime()}&token=${lockToken}`,
+                    url: `${frontend}/lock-account/${user.referral_id}&expires=${new Date().getTime()}&token=${lockToken}`,
                 });
             }
         }

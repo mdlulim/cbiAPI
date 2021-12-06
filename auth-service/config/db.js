@@ -22,6 +22,11 @@ var sequelize = new Sequelize(config.dbConnectionString, {
         acquire: 1000000,
     }
 });
+sequelize.authenticate()
+.then(res => {
+    console.log('test')
+});
+console.log('after auth')
 require('sequelize-values')(sequelize);
 
 module.exports = sequelize;
