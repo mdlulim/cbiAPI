@@ -11,6 +11,12 @@ const getTxid = (subtype, autoid) => {
     return subtype.substr(0, 3).toUpperCase() + autoid.toString();
 };
 
+/**
+ * Auto-renew wealth creator membership
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 async function autorenew(req, res){
     try {
         /* 
@@ -133,6 +139,13 @@ async function autorenew(req, res){
     }
 };
 
+/**
+ * Send notification for wealth-creators whose membership is due to expire within next 5 days
+ * and has auto-renewal flag turned OFF under their profile
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 async function autorenewNotify(req, res){
     try {
         /* 
@@ -195,8 +208,31 @@ async function index(req, res){
     }
 };
 
+/**
+ * Calculate member commission for a specific product
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
+async function productCommission(req, res){
+    try {
+        const { code } = req.params;
+        return res.send({
+            success: true,
+            code,
+        });
+    } catch (error) {
+        console.log(error);
+        return res.status(500).send({
+            success: false,
+            message: 'Could not process request'
+        });
+    }
+};
+
 module.exports = {
     autorenew,
     autorenewNotify,
     index,
+    productCommission,
 }

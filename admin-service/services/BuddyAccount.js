@@ -45,11 +45,11 @@ async function show(id) {
         return {
             code: 200,
             status: 'OK',
-            data: {
+            data: buddyAccount ? {
                 identifier: buddyAccount.buddy_identifier,
                 id: buddyAccount.id,
                 created: buddyAccount.created
-            }
+            } : null
         }
     } catch (error) {
         console.error(error.message || null);
