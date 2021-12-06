@@ -20,6 +20,7 @@ const upload = multer({
     storage: multerS3({
         s3,
         bucket,
+        contentType: multerS3.AUTO_CONTENT_TYPE,
         acl: 'public-read-write',
         key: async function (request, file, cb) {
             const { category, type } = request.params;
