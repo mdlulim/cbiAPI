@@ -78,25 +78,67 @@ const resetPassword = data => {
         first_name,
     } = data;
     const html = `
-        <p>Hi ${first_name},</p>
-        <p>You have requested your password to be reset.<p>
-        <p>
-            In order to reset your password, click 
-            <a href="${link}">
-                here 
-            </a> 
-            or you can copy and paste this link in your browser:<br/>
-            <a href="${link}" target="_blank">
-                ${link}
-            </a>
-        </p>
-        <p>
-            This link will be active for 30 minutes.
-            If you don't click on it within that time frame, you can resend it later by
-            selecting forgot password option from the login screen.
-        </p>
-        <p>If this request wasn't made by you, contact support urgently.</p>
-        <p style="padding-top:15px"><strong>Regards</strong>,<br />CBI Support</p>
+        <!DOCTYPE html>
+        <html lang="en">
+        
+        <head>
+            <meta charset="UTF-8">
+            <meta http-equiv="X-UA-Compatible" content="IE=edge">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Document</title>
+        </head>
+        
+        <body>
+            <div style="
+                    font-family: Arial, Helvetica, sans-serif; 
+                    color: darkslategray; 
+                    min-width: 360px; 
+                    max-width: 600px; 
+                    margin: 0 auto;
+                    line-height: 1.5;">
+                <div style="margin: 0 5%;">
+                    <div style="padding: 20px 0; margin-bottom: 20px; background-image: linear-gradient(310deg,#141727,#3a416f); color: white; ">
+                        <div style="display: flex; flex-direction: column; align-items: center;">
+                            <img src="https://cdn-cbigold.ams3.digitaloceanspaces.com/public/email/CDC3837FF1DF9ADC1FF459D0278FD.png" style="height: 50px;" alt="">
+                        </div>
+                        <!-- Email topic -->
+                        <p style="line-height: 2; text-align: center;">
+                            Hi ${first_name}, </br />
+                        </p>
+                        <h2 style="text-align: center;">Forgot Password</h2>
+                    </div>
+                    <!-- Greetings and short message -->
+        
+                    <!-- Email body -->
+                    <div>
+                        <p>
+                            You have requested for a password reset.
+                        <p>
+                        <p>
+                            <a href="${link}" target="_blank" rel="noopener noreferrer"><button
+                                    style="background-image: linear-gradient(310deg,#c89623,#c89623); color: white; padding: 15px; border: none; cursor: pointer;">Reset
+                                    Password</button></a><br /><br />
+        
+                            If the button doesn't work, use the link below<br />
+                            <a href="${link}" target="_blank" style="text-decoration: none;">
+                                ${link}
+                            </a>
+                        </p>
+                        <p>If this request isn't authorized by you, <a href="mailto:support@cbiglobal.io" style="text-decoration: none;">contact support</a></p>
+                        <p style="padding-top:50px"><strong>Cheers</strong>,<br />CBI Support</p>
+                    </div>
+                </div>
+                <!-- Email footer -->
+                <div>
+                    <p style="text-align: center; line-height: 1.5; font-size: smaller;">
+                        &copy;2021 CBI Global<br />
+                        <a href="${frontend}">Help Centre</a> | <a href="${frontend}">Terms and conditions</a> | <a href="${frontend}">Security and privacy</a>
+                    </p>
+                </div>
+            </div>
+        </body>
+        
+        </html>
     `;
     const text = ``;
     return {

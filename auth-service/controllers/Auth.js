@@ -41,7 +41,7 @@ async function validate(req, res) {
         });
     } catch (error) {
         console.log(error)
-        return res.send({
+        return res.status(500).send({
             success: false,
             message: 'Could not process request'
         });
@@ -79,9 +79,9 @@ async function tokensVerify(req, res) {
         });
         return res.send(data);
     } catch (error) {
-        return res.send({
+        return res.status(500).send({
             success: false,
-            message: error.message || 'Could not process request'
+            message: 'Could not process request'
         });
     }
 }
@@ -167,9 +167,9 @@ async function tokensVerifyResend(req, res) {
             success: true,
         });
     } catch (error) {
-        return res.send({
+        return res.status(500).send({
             success: false,
-            message: error.message || 'Could not process request'
+            message: 'Could not process request'
         });
     }
 }
@@ -815,7 +815,7 @@ async function socialRegister(req, res) {
             throw new Error('Request could not be processed, please try again or contact support.');
         }
     } catch (error) {
-        return res.send({
+        return res.status(500).send({
             success: false,
             message: 'Could not process request'
         });
@@ -834,7 +834,7 @@ async function logout(req, res) {
             success: true,
         });
     } catch (error) {
-        return res.send({
+        return res.status(500).send({
             success: false,
             message: 'Could not process request'
         });
@@ -854,7 +854,7 @@ async function logoutAll(req, res) {
             success: true,
         });
     } catch (error) {
-        return res.send({
+        return res.status(500).send({
             success: false,
             message: 'Could not process request'
         });
@@ -926,7 +926,7 @@ async function passwordChange(req, res) {
         });
     } catch (error) {
         console.log(error.message)
-        return res.send({
+        return res.status(500).send({
             success: false,
             message: 'Could not process request'
         });
@@ -941,6 +941,7 @@ async function passwordChange(req, res) {
 async function passwordReset(req, res) {
     try {
         const { email } = req.body;
+
         const user = await userService.findByEmail(email);
 
         if (!user) {
@@ -963,7 +964,7 @@ async function passwordReset(req, res) {
 
         await userService.update(user.id, {
             verification,
-            verify_token: token,
+            // verify_token: token,
             updated: sequelize.fn('NOW'),
         });
 
@@ -979,7 +980,8 @@ async function passwordReset(req, res) {
             success: true,
         });
     } catch (error) {
-        return res.send({
+        console.log('error', error.message)
+        return res.status(500).send({
             success: false,
             message: 'Could not process request'
         });
@@ -1044,7 +1046,7 @@ async function passwordResetConfirm(req, res) {
         });
     } catch (error) {
         console.log(error.message)
-        return res.send({
+        return res.status(500).send({
             success: false,
             message: 'Could not process request'
         });
@@ -1063,7 +1065,7 @@ async function emailVerify(req, res) {
             success: true,
         });
     } catch (error) {
-        return res.send({
+        return res.status(500).send({
             success: false,
             message: 'Could not process request'
         });
@@ -1081,7 +1083,7 @@ async function emailVerifyResend(req, res) {
             success: true,
         });
     } catch (error) {
-        return res.send({
+        return res.status(500).send({
             success: false,
             message: 'Could not process request'
         });
@@ -1100,7 +1102,7 @@ async function mobileVerify(req, res) {
             success: true,
         });
     } catch (error) {
-        return res.send({
+        return res.status(500).send({
             success: false,
             message: 'Could not process request'
         });
@@ -1118,7 +1120,7 @@ async function mobileVerifyResend(req, res) {
             success: true,
         });
     } catch (error) {
-        return res.send({
+        return res.status(500).send({
             success: false,
             message: 'Could not process request'
         });
@@ -1142,7 +1144,7 @@ async function mfa(req, res) {
             success: true,
         });
     } catch (error) {
-        return res.send({
+        return res.status(500).send({
             success: false,
             message: 'Could not process request'
         });
@@ -1165,7 +1167,7 @@ async function createMfaSms(req, res) {
             success: true,
         });
     } catch (error) {
-        return res.send({
+        return res.status(500).send({
             success: false,
             message: 'Could not process request'
         });
@@ -1181,7 +1183,7 @@ async function mfaSms(req, res) {
             success: true,
         });
     } catch (error) {
-        return res.send({
+        return res.status(500).send({
             success: false,
             message: 'Could not process request'
         });
@@ -1203,7 +1205,7 @@ async function mfaSmsSend(req, res) {
             success: true,
         });
     } catch (error) {
-        return res.send({
+        return res.status(500).send({
             success: false,
             message: 'Could not process request'
         });
@@ -1219,7 +1221,7 @@ async function disableMfaSms(req, res) {
             success: true,
         });
     } catch (error) {
-        return res.send({
+        return res.status(500).send({
             success: false,
             message: 'Could not process request'
         });
@@ -1246,7 +1248,7 @@ async function createMfaToken(req, res) {
             success: true,
         });
     } catch (error) {
-        return res.send({
+        return res.status(500).send({
             success: false,
             message: 'Could not process request'
         });
@@ -1262,7 +1264,7 @@ async function mfaToken(req, res) {
             success: true,
         });
     } catch (error) {
-        return res.send({
+        return res.status(500).send({
             success: false,
             message: 'Could not process request'
         });
@@ -1278,7 +1280,7 @@ async function destroyMfaToken(req, res) {
             success: true,
         });
     } catch (error) {
-        return res.send({
+        return res.status(500).send({
             success: false,
             message: 'Could not process request'
         });
@@ -1302,7 +1304,7 @@ async function mfaVerify(req, res) {
             success: true,
         });
     } catch (error) {
-        return res.send({
+        return res.status(500).send({
             success: false,
             message: 'Could not process request'
         });
@@ -1321,7 +1323,7 @@ async function refresh(req, res) {
             data: req.user,
         });
     } catch (error) {
-        return res.send({
+        return res.status(500).send({
             auth: false,
             message: 'Could not process request. Authentication failed'
         });
