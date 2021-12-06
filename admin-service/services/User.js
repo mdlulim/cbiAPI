@@ -465,12 +465,19 @@ async function approveDeposit(id, data) {
 
     let userCondition       = {id: data.user.id};
     let userData         = {available_balance: data.user.available_balance};
-
+    const user_id = data.user.user_id;
     let status = {status: data.status}
     const commissionData ={
         user_id: data.user.user_id,
+        type: 'REFERRAL',
+        referral_id: data.sponsor.user_id,
+        status: 'Paid',
+        amount: data.sponsor.available_balance,
+        currency_code: data.transaction.currency.code,
+        commission_date: Date.now()
     }
-    console.log(sponsorCondition)
+    console.log("===================================Commissions========================================")
+    console.log(commissionData)
     try {
         await Transaction.update(status, {
             where: { id }
@@ -487,8 +494,14 @@ async function approveDeposit(id, data) {
         await Account.update(userData,{
             where : userCondition
         });
+        await User.update({
+            status: 'Active',
+            blocked: false,
+            archived: false,
+            updated: sequelize.fn('NOW'),
+        }, { where: { id: user_id } });
        
-        await User.create(data);
+        await Commission.create(commissionData);
 
         return { success: true, message: "Account was successfully updated" };
     } catch (error) {
