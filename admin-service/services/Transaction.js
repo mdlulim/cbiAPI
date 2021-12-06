@@ -11,12 +11,19 @@ async function index(query) {
     try {
         const { offset, limit } = query;
         const where = query || {};
+        const userWhere = {};
 
         delete where.offset;
         delete where.limit;
 
+        if (where.user) {
+            userWhere.id = where.user;
+            delete where.user;
+        }
+
         return Transaction.findAndCountAll({
             where,
+            include: [{ model: User, where: userWhere }],
             order: [['created', 'DESC']],
             offset: offset || 0,
             limit: limit || 100,

@@ -10,6 +10,7 @@ const userController = require('./controllers/User');
 const buddyAPIController = require('./controllers/BuddyAPIController');
 const buddyAccountController = require('./controllers/BuddyAccountController');
 const pagePermissionController = require('./controllers/PagePermission');
+const feeController = require('./controllers/Fee');
 const authMiddleware = require('./middlewares/auth');
 
 
@@ -347,6 +348,34 @@ module.exports.set = app => {
      * Delete company’s currency.
      */
     app.delete('/currencies/:code', authMiddleware.checkAuth, currencyController.destroy);
+
+     /**
+     * Create Fee
+     * 
+     * Create a fee.
+     */
+    app.post('/fees', authMiddleware.checkAuth, feeController.create);
+
+    /**
+     * List Fees
+     * 
+     * Get a list of fees belonging to CBI.
+     */
+    app.get('/fees', authMiddleware.checkAuth, feeController.index);
+
+    /**
+     * Retrieve Fees
+     * 
+     * Retrieve a company’s fees (profile).
+     */
+    app.get('/fees/:id', authMiddleware.checkAuth, feeController.show);
+
+    /**
+     * Update User
+     * 
+     * Update user details.
+     */
+    app.put('/fees/:id', authMiddleware.checkAuth, feeController.update);
 
     /**
      * List Countries
