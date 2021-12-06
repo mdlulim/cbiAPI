@@ -10,6 +10,8 @@ const { Product } = require('../models/Product');
 const { UserProduct }  = require('../models/UserProduct');
 const { Transaction }  = require('../models/Transaction');
 const { Account }  = require('../models/Account');
+const { Fee }  = require('../models/Fee');
+const { Commission }  = require('../models/Commission');
 
 const { KYC } = require('../models/KYC');
  
@@ -392,10 +394,48 @@ async function transactions(user_id) {
 }
 
 async function updateTransaction(id, data) {
+    console.log("===========================================Update Transaction================================================");
     try {
-        await Transaction.update(data, {
+        const myData = {status: data.status}
+        if(data.status === 'Completed'){
+            const transaction = data.transaction;
+            const user_id = transaction.user_id;
+            const user =  await User.findOne({where : {id: transaction.user_id}});
+            const mainAccount =  await Account.findOne({where : {id: '3cf7d2c0-80e1-4264-9f2f-6487fd1680c2'}});
+            const userWallet =  await Account.findOne({
+                where: { user_id },
+            });
+            //9001127.1990
+            const fee =  await Fee.findOne({where : {subtype: transaction.subtype.charAt(0).toUpperCase() + transaction.subtype.slice(1), group_id: user.dataValues.group_id} });
+            console.log("status: "+data.status)
+           // console.log("status: "+transaction.subtype.toLowerCase())
+            if(transaction.subtype.toLowerCase() === 'deposit'){
+                console.log("subtype: "+transaction.subtype)
+                let credit = {available_balance: parseFloat(mainAccount.available_balance)+parseFloat(fee.dataValues.value)};
+                let mainAccountCondition = {id: mainAccount.id}
+                Account.update( credit, {where: mainAccountCondition})
+
+                let creditUser = {available_balance: parseFloat(userWallet.available_balance)+parseFloat(transaction.amount)-parseFloat(fee.dataValues.value)};
+                console.log(creditUser);
+                let accountCondition = {id: userWallet.id}
+                Account.update( creditUser,{where: accountCondition})
+
+            }else if(transaction.subtype.toLowerCase() === "withdrawal"){
+                console.log("subtype: "+transaction.subtype)
+                let credit = {available_balance: parseFloat(mainAccount.available_balance)+parseFloat(fee.dataValues.value)};
+                let mainAccountCondition = {id: mainAccount.id}
+                Account.update( credit, {where: mainAccountCondition})
+
+                let creditUser = {available_balance: parseFloat(userWallet.available_balance)+parseFloat(transaction.amount)-parseFloat(fee.dataValues.value)};
+                let accountCondition = {id: userWallet.id}
+                Account.update( creditUser,{where: accountCondition})
+            }
+           
+        }
+        await Transaction.update(myData, {
             where: { id }
         });
+
         return { success: true };
     } catch (error) {
         console.error(error.message || null);
@@ -416,6 +456,7 @@ async function updateTransaction(id, data) {
 // }
 
 async function approveDeposit(id, data) {
+   
     let companyCondition    = {id: data.main.id};
     let companyData         = {available_balance: data.main.available_balance};
 
@@ -426,6 +467,9 @@ async function approveDeposit(id, data) {
     let userData         = {available_balance: data.user.available_balance};
 
     let status = {status: data.status}
+    const commissionData ={
+        user_id: data.user.user_id,
+    }
     console.log(sponsorCondition)
     try {
         await Transaction.update(status, {
@@ -443,6 +487,8 @@ async function approveDeposit(id, data) {
         await Account.update(userData,{
             where : userCondition
         });
+       
+        await User.create(data);
 
         return { success: true, message: "Account was successfully updated" };
     } catch (error) {

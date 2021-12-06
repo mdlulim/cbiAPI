@@ -309,8 +309,22 @@ async function transactions(req, res){
 
 async function updateTransaction(req, res){
     try {
+        const data = req.body.transaction;
+
+        //  activityService.addActivity({
+        //     user_id: req.user.id,
+        //     action: `${req.user.group_name}.transactions.${data.tx_type}.${data.subtype}`,
+        //     section: 'Transactions',
+        //     subsection: getSubsection(data),
+        //     description: `${user.first_name} ${req.body.status}  a ${data.subtype} of ${data.amount.toFixed(data.currency.divisibility)} ${data.currency.code}`,
+        //     ip: null,
+        //     data,
+        // })
+        // console.log(req.user);
         return userService.updateTransaction(req.params.id, req.body)
-        .then(data => res.send(data));
+        .then(data2 => {
+            res.send(data2)
+        });
     } catch (err) {
         return res.status(500).send({
             success: false,
