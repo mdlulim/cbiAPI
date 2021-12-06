@@ -1,8 +1,12 @@
-// const sequelize = require('../config/db');
+const sequelize = require('../config/db');
+const moment = require('moment');
 const { Group } = require('../models/Group');
+const { Notification } = require('../models/Notification');
 const { User }  = require('../models/User');
 
 User.belongsTo(Group, { foreignKey: 'group_id', targetKey: 'id' });
+Notification.belongsTo(User, { foreignKey: 'user_id', targetKey: 'id' });
+User.hasMany(User, { foreignKey: 'user_id', targetKey: 'id' });
 
 async function create(data) {
     try {
@@ -62,8 +66,79 @@ async function show(id) {
     }
 }
 
+async function update(data, id) {
+    try {
+        data.updated = sequelize.fn('NOW');
+        return User.update(data, {
+            where: { id },
+        });
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
+async function wcEligibleForAutoRenewNotify(query) {
+    try {
+        const expiry = moment().add(5, 'days').format('YYYY-MM-DD');
+        const options = {
+            nest: true,
+            type: sequelize.QueryTypes.SELECT
+        };
+        const sql = `
+        SELECT "user"."id", "user"."email", "user"."first_name", "user"."expiry", "notification"."email" AS "notification.email", "notification"."sms" AS "notification.sms"
+        FROM "users" AS "user"
+        INNER JOIN "groups" AS "group" ON "user"."group_id" = "group"."id" AND "group"."name" = 'wealth-creator' AND "group"."channel" = 'frontend'
+        INNER JOIN "notifications" AS "notification" ON "user"."id" = "notification"."user_id" AND "notification"."key" = 'account-activity-updates'
+        WHERE (
+                "user"."expiry" IS NOT NULL AND
+                "user"."expiry" <= to_date('${expiry}', 'YYYY-MM-DD')
+            ) AND
+            "user"."status" ILIKE 'Active' AND
+            "user"."autorenew" = false AND
+            "user"."archived" = false`;
+        return sequelize.query(sql, options);
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
+async function wcDueForAutoRenew(query) {
+    try {
+        const expiry = moment().add(5, 'days').format('YYYY-MM-DD');
+        const options = {
+            nest: true,
+            type: sequelize.QueryTypes.SELECT
+        };
+        const sql = `
+        SELECT "user"."id", "user"."email", "user"."first_name", "user"."expiry",
+            "notification"."email" AS "notification.email", "notification"."sms" AS "notification.sms",
+            "account"."id" AS "account.id", "account"."reference" AS "account.reference", 
+            "account"."available_balance" AS "account.available_balance", "account"."balance" AS "account.balance"
+        FROM "users" AS "user"
+        INNER JOIN "groups" AS "group" ON "user"."group_id" = "group"."id" AND "group"."name" = 'wealth-creator' AND "group"."channel" = 'frontend'
+        INNER JOIN "notifications" AS "notification" ON "user"."id" = "notification"."user_id" AND "notification"."key" = 'account-activity-updates'
+        INNER JOIN "accounts" AS "account" ON "user"."id" = "account"."user_id" AND "account"."is_primary" = true
+        WHERE (
+                "user"."expiry" IS NOT NULL AND
+                "user"."expiry" = to_date('${expiry}', 'YYYY-MM-DD')
+            ) AND
+            "user"."status" ILIKE 'Active' AND
+            "user"."autorenew" = true AND
+            "user"."archived" = false`;
+        return sequelize.query(sql, options);
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
 module.exports = {
     create,
     index,
     show,
+    update,
+    wcEligibleForAutoRenewNotify,
+    wcDueForAutoRenew,
 }

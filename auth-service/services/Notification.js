@@ -6,7 +6,7 @@ Notification.belongsTo(User, { foreignKey: 'user_id', targetKey: 'id' });
 
 async function create(data) {
     try {
-        return Notification.create(data);
+        return Notification.bulkCreate(data, { ignoreDuplicates: true });
     } catch (error) {
         console.error(error.message || null);
         throw new Error('Could not process your request');
