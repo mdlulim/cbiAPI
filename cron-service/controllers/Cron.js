@@ -1,11 +1,16 @@
 const async = require('async');
 const moment = require('moment');
 const accountService = require('../services/Account');
+const commissionService = require('../services/Commission');
 const cronService = require('../services/Cron');
+const investmentService = require('../services/Investment');
+const productService = require('../services/Product');
 const settingService = require('../services/Setting');
 const transactionService = require('../services/Transaction');
 const userService = require('../services/User');
 const emailHandler = require('../helpers/emailHandler');
+const { products } = require('../config');
+const { FP, FX } = products;
 
 const getTxid = (subtype, autoid) => {
     return subtype.substr(0, 3).toUpperCase() + autoid.toString();
@@ -214,12 +219,24 @@ async function index(req, res){
  * @param {*} res 
  * @returns 
  */
-async function productCommission(req, res){
+async function productDailyEarnings(req, res){
     try {
         const { code } = req.params;
-        return res.send({
-            success: true,
-            code,
+        const product = await productService.findByCode(code);
+
+        if (product && product.id) {
+            const { product_category } = product;
+            switch (product_category.code) {
+                case FX:
+                    
+                    break;
+                    
+                case FP: return fixedPlansDailyEarnings(product, res);
+            }
+        }
+        return res.status(403).send({
+            success: false,
+            message: 'Product not found'
         });
     } catch (error) {
         console.log(error);
@@ -230,9 +247,256 @@ async function productCommission(req, res){
     }
 };
 
+/**
+ * Calculate and payout member commission for a specific product
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
+async function productWeeklyEarnings(req, res){
+    try {
+        const { code } = req.params;
+        const product = await productService.findByCode(code);
+
+        if (product && product.id) {
+            const { product_category } = product;
+            switch (product_category.code) {
+                case FX:
+                    
+                    break;
+                    
+                case FP: return fixedPlansWeeklyEarnings(product, res);
+            }
+        }
+        return res.status(403).send({
+            success: false,
+            message: 'Product not found'
+        });
+    } catch (error) {
+        console.log(error);
+        return res.status(500).send({
+            success: false,
+            message: 'Could not process request'
+        });
+    }
+};
+
+/*
+	Eg. Nkosi invests in Plan 2 at 0.30% daily interest. After one week 
+    (currently 5 days) his earning are (0.30% x 5 = 1.5%)
+
+	Calculation (Of the 1.5% - 65% of value get paid out into members
+    wallet, 35% get re-invested and is added back to initial investment amount for compounding)
+*/
+async function fixedPlansDailyEarnings(product, res) {
+    const {
+        type,
+        title,
+        weekly_dividends,
+        product_code,
+    } = product;
+    const dayOfWeek = moment().isoWeekday();
+
+    // Dividends are only calculated between Monday (1) and Friday (5)
+    if (dayOfWeek > 5) {
+        return res.status(203).send({
+            success: true,
+            message: 'Payouts and/or calculations occur during weekdays',
+        });
+    }
+
+    // check if weekly_dividends
+    if (!weekly_dividends) {
+        return res.status(203).send({
+            success: true,
+            message: `No weekly dividends for ${title} (${type})`,
+        });
+    }
+    const investments = await investmentService.findActive();
+    return async.map(investments, async (item, callback) => {
+        const {
+            id,
+            daily_interest,
+            last_updated,
+            invested_amount,
+            accumulated_amount,
+        } = item;
+        const dailyInterest       = parseFloat(daily_interest); // estimated daily interest
+        const compoundedAmount    = parseFloat(accumulated_amount);
+        const earnings            = dailyInterest / 100 * compoundedAmount;
+        const reInvestedAmount    = earnings * 0.35; // 35% to be re-invested (compounding)
+        const interestAmount      = earnings * 0.65; // 65% to be paid to members wallet
+        const accumulatedAmount   = compoundedAmount + reInvestedAmount;
+
+        // check if already paid for the current day
+        if (last_updated) {
+            if (moment().isSame(last_updated)) {
+                return;
+            }
+        }
+
+        // update investment record
+        // compound the amount
+        const reInvestment = {
+            accumulated_amount: accumulatedAmount,
+        };
+        await investmentService.update(id, reInvestment);
+
+        // log commission earnings record
+        const commissionData = {
+            type: product_code.toUpperCase(),
+            user_id: user.id,
+            referral_id: user.id,
+            amount: interestAmount,
+        };
+        await commissionService.create(commissionData);
+
+        // log transaction (into transactions table) as "interest"
+        // const transactionData = {
+        //     tx_type: 'debit',
+        //     subtype: 'interest',
+        //     reference: `${product_code}-Earnings`,
+        //     note: `Earnings from ${title}`,
+        //     fee: 0,
+        //     amount: interestAmount,
+        //     total_amount: interestAmount,
+        //     balance: available_balance,
+        //     user_id: user.id,
+        // };
+        // const transaction = await transactionService.create(transactionData);
+        // const txid = getTxid(product_code, transaction.auto_id);
+        // await transactionService.update({ txid }, transaction.id);
+
+        return {
+            invested_amount: parseFloat(invested_amount),
+            daily_interest: dailyInterest,
+            compounded_amount: compoundedAmount,
+            earnings_today: earnings,
+            reinvested_amount: reInvestedAmount,
+            interest_amount: interestAmount,
+            accumulated_amount: accumulatedAmount,
+            notification: null,
+            last_updated,
+        };
+    }, (err, results) => {
+        if (err) throw err;
+        return res.send({
+            success: true,
+            results,
+        });
+    });
+}
+
+/*
+	Eg. Nkosi invests in Plan 2 at 0.30% daily interest. After one week 
+    (currently 5 days) his earning are (0.30% x 5 = 1.5%)
+
+	Calculation (Of the 1.5% - 65% of value get paid out into members
+    wallet, 35% get re-invested and is added back to initial investment amount for compounding)
+*/
+async function fixedPlansWeeklyEarnings(product, res) {
+    const {
+        type,
+        title,
+        weekly_dividends,
+        product_code,
+    } = product;
+    const dayOfWeek = moment().isoWeekday();
+
+    // Dividends are only paid on Saturdays (6)
+    if (dayOfWeek === 6) {
+        return res.status(203).send({
+            success: true,
+            message: 'Dividends and/or payouts occur ONLY on Saturdays',
+        });
+    }
+
+    // check if weekly_dividends
+    if (!weekly_dividends) {
+        return res.status(203).send({
+            success: true,
+            message: `No weekly dividends/payouts for ${title} (${type})`,
+        });
+    }
+    const investments = await investmentService.findActive();
+    return async.map(investments, async (item, callback) => {
+        const {
+            id,
+            daily_interest,
+            last_updated,
+            invested_amount,
+            accumulated_amount,
+        } = item;
+        const dailyInterest       = parseFloat(daily_interest); // estimated daily interest
+        const compoundedAmount    = parseFloat(accumulated_amount);
+        const earnings            = dailyInterest / 100 * compoundedAmount;
+        const reInvestedAmount    = earnings * 0.35; // 35% to be re-invested (compounding)
+        const interestAmount      = earnings * 0.65; // 65% to be paid to members wallet
+        const accumulatedAmount   = compoundedAmount + reInvestedAmount;
+
+        // check if already paid for the current day
+        if (last_updated) {
+            if (moment().isSame(last_updated)) {
+                return;
+            }
+        }
+
+        // update investment record
+        // compound the amount
+        const reInvestment = {
+            accumulated_amount: accumulatedAmount,
+        };
+        await investmentService.update(id, reInvestment);
+
+        // log commission earnings record
+        const commissionData = {
+            type: product_code.toUpperCase(),
+            user_id: user.id,
+            referral_id: user.id,
+            amount: interestAmount,
+        };
+        await commissionService.create(commissionData);
+
+        // log transaction (into transactions table) as "interest"
+        // const transactionData = {
+        //     tx_type: 'debit',
+        //     subtype: 'interest',
+        //     reference: `${product_code}-Earnings`,
+        //     note: `Earnings from ${title}`,
+        //     fee: 0,
+        //     amount: interestAmount,
+        //     total_amount: interestAmount,
+        //     balance: available_balance,
+        //     user_id: user.id,
+        // };
+        // const transaction = await transactionService.create(transactionData);
+        // const txid = getTxid(product_code, transaction.auto_id);
+        // await transactionService.update({ txid }, transaction.id);
+
+        return {
+            invested_amount: parseFloat(invested_amount),
+            daily_interest: dailyInterest,
+            compounded_amount: compoundedAmount,
+            earnings_today: earnings,
+            reinvested_amount: reInvestedAmount,
+            interest_amount: interestAmount,
+            accumulated_amount: accumulatedAmount,
+            notification: null,
+            last_updated,
+        };
+    }, (err, results) => {
+        if (err) throw err;
+        return res.send({
+            success: true,
+            results,
+        });
+    });
+}
+
 module.exports = {
     autorenew,
     autorenewNotify,
     index,
-    productCommission,
+    productDailyEarnings,
+    productWeeklyEarnings,
 }

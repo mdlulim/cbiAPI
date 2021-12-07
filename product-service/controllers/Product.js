@@ -302,6 +302,7 @@ async function invest(req, res){
             invested_amount: amount,
             currency_code,
             end_date: moment().add(investment_period, 'weeks').format('YYYY-MM-DD'),
+            accumulated_amount: amount,
         };
 
         // create investment and log product
