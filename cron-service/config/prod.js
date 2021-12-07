@@ -9,6 +9,12 @@ config = {
         admin: process.env.BASE_URL_ADMIN,
         frontend: process.env.BASE_URL_FRONTEND,
     },
+    products: {
+        CBIx7: 'CBIX7',
+        WC: 'WC',
+        FP: 'FP',
+        FX: 'FX',
+    },
     mail: {
         smtp: {
             host: 'mail.cbiglobal.io',

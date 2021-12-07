@@ -1041,6 +1041,12 @@ async function passwordResetConfirm(req, res) {
             data: { device },
         });
 
+        // send email notification
+        await emailHandler.changePassword({
+            first_name: user.first_name,
+            email: user.email,
+        });
+
         return res.send({
             success: true,
         });

@@ -9,6 +9,12 @@ config = {
         admin: 'http://admin.qa.cbiglobal.io',
         frontend: 'http://qa.cbiglobal.io',
     },
+    products: {
+        CBIx7: 'CBIX7',
+        WC: 'WC',
+        FP: 'FP',
+        FX: 'FX',
+    },
     mail: {
         smtp: {
             host: 'mail.cbiglobal.io',
