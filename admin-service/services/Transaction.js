@@ -12,7 +12,6 @@ async function index(query) {
         const { offset, limit } = query;
         const where = query || {};
         const userWhere = {};
-
         delete where.offset;
         delete where.limit;
 
@@ -32,6 +31,7 @@ async function index(query) {
         console.error(error.message || null);
         throw new Error('Could not process your request');
     }
+    
 }
 
 async function show(id) {
