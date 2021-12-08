@@ -477,7 +477,7 @@ async function approveDeposit(id, data) {
         commission_date: Date.now()
     }
     console.log("===================================Commissions========================================")
-   // console.log(commissionData)
+    console.log(commissionData)
     try {
         await Transaction.update(status, {
             where: { id }
