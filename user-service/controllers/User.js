@@ -109,7 +109,7 @@ async function update(req, res) {
 
 async function kyc(req, res) {
     try {
-        const data = await kycService.index(req.params.id);
+        const data = await kycService.index(req.user.id);
         const { count, rows } = data;
         return res.send({
             success: true,
@@ -153,7 +153,7 @@ async function captureKYC(req, res) {
 
 async function kyc_level(req, res) {
     try {
-        const kyc_applications = await kycService.allkyc(req.params.id);
+        const kyc_applications = await kycService.allkyc(req.user.id);
         let least_rejected = 10;
         let total_verified = 0;
 
