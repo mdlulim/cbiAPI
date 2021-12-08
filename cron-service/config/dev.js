@@ -6,8 +6,8 @@ config = {
     tokenExpireTime: '6h',
     tokenExpireHours: 6,
     baseurl: {
-        admin: 'http://admin.cbiglobal.io',
-        frontend: 'http://demo.cbiglobal.io',
+        admin: 'https://admin.cbiglobal.io',
+        frontend: 'https://demo.cbiglobal.io',
     },
     products: {
         CBIx7: 'CBIX7',
