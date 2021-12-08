@@ -12,6 +12,7 @@ const { Transaction }  = require('../models/Transaction');
 const { Account }  = require('../models/Account');
 const { Fee }  = require('../models/Fee');
 const { Commission }  = require('../models/Commission');
+const { Setting }  = require('../models/Setting');
 
 const { KYC } = require('../models/KYC');
  
@@ -113,7 +114,7 @@ async function index(query) {
             }
         };
     } catch (error) {
-        console.error(error.message || null);
+        console.error(error || null);
         throw new Error('Could not process your request');
     }
 }
@@ -394,7 +395,7 @@ async function transactions(user_id) {
 }
 
 async function updateTransaction(id, data) {
-    console.log("===========================================Update Transaction================================================");
+   
     try {
         const myData = {status: data.status}
         if(data.status === 'Completed'){
@@ -456,29 +457,34 @@ async function updateTransaction(id, data) {
 // }
 
 async function approveDeposit(id, data) {
-   
-    let companyCondition    = {id: data.main.id};
-    let companyData         = {available_balance: data.main.available_balance};
 
-    let sponsorCondition    = {id: data.sponsor.id};
-    let sponsorData         = {available_balance: data.sponsor.available_balance};
-
-    let userCondition       = {id: data.user.id};
-    let userData         = {available_balance: data.user.available_balance};
-    const user_id = data.user.user_id;
-    let status = {status: data.status}
-    const commissionData ={
-        user_id: data.user.user_id,
-        type: 'REFERRAL',
-        referral_id: data.sponsor.user_id,
-        status: 'Paid',
-        amount: data.sponsor.available_balance,
-        currency_code: data.transaction.currency.code,
-        commission_date: Date.now()
-    }
-    console.log("===================================Commissions========================================")
-    console.log(commissionData)
+    //console.log(commissionData)
     try {
+        const setting =  await Setting.findOne({where : {key: 'membership_fee'}});
+        if(parseFloat(data.transaction.amount) < parseFloat(setting.dataValues.value)){
+            return { success: false, message: "Insufficient funds" };
+        }
+        if(data.status === 'Completed'){
+            const user =  await User.findOne({where : {id: data.transaction.user_id}});
+            const sponsor =  await User.findOne({where : {id: user.dataValues.sponsor}});
+        //console.log(setting)
+            const mainAccount =  await Account.findOne({where : {id: '3cf7d2c0-80e1-4264-9f2f-6487fd1680c2'}});
+            const userAccount =  await Account.findOne({where : {user_id: user.dataValues.id}});
+            const sponsorAccount =  await Account.findOne({where : {user_id: sponsor.dataValues.id}});
+
+            const userTopUp = parseFloat(data.transaction.amount) - parseFloat(setting.dataValues.value)+(parseFloat(setting.dataValues.value)* 25 / 100);
+
+            let companyCondition    = {id: mainAccount.dataValues.id};
+            let companyData         = {available_balance: parseFloat(mainAccount.dataValues.available_balance)+(parseFloat(setting.dataValues.value)* 50 / 100)};
+
+            let sponsorCondition    = {id: sponsorAccount.dataValues.id};
+            let sponsorData         = {available_balance: parseFloat(sponsorAccount.dataValues.available_balance)+(parseFloat(setting.dataValues.value)* 25 / 100)};
+
+            let userCondition       = {id: userAccount.dataValues.id};
+            let userData            = {available_balance: parseFloat(userAccount.dataValues.available_balance)+userTopUp};
+
+            const user_id = user.dataValues.id;
+            let status = {status: data.status}
         await Transaction.update(status, {
             where: { id }
         });
@@ -500,10 +506,25 @@ async function approveDeposit(id, data) {
             archived: false,
             updated: sequelize.fn('NOW'),
         }, { where: { id: user_id } });
-       
+        const commissionData ={
+            user_id: user.dataValues.id,
+            type: 'REFERRAL',
+            referral_id: sponsor.id,
+            status: 'Paid',
+            amount: parseFloat(setting.dataValues.value)* 25 / 100,
+            currency_code: data.transaction.currency.code,
+            commission_date: Date.now()
+        }
         await Commission.create(commissionData);
-
         return { success: true, message: "Account was successfully updated" };
+    }else{
+        let status = {status: data.status}
+        await Transaction.update(status, {
+            where: { id }
+        });
+    }
+
+       
     } catch (error) {
         console.error(error || null);
         throw new Error('Could not process your request');

@@ -436,7 +436,7 @@ async function updateBankAccounts(req, res){
 async function approveDeposit(req, res){
     try {
         return userService.approveDeposit(req.params.id, req.body)
-        .then(data => res.send({ success: true, message: 'Account was successfully updated' }));
+        .then(data => res.send(data));
     } catch (err) {
         return res.status(500).send({
             success: false,
