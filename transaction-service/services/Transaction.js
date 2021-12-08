@@ -43,7 +43,7 @@ async function index(user_id, query) {
             "document"."file" AS "document.file"
         FROM transactions AS "transaction"
         LEFT OUTER JOIN documents AS "document" ON ("document"."metadata"->>'txid')::TEXT = "transaction"."txid"
-        WHERE "transaction"."user_id" = '${user_id}' AND "transaction"."status" NOT iLIKE 'Pending'
+        WHERE "transaction"."user_id" = '${user_id}'
         ORDER BY "transaction"."created" DESC`;
         const transactions = await sequelize.query(query, options);
 
