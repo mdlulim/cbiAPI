@@ -31,8 +31,9 @@ async function validate(req, res) {
         const user = await userService.findByPropertyValue(prop, value);
         const data = {};
         if (user) {
-            data.first_name = user.first_name;
-            data.last_name  = user.last_name;
+            data.first_name  = user.first_name;
+            data.last_name   = user.last_name;
+            data.referral_id = user.referral_id;
         }
         return res.send({
             success: true,
@@ -54,7 +55,7 @@ async function tokensVerify(req, res) {
         if (type === 'login') {
             const data = await authService.verifyLogin({
                 ...req.user,
-                ...req.body
+                ...req.body,
             });
             return res.send(data);
         }
@@ -79,9 +80,14 @@ async function tokensVerify(req, res) {
         });
         return res.send(data);
     } catch (error) {
+        const messages = ['Access denied', 'Invalid code specified', 'Account temporarily blocked'];
+        var message = 'Could not process request';
+        if (messages.map(item => error.message.includes(item))) {
+            message = error.message;
+        }
         return res.status(500).send({
             success: false,
-            message: 'Could not process request'
+            message,
         });
     }
 }
@@ -94,10 +100,11 @@ async function tokensVerifyResend(req, res) {
             geoinfo,
             newDeviceLogin,
         } = req.body;
+        const { id } = req.user;
 
         if (type === 'login') {
 
-            const user = await userService.show(req.user.id);
+            const user = await userService.show(id);
     
             if (!user) {
                 throw new Error('Access denied.');
@@ -106,8 +113,8 @@ async function tokensVerifyResend(req, res) {
             // auth (jwt) token
             const { email, group, first_name } = user;
             const payload = {
+                id,
                 email,
-                id: user.id,
                 time: new Date(),
                 newDeviceLogin,
             };
@@ -117,8 +124,8 @@ async function tokensVerifyResend(req, res) {
     
             // generate otp code
             const code = rn({
-                min: 1000,
-                max: 9999,
+                min: 100000,
+                max: 999999,
                 integer: true,
             });
 
@@ -130,9 +137,9 @@ async function tokensVerifyResend(req, res) {
                 type: 'OTP',
                 description: `${group.label} verify login`,
                 expiry: moment().add(15, 'minutes').format('YYYY-MM-DD HH:mm:ss'),
+                token: verifyToken,
                 transaction,
                 code,
-                verifyToken,
             };
     
             // delete previous otp login attemps/records
@@ -267,20 +274,20 @@ async function login(req, res) {
 
         // generate otp code
         const code = rn({
-            min: 1000,
-            max: 9999,
+            min: 100000,
+            max: 999999,
             integer: true,
         });
         const authRecord = {
+            type: 'OTP',
             user_id: user.id,
             device: device || {},
             geoinfo: geoinfo || {},
-            type: 'OTP',
             description: `${group.label} verify login`,
             expiry: moment().add(15, 'minutes').format('YYYY-MM-DD HH:mm:ss'),
+            token: verifyToken,
             transaction,
             code,
-            verifyToken,
         };
 
         // delete previous otp login attemps/records
@@ -368,8 +375,8 @@ async function socialLogin(req, res) {
 
         // generate otp code
         const code = rn({
-            min: 1000,
-            max: 9999,
+            min: 100000,
+            max: 999999,
             integer: true,
         });
         const authRecord = {
@@ -379,9 +386,9 @@ async function socialLogin(req, res) {
             type: 'OTP',
             description: `${group.label} verify login`,
             expiry: moment().add(15, 'minutes').format('YYYY-MM-DD HH:mm:ss'),
+            token: verifyToken,
             transaction,
             code,
-            verifyToken,
         };
 
         // delete previous otp login attemps/records
@@ -558,7 +565,7 @@ async function register(req, res) {
             mobile: mobile || null,
             first_name: first_name || null,
             last_name: last_name || null,
-            username: username || email,
+            username: username || mobile,
             sponsor: sponsorId,
             group_id: groupId,
             password,
