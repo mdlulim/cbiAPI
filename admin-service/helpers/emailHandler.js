@@ -33,8 +33,39 @@ async function depositRequestNotification(data) {
     return sendMail(from, email, 'CBI - Deposit Request Notification', template);
 };
 
+async function updatingUserStatus(data) {
+    const { email } = data;
+    const template = emailTemplates.updatingUserStatus(data);
+    const from = {
+        name: 'CBI',
+        email: smtp.auth.user,
+    };
+    return sendMail(from, email, 'CBI - Membership Status Notification', template);
+};
+async function transactionNotification(data) {
+    const { email } = data;
+    const template = emailTemplates.updatingUserStatus(data);
+    const from = {
+        name: 'CBI',
+        email: smtp.auth.user,
+    };
+    return sendMail(from, email, 'CBI - Transaction Notification', template);
+};
+
+async function approveMembership(data) {
+    const { email } = data;
+    const template = emailTemplates.approveMembership(data);
+    const from = {
+        name: 'CBI',
+        email: smtp.auth.user,
+    };
+    return sendMail(from, email, 'CBI - Membership Approval Notification', template);
+};
 
 module.exports = {
     newUser,
-    kycNotification
+    kycNotification,
+    updatingUserStatus,
+    approveMembership,
+    transactionNotification
 };

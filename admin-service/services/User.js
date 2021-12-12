@@ -188,8 +188,8 @@ async function show(id) {
  * Update company’s user details.
  * 
  * @param {string} id
- * @param {string} data 
- * @returns 
+ * @param {string} data
+ * @returns
  */
 async function update(id, data) {
     try {
@@ -211,12 +211,14 @@ async function update(id, data) {
  */
 async function archive(id) {
     try {
-        return User.update({
+        await User.update({
             status: 'Archived',
             archived: true,
             deactivation_date:sequelize.fn('NOW'),
             updated: sequelize.fn('NOW'),
         }, { where: { id } });
+        const user =  await User.findOne({where : {id}});
+        return { success: true, message: "Memmber was successfully updated", user: user};
     } catch (error) {
         console.error(error.message || null);
         throw new Error('Could not process your request');
@@ -234,11 +236,13 @@ async function archive(id) {
  */
 async function block(id) {
     try {
-        return User.update({
+        await User.update({
             status: 'Blocked',
             blocked: true,
             updated: sequelize.fn('NOW'),
         }, { where: { id } });
+        const user =  await User.findOne({where : {id}});
+        return { success: true, message: "Memmber was successfully updated", user: user};
     } catch (error) {
         console.error(error.message || null);
         throw new Error('Could not process your request');
@@ -256,11 +260,13 @@ async function block(id) {
  */
 async function unarchive(id) {
     try {
-        return User.update({
+        await User.update({
             status: 'Active',
             archived: false,
             updated: sequelize.fn('NOW'),
         }, { where: { id } });
+        const user =  await User.findOne({where : {id}});
+        return { success: true, message: "Memmber was successfully updated", user: user};
     } catch (error) {
         console.error(error.message || null);
         throw new Error('Could not process your request');
@@ -278,12 +284,15 @@ async function unarchive(id) {
  */
 async function unblock(id) {
     try {
-        return User.update({
+        await User.update({
             status: 'Active',
             blocked: false,
             archived: false,
             updated: sequelize.fn('NOW'),
         }, { where: { id } });
+
+        const user =  await User.findOne({where : {id}});
+        return { success: true, message: "Memmber was successfully updated", user: user};
     } catch (error) {
         console.error(error.message || null);
         throw new Error('Could not process your request');
@@ -292,9 +301,9 @@ async function unblock(id) {
 
 /**
  * List User Products
- * 
+ *
  * Get a list of products belonging to CBI's user.
- * 
+ *
  * @param {string} user_id 
  * @returns 
  */
@@ -398,31 +407,34 @@ async function updateTransaction(id, data) {
    
     try {
         const myData = {status: data.status}
+        const transaction = data.transaction;
+        const user_id = transaction.user_id;
+        const user =  await User.findOne({where : {id: transaction.user_id}});
+        console.log("=====================Transaction============================================")
+
+        const fee =  await Fee.findOne({where : {subtype: transaction.subtype.charAt(0).toUpperCase() + transaction.subtype.slice(1), group_id: user.dataValues.group_id} });
+        let userBalance = {};
         if(data.status === 'Completed'){
-            const transaction = data.transaction;
-            const user_id = transaction.user_id;
-            const user =  await User.findOne({where : {id: transaction.user_id}});
             const mainAccount =  await Account.findOne({where : {id: '3cf7d2c0-80e1-4264-9f2f-6487fd1680c2'}});
             const userWallet =  await Account.findOne({
                 where: { user_id },
             });
             //9001127.1990
-            const fee =  await Fee.findOne({where : {subtype: transaction.subtype.charAt(0).toUpperCase() + transaction.subtype.slice(1), group_id: user.dataValues.group_id} });
-            console.log("status: "+data.status)
+            //console.log("status: "+data.status)
            // console.log("status: "+transaction.subtype.toLowerCase())
             if(transaction.subtype.toLowerCase() === 'deposit'){
-                console.log("subtype: "+transaction.subtype)
+                //console.log("subtype: "+transaction.subtype)
                 let credit = {available_balance: parseFloat(mainAccount.available_balance)+parseFloat(fee.dataValues.value)};
                 let mainAccountCondition = {id: mainAccount.id}
                 Account.update( credit, {where: mainAccountCondition})
 
                 let creditUser = {available_balance: parseFloat(userWallet.available_balance)+parseFloat(transaction.amount)-parseFloat(fee.dataValues.value)};
-                console.log(creditUser);
+                userBalance = parseFloat(userWallet.available_balance)+parseFloat(transaction.amount)-parseFloat(fee.dataValues.value);
                 let accountCondition = {id: userWallet.id}
                 Account.update( creditUser,{where: accountCondition})
 
             }else if(transaction.subtype.toLowerCase() === "withdrawal"){
-                console.log("subtype: "+transaction.subtype)
+                //console.log("subtype: "+transaction.subtype)
                 let credit = {available_balance: parseFloat(mainAccount.available_balance)+parseFloat(fee.dataValues.value)};
                 let mainAccountCondition = {id: mainAccount.id}
                 Account.update( credit, {where: mainAccountCondition})
@@ -437,7 +449,18 @@ async function updateTransaction(id, data) {
             where: { id }
         });
 
-        return { success: true };
+        return { success: true, message: 'Transaction was updated successfully',
+            data: {
+                status: data.status,
+                first_name: user.first_name,
+                email: user.email,
+                subtype: data.transaction.subtype,
+                tx_type: data.transaction.tx_type,
+                amount: data.transaction.amount,
+                fee: fee? fee.dataValues.value: '',
+                currency_code: data.transaction.currency.code,
+                available_balance: userBalance
+        } };
     } catch (error) {
         console.error(error.message || null);
         throw new Error('Could not process your request');
@@ -464,6 +487,7 @@ async function approveDeposit(id, data) {
         if(parseFloat(data.transaction.amount) < parseFloat(setting.dataValues.value)){
             return { success: false, message: "Insufficient funds" };
         }
+
         if(data.status === 'Completed'){
             const user =  await User.findOne({where : {id: data.transaction.user_id}});
             const sponsor =  await User.findOne({where : {id: user.dataValues.sponsor}});
@@ -485,43 +509,52 @@ async function approveDeposit(id, data) {
 
             const user_id = user.dataValues.id;
             let status = {status: data.status}
-        await Transaction.update(status, {
-            where: { id }
-        });
+            // await Transaction.update(status, { where: { id } });
 
-        await Account.update(companyData,{
-            where : companyCondition
-        });
+            // await Account.update(companyData,{ where : companyCondition });
 
-        await Account.update(sponsorData,{
-            where : sponsorCondition
-        });
+            // await Account.update(sponsorData,{ where : sponsorCondition });
 
-        await Account.update(userData,{
-            where : userCondition
-        });
-        await User.update({
-            status: 'Active',
-            blocked: false,
-            archived: false,
-            updated: sequelize.fn('NOW'),
-        }, { where: { id: user_id } });
-        const commissionData ={
-            user_id: user.dataValues.id,
-            type: 'REFERRAL',
-            referral_id: sponsor.id,
-            status: 'Paid',
-            amount: parseFloat(setting.dataValues.value)* 25 / 100,
-            currency_code: data.transaction.currency.code,
-            commission_date: Date.now()
-        }
-        await Commission.create(commissionData);
-        return { success: true, message: "Account was successfully updated" };
+            // await Account.update(userData,{ where : userCondition });
+
+            // await User.update({
+            //     status: 'Active',
+            //     blocked: false,
+            //     archived: false,
+            //     updated: sequelize.fn('NOW'),
+            // }, { where: { id: user_id } });
+
+            const commissionData ={
+                user_id: user.id,
+                type: 'REFERRAL',
+                referral_id: sponsor.id,
+                status: 'Paid',
+                amount: parseFloat(setting.value)* 25 / 100,
+                currency_code: data.transaction.currency.code,
+                commission_date: Date.now()
+            }
+
+            const data = {
+                status: data.status,
+                first_name: user.first_name,
+                sponsor_first_name: sponsor.first_name,
+                email: user.email,
+                sponsor_email: sponsor.email,
+                subtype: data.transaction.subtype,
+                tx_type: data.transaction.tx_type,
+                amount: data.transaction.amount,
+                sponsor_amount: data.transaction.amount,
+                fee: fee.dataValues.value,
+                sponsor_fee: fee.dataValues.value,
+                currency_code: data.transaction.currency.code,
+                sponsor_available_balance: userBalance,
+                available_balance: userBalance
+            }
+            await Commission.create(commissionData);
+            return { success: true, message: "Account was successfully updated", data: data };
     }else{
         let status = {status: data.status}
-        await Transaction.update(status, {
-            where: { id }
-        });
+        await Transaction.update(status, { where: { id } });
     }
 
        
