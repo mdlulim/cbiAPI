@@ -1,12 +1,13 @@
 const sequelize = require('../config/db');
-const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs');
 const { EmailAddress } = require('../models/EmailAddress');
 const { User } = require('../models/User');
 const { UserDevice } = require('../models/UserDevice');
 const { Group } = require('../models/Group');
 const { OTPAuth } = require('../models/OTPAuth');
 const emailHandler = require('../helpers/emailHandler');
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
+const moment = require('moment');
 
 const config = require('../config');
 const {
@@ -54,7 +55,7 @@ async function authenticate(data) {
             await User.update({
                 blocked,
                 login_attempts: loginAttemps,
-                updated: new Date().toISOString(),
+                updated: sequelize.fn('NOW'),
             }, { where: { id: record.id } });
             if (blocked) {
                 throw new Error('Authentication failed. Account blocked, please contact support.');
@@ -65,6 +66,25 @@ async function authenticate(data) {
             throw new Error('Authentication failed. Account blocked, please contact support.');
         if (!record.verified)
             throw new Error('Authentication failed. User pending verification.');
+
+
+        // check if account is temporary locked
+        // and if temporary lock has expired or not
+        if (record.temp_lock_expiry) {
+            if (moment().isBefore(moment(record.temp_lock_expiry))) {
+                const start = moment(record.temp_lock_expiry);
+                const end = moment();
+                const duration = moment.duration(start.diff(end));
+                var timeLeft = duration.asMinutes();
+                var retryIn = `${parseInt(timeLeft)} minute(s)`;
+                if (parseInt(timeLeft) === 0) {
+                    timeLeft = duration.asSeconds();
+                    retryIn = `${parseInt(timeLeft)} second(s)`;
+                }
+                throw new Error(`Authentication failed. Account temporarily blocked, try again after ${retryIn}`);
+            }
+        }
+
         // if (record.status.toLowerCase() !== 'active')
         //     throw new Error('Authentication failed. User pending verification.');
 
@@ -172,6 +192,13 @@ async function socialAuth(data) {
             throw new Error('Authentication failed. User pending verification.');
         // if (record.status.toLowerCase() !== 'active')
         //     throw new Error('Authentication failed. User pending verification.');
+
+
+        // check if account is temporary locked
+        // and if temporary lock has expired or not
+        if (record.temp_lock_expiry) {
+            
+        }
 
         /**
          * Validate user's device and/or location
@@ -372,12 +399,12 @@ async function verifyResetPassword(data) {
 }
 
 async function verifyLogin(data) {
-    const { code, id, geoinfo, device, newDeviceLogin } = data;
+    const { code, id, geoinfo, device, newDeviceLogin, token } = data;
     const otpAuth = await OTPAuth.findOne({
-        where: { code, user_id: id }
+        where: { user_id: id, token }
     });
 
-    if (otpAuth) {
+    if (otpAuth && otpAuth.code === code) {
         const user = await User.findOne({
             where: { id },
             include: [{ model: Group }],
@@ -432,6 +459,7 @@ async function verifyLogin(data) {
         // update user's last login status
         await User.update(id, {
             where: {
+                temp_lock_expiry: null,
                 last_login: sequelize.fn('NOW'),
                 blocked: false,
                 login_attempts: 0,
@@ -526,7 +554,24 @@ async function verifyLogin(data) {
             data: returnData,
         };
     }
-    throw new Error('Invalid code specified');
+
+    if (otpAuth) {
+        const otpAtempts = otpAuth.attempts + 1;
+        const blocked = (otpAtempts >= 3);
+        await OTPAuth.update({
+            attempts: otpAtempts,
+            updated: sequelize.fn('NOW'),
+        }, { where: { id: otpAuth.id } });
+        if (blocked) {
+            await User.update({
+                temp_lock_expiry: moment().add(15, 'minutes').format('YYYY-MM-DD HH:mm:ss'),
+                updated: sequelize.fn('NOW'),
+            }, { where: { id } });
+            throw new Error('Account temporarily blocked, try again after 15 minutes.');
+        }
+        throw new Error(`Invalid code specified. You have ${3 - otpAtempts} attemp(s) remaining.`);
+    }
+    throw new Error('Access denied');
 }
 
 /**
