@@ -1,13 +1,29 @@
+const sequelize = require('../config/db');
+const { Account } = require('../models/Account');
 const { Buddy } = require('../models/Buddy');
 
 async function lookupbalance() {
     try {
-        const allbuddyAccounts = await Buddy.findAll();
+        data = await Account.findOne({
+            where: {
+                id: 'f06f4a4e-d7e4-471c-972a-2f0200d5471f'
+            }
+        })
         return {
             code: 200,
-            status: 'OK',
+            success: true,
             data: {
-                allbuddyAccounts
+                entity: 'BUDDY',
+                path: 'balance',
+                env: 'staging',
+                version: '1.0.0',
+                timestamp: Date.now(),
+                data: {
+                        "name": "BUDDY",
+                        "type": "CRYPTO",
+                        "currency": "CBI",
+                        "balance": data.balance
+                }
             }
         }
     } catch (error) {
