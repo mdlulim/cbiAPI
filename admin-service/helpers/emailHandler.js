@@ -44,7 +44,7 @@ async function updatingUserStatus(data) {
 };
 async function transactionNotification(data) {
     const { email } = data;
-    const template = emailTemplates.updatingUserStatus(data);
+    const template = emailTemplates.transactionNotification(data);
     const from = {
         name: 'CBI',
         email: smtp.auth.user,
@@ -62,10 +62,21 @@ async function approveMembership(data) {
     return sendMail(from, email, 'CBI - Membership Approval Notification', template);
 };
 
+async function memberCommissionFee(data) {
+    const { email } = data;
+    const template = emailTemplates.memberCommissionFee(data);
+    const from = {
+        name: 'CBI',
+        email: smtp.auth.user,
+    };
+    return sendMail(from, email, 'CBI - Membership Approval Notification', template);
+};
+
 module.exports = {
     newUser,
     kycNotification,
     updatingUserStatus,
     approveMembership,
-    transactionNotification
+    transactionNotification,
+    memberCommissionFee
 };

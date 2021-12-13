@@ -10,6 +10,14 @@ function cleanEmail(email) {
     return email ? email.trim() : email;
 }
 
+const getSubsection = (data) => {
+    const {
+        tx_type,
+        subtype,
+    } = data;
+    return `${tx_type[0].toUpperCase() + tx_type.substr(1)} ${subtype[0].toUpperCase() + subtype.substr(1)}`;
+};
+
 async function create(req, res) {
     try {
         const {
@@ -359,29 +367,33 @@ async function updateTransaction(req, res){
     try {
         const data = req.body.transaction;
         // console.log(req.user);
-        await userService.updateTransaction(req.params.id, req.body).then(async (data) => {
+        return userService.updateTransaction(req.params.id, req.body).then(async (data) => {
            // console.log(data)
             if(data.success){
                 console.log(data)
-               // send email to recipient
-                await emailHandler.updatingUserStatus({
-                        first_name: data.first_name,
-                        email: data.email,
-                        status: data.status,
-                        sender: `${req.user.first_name} ${req.user.last_name} (${req.user.referral_id})`,
-                    });
+                // send email to recipient
+                await emailHandler.transactionNotification({
+                    first_name  : data.data.first_name,
+                    email       : data.data.email,
+                    status      : data.data.status,
+                    amount      : data.data.amount,
+                    reference   : data.data.reference,
+                    available_balance   : data.data.available_balance,
+                    currency_code       : data.data.currency_code,
+                    sender: `${req.user.first_name} ${req.user.last_name} (${req.user.referral_id})`,
+                }).then((response) =>{
+                    console.log(response)
+                });
 
-
-
-            //    await activityService.addActivity({
-            //         user_id: req.user.id,
-            //         action: `${req.user.group_name}.transactions.${data.tx_type}.${data.subtype}`,
-            //         section: 'Transactions',
-            //         subsection: getSubsection(data),
-            //         description: `${data.first_name} ${data.status}  a ${data.subtype} of ${data.amount} ${data.currency_code}`,
-            //         ip: null,
-            //         data,
-            //     })
+               await activityService.addActivity({
+                    user_id: req.user.id,
+                    action: `${req.user.group_name}.transactions.${data.data.tx_type}.${data.data.subtype}`,
+                    section: 'Transactions',
+                    subsection: getSubsection(data.data),
+                    description: `${data.data.first_name} ${data.data.status}  a ${data.data.subtype} of ${data.data.amount} ${data.data.currency_code}`,
+                    ip: null,
+                    data,
+                })
             }
            return res.send({ success: data.success, message: data.message})
         })
@@ -495,8 +507,44 @@ async function updateBankAccounts(req, res){
 
 async function approveDeposit(req, res){
     try {
-        return userService.approveDeposit(req.params.id, req.body)
-        .then(data => res.send(data));
+        return userService.approveDeposit(req.params.id, req.body).then(async (data) => {
+            console.log(data)
+            if(data.success){
+               console.log(data)
+                //send email to recipient
+                await emailHandler.approveMembership({
+                    first_name  : data.data.user.first_name,
+                    email       : data.data.user.email,
+                    status      : data.data.user.status,
+                    amount      : data.data.user.amount,
+                    reference   : data.data.user.reference,
+                    available_balance   : data.data.user.available_balance,
+                    currency_code       : data.data.user.currency_code,
+                    sender: `${req.user.first_name} ${req.user.last_name} (${req.user.referral_id})`,
+                })
+                await emailHandler.memberCommissionFee({
+                    first_name  : data.data.sponsor.first_name,
+                    email       : data.data.sponsor.email,
+                    status      : data.data.sponsor.status,
+                    amount      : data.data.sponsor.amount,
+                    reference   : data.data.user.first_name,
+                    available_balance   : data.data.sponsor.available_balance,
+                    currency_code       : data.data.sponsor.currency_code,
+                    sender: `${req.user.first_name} ${req.user.last_name} (${req.user.referral_id})`,
+                })
+                
+               await activityService.addActivity({
+                    user_id: req.user.id,
+                    action: `${req.user.group_name}.transactions.${data.data.user.tx_type}.${data.data.user.subtype}`,
+                    section: 'Transactions',
+                    subsection: getSubsection(data.data.user),
+                    description: `${data.data.user.first_name} ${data.data.user.status}  a ${data.data.user.subtype} of ${data.data.user.amount} ${data.data.user.currency_code}`,
+                    ip: null,
+                    data,
+                })
+            }
+           return res.send({ success: data.success, message: data.message})
+        });
     } catch (err) {
         return res.status(500).send({
             success: false,

@@ -185,6 +185,7 @@ const approveMembership = data => {
         amount,
         first_name,
         currency_code,
+        available_balance,
         reference,
     } = data;
 
@@ -227,7 +228,7 @@ const approveMembership = data => {
                         <tbody>
                             <tr>
                                 <td style="padding-right: 40px;"><strong>Your current balance:</strong></td>
-                                <td>${amount} ${currency_code}</td>
+                                <td>${available_balance} ${currency_code}</td>
                             </tr>
                             <tr>
                                 <td><strong>Reference:</strong></td>
@@ -258,11 +259,13 @@ const approveMembership = data => {
     }
 };
 
-const membershipReferralFee = data => {
+const memberCommissionFee = data => {
     const {
         amount,
         first_name,
+        username,
         currency_code,
+        available_balance,
         reference,
     } = data;
 
@@ -299,13 +302,13 @@ const membershipReferralFee = data => {
                 <!-- Email body -->
                 <div >
                     <p>
-                        Your CBI wallet account has been credited with ${amount} ${currency_code} from your referral <br/>
+                        Your CBI wallet account has been credited with ${amount} ${currency_code} from your referral<br/>
                     </p>
                     <table>
                         <tbody>
                             <tr>
                                 <td style="padding-right: 40px;"><strong>Your current balance:</strong></td>
-                                <td>${amount} ${currency_code}</td>
+                                <td>${available_balance} ${currency_code}</td>
                             </tr>
                             <tr>
                                 <td><strong>Reference:</strong></td>
@@ -343,7 +346,6 @@ const transactionNotification = data => {
         currency_code,
         available_balance,
         reference,
-        
     } = data;
 
     const html = `
@@ -424,5 +426,6 @@ module.exports = {
     kycNotification,
     approveMembership,
     updatingUserStatus,
-    transactionNotification
+    transactionNotification,
+    memberCommissionFee
 };
