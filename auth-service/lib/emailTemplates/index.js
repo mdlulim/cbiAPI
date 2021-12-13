@@ -246,7 +246,7 @@ const verifyLogin = data => {
                     <!-- Email body -->
                     <div>
                         <p>Your verification code is:</p>
-                        <p style="font-size: 2.5em;"><strong>${code}</strong></p>
+                        <p style="font-size: 2.5em;"><strong>${code.toString().substr(0, 3)} ${code.toString().substr(3, 3)}</strong></p>
                         <p>Use this code to sign into your CBI account. CBI will never ask you to share this code with anyone. If you are signing in on web, make sure you are on cbiglobal.io.</p>
         
                         <p>If this request isn't authorized by you, <a href="mailto:support@cbiglobal.io" style="text-decoration: none;">contact
@@ -378,20 +378,66 @@ const confirmEmail = data => {
         link,
         first_name,
     } = data;
+    // const html = `
+    //     <p>Hi ${first_name},</p>
+    //     <h3>Verify your email address</h3>
+    //     <p>Click the button below to verify your email and continue the sign up process.</p>
+    //     <p><strong>${link}</strong></p>
+    //     <p style="padding-top:15px"><strong>Regards</strong>,<br />CBI Support</p>
+    // `;
     const html = `
-        <p>Hi ${first_name},</p>
-        <h3>Verify your email address</h3>
-        <p>Click the button below to verify your email and continue the sign up process.</p>
-        <p><strong>${link}</strong></p>
-        <p style="padding-top:15px"><strong>Regards</strong>,<br />CBI Support</p>
-    `;
-    const text = `
-        Hi ${first_name}, 
-        Verify your email address.
-        Click the button below to verify your email and continue the sign up process: ${link}.
+    <!DOCTYPE html>
+    <html lang="en">
 
-        Regards, CBI Support
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Document</title>
+    </head>
+
+    <body>
+        <div style="
+                font-family: Arial, Helvetica, sans-serif; 
+                color: darkslategray; 
+                min-width: 360px; 
+                max-width: 600px; 
+                margin: 0 auto;
+                line-height: 1.5;">
+            <div style="padding: 20px 0; margin-bottom: 20px; background-image: linear-gradient(310deg,#141727,#3a416f); color: white; ">
+                <div style="display: flex; flex-direction: column; align-items: center;">
+                    <img src="https://cdn-cbigold.ams3.digitaloceanspaces.com/public/email/CDC3837FF1DF9ADC1FF459D0278FD.png" style="height: 50px;" alt="" />
+                </div>
+                <!-- Email topic -->
+                <p style="line-height: 2; text-align: center;">
+                    Hi ${first_name}, </br />
+                </p>
+                <h2 style="text-align: center;">Account Verification</h2>
+            </div>
+            <div style="margin: 0 5%; border-bottom: 1px solid grey;">
+                <!-- Email body -->
+                <div>
+                    <p>
+                        Thanks for registering with CBI Global, we are very excited to have you onboard.
+                        Please verify your email to proceed: <br/><br/>
+                        <a href="${link}" target="_blank" rel="noopener noreferrer"><button style="background-image: linear-gradient(310deg,#c89623,#c89623); color: white; padding: 15px; border: none; cursor: pointer;">Verify Email</button></a>
+                    </p>
+                    <p style="padding-top:50px"><strong>Cheers</strong>,<br />CBI Support</p>
+                </div>
+            </div>
+            <!-- Email footer -->
+            <div>
+                <p style="text-align: center; line-height: 1.5; font-size: smaller;">
+                    &copy;2021 CBI Global<br />
+                    <a href="${frontend}">Help Centre</a> | <a href="${frontend}">Terms and conditions</a> | <a href="${frontend}">Security and privacy</a>
+                </p>
+            </div>
+        </div>
+    </body>
+
+    </html>
     `;
+    const text = ``;
     return {
         html,
         text

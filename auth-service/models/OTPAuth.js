@@ -18,6 +18,7 @@ const OTPAuth = sequelize.define('otp_auth', {
 	created: Sequelize.DATE,
 	description: Sequelize.STRING,
 	type: Sequelize.STRING,
+	attempts: Sequelize.INTEGER,
 	user_id: Sequelize.UUID,
 }, {
     timestamps: false

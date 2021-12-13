@@ -19,6 +19,7 @@ authImage = ''
 buddyImage = ''
 companyImage = ''
 contentImage = ''
+cronImage = ''
 productImage = ''
 transactionImage = ''
 userImage = ''
@@ -31,6 +32,7 @@ authTag = ''
 buddyTag = ''
 companyTag = ''
 contentTag = ''
+cronTag = ''
 productTag = ''
 transactionTag = ''
 userTag = ''
@@ -118,6 +120,18 @@ pipeline {
                         sh "docker build -t ${contentImage} ./content-service"
                     }                      
                 }
+                stage('cron-service') {
+                    steps {
+                        script {
+                           gitCommit = env.GIT_COMMIT.substring(0,8)
+                           unixTime = (new Date().time / 1000) as Integer
+                           branchName = env.GIT_BRANCH.replace('/', '-').substring(7)
+                           cronTag = "${branchName}-${gitCommit}-${unixTime}"
+                           cronImage = "${dockerRepoHost}/cron-service:${cronTag}"
+                        }
+                        sh "docker build -t ${cronImage} ./cron-service"
+                    }                      
+                }
                 stage('product-service') {
                     steps {
                         script {
@@ -175,6 +189,7 @@ pipeline {
                 sh "docker push ${buddyImage}"
                 sh "docker push ${companyImage}"
                 sh "docker push ${contentImage}"
+                sh "docker push ${cronImage}"
                 sh "docker push ${productImage}"
                 sh "docker push ${transactionImage}"
                 sh "docker push ${userImage}"
@@ -183,7 +198,7 @@ pipeline {
         }
         stage('Remove Local Docker Image') {
             steps {
-                sh "docker rmi ${adminImage} ${authImage} ${buddyImage} ${companyImage} ${contentImage} ${productImage} ${transactionImage} ${userImage} ${fileImage}"
+                sh "docker rmi ${adminImage} ${authImage} ${buddyImage} ${companyImage} ${contentImage} ${cronImage} ${productImage} ${transactionImage} ${userImage} ${fileImage}"
             }
         }
         stage('Update GitOps repo for ArgoCD') {
@@ -198,6 +213,7 @@ pipeline {
                                 sh("cd cbigold/overlays/develop && kustomize edit set image registry.digitalocean.com/cbiglobal/buddy-service:${buddyTag}");
                                 sh("cd cbigold/overlays/develop && kustomize edit set image registry.digitalocean.com/cbiglobal/company-service:${companyTag}");
                                 sh("cd cbigold/overlays/develop && kustomize edit set image registry.digitalocean.com/cbiglobal/content-service:${contentTag}");
+                                sh("cd cbigold/overlays/develop && kustomize edit set image registry.digitalocean.com/cbiglobal/cron-service:${cronTag}");
                                 sh("cd cbigold/overlays/develop && kustomize edit set image registry.digitalocean.com/cbiglobal/product-service:${productTag}");
                                 sh("cd cbigold/overlays/develop && kustomize edit set image registry.digitalocean.com/cbiglobal/transaction-service:${transactionTag}");
                                 sh("cd cbigold/overlays/develop && kustomize edit set image registry.digitalocean.com/cbiglobal/user-service:${userTag}");
@@ -209,6 +225,7 @@ pipeline {
                                 sh("cd cbigold/overlays/production && kustomize edit set image registry.digitalocean.com/cbiglobal/buddy-service:${buddyTag}");
                                 sh("cd cbigold/overlays/production && kustomize edit set image registry.digitalocean.com/cbiglobal/company-service:${companyTag}");
                                 sh("cd cbigold/overlays/production && kustomize edit set image registry.digitalocean.com/cbiglobal/content-service:${contentTag}");
+                                sh("cd cbigold/overlays/production && kustomize edit set image registry.digitalocean.com/cbiglobal/cron-service:${cronTag}");
                                 sh("cd cbigold/overlays/production && kustomize edit set image registry.digitalocean.com/cbiglobal/product-service:${productTag}");
                                 sh("cd cbigold/overlays/production && kustomize edit set image registry.digitalocean.com/cbiglobal/transaction-service:${transactionTag}");
                                 sh("cd cbigold/overlays/production && kustomize edit set image registry.digitalocean.com/cbiglobal/user-service:${userTag}");
@@ -220,6 +237,7 @@ pipeline {
                                 sh("cd cbigold/overlays/qa && kustomize edit set image registry.digitalocean.com/cbiglobal/buddy-service:${buddyTag}");
                                 sh("cd cbigold/overlays/qa && kustomize edit set image registry.digitalocean.com/cbiglobal/company-service:${companyTag}");
                                 sh("cd cbigold/overlays/qa && kustomize edit set image registry.digitalocean.com/cbiglobal/content-service:${contentTag}");
+                                sh("cd cbigold/overlays/qa && kustomize edit set image registry.digitalocean.com/cbiglobal/cron-service:${cronTag}");
                                 sh("cd cbigold/overlays/qa && kustomize edit set image registry.digitalocean.com/cbiglobal/product-service:${productTag}");
                                 sh("cd cbigold/overlays/qa && kustomize edit set image registry.digitalocean.com/cbiglobal/transaction-service:${transactionTag}");
                                 sh("cd cbigold/overlays/qa && kustomize edit set image registry.digitalocean.com/cbiglobal/user-service:${userTag}");
@@ -231,6 +249,7 @@ pipeline {
                                 sh("cd cbigold/overlays/staging && kustomize edit set image registry.digitalocean.com/cbiglobal/buddy-service:${buddyTag}");
                                 sh("cd cbigold/overlays/staging && kustomize edit set image registry.digitalocean.com/cbiglobal/company-service:${companyTag}");
                                 sh("cd cbigold/overlays/staging && kustomize edit set image registry.digitalocean.com/cbiglobal/content-service:${contentTag}");
+                                sh("cd cbigold/overlays/staging && kustomize edit set image registry.digitalocean.com/cbiglobal/cron-service:${cronTag}");
                                 sh("cd cbigold/overlays/staging && kustomize edit set image registry.digitalocean.com/cbiglobal/product-service:${productTag}");
                                 sh("cd cbigold/overlays/staging && kustomize edit set image registry.digitalocean.com/cbiglobal/transaction-service:${transactionTag}");
                                 sh("cd cbigold/overlays/staging && kustomize edit set image registry.digitalocean.com/cbiglobal/user-service:${userTag}");
