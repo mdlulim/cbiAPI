@@ -153,6 +153,29 @@ async function categories() {
     }
 }
 
+async function transactions(permakey, user_id) {
+    try {
+        const options = {
+            nest: true,
+            replacements: {},
+            type: sequelize.QueryTypes.SELECT,
+        };
+        const sql = `
+        SELECT "transaction"."txid", "transaction"."created", "transaction"."total_amount", "transaction"."fee", "transaction"."tx_type",
+            "transaction"."currency", "transaction"."metadata"->>'tokens'::text AS "tokens"
+        FROM user_products AS "user_product"
+        INNER JOIN products AS "product" ON "user_product"."product_id" = "product"."id"
+        INNER JOIN transactions AS "transaction" ON "user_product"."id"::text = "transaction"."metadata"->>'refid'::text
+        WHERE "product"."permakey" = '${permakey}' AND "transaction"."status" iLike 'Completed'
+            AND "user_product"."user_id" = '${user_id}'
+        ORDER BY "transaction"."created" DESC`;
+        return sequelize.query(sql, options);
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
 module.exports = {
     find,
     show,
@@ -162,4 +185,5 @@ module.exports = {
     products,
     categories,
     findByCode,
+    transactions,
 }

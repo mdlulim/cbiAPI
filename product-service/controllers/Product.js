@@ -171,6 +171,7 @@ async function subscribe(req, res){
                 metadata: {
                     entity: 'user_products',
                     refid: userProduct.id,
+                    tokens: data.tokens,
                 }
             });
 
@@ -433,6 +434,28 @@ async function categories(req, res) {
     }
 }
 
+async function transactions(req, res){
+    try {
+        const { permakey } = req.params;
+        const transactions = await productService.transactions(permakey, req.user.id);
+        return res.status(200).send({
+            success: true,
+            data: {
+                count: null,
+                next: null,
+                previous: null,
+                results: transactions,
+            }
+        });
+    } catch (err) {
+        console.log(err.message);
+        return res.status(500).send({
+            success: false,
+            message: 'Could not process your request'
+        });
+    }
+}
+
 module.exports = {
     index,
     overview,
@@ -441,4 +464,5 @@ module.exports = {
     products,
     categories,
     invest,
+    transactions,
 };
