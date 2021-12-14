@@ -5,6 +5,16 @@ const { Fee }  = require('../models/Fee');
 const { Account }  = require('../models/Account');
 Transaction.belongsTo(User, { foreignKey: 'user_id', targetKey: 'id' });
 
+async function showTransaction(data) {
+    try {
+        return Transaction.findOne({
+            where: { txid: data.txid },
+        });
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
 
 async function process(transaction) {
     try {
@@ -69,4 +79,5 @@ async function status(query) {
 module.exports = {
     process,
     status,
+    showTransaction
 }

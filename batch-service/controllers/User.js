@@ -4,6 +4,9 @@ const userService = require('../services/User');
 const csv = require('csv-parser')
 const fs = require('fs');
 const { fileURLToPath } = require('url');
+const path = require('path');
+const csvParser = require('csv-parser');
+var Readable = require('stream').Readable
 const results = [];
 
 async function process(req, res) {
@@ -15,39 +18,32 @@ async function process(req, res) {
             url: req.body.url,
             crossdomain: true,
         })
-
-
-        fs.createReadStream(new Blob(file)).pipe(csv()).on('data', (data) => results.push(data)).on('end', () => {
-            
-            // results.forEach(function(transaction) {
-            //     //var tableName = table.name;
-            //     //console.log(tableName);
-            // });
-
-
-                console.log(results);
+        var s = new Readable()
+        s.push(file.data)
+        s.push(null)
+        /**
+        *convert the file to json object
+        */
+        s.pipe(csv()).on('data', (data) => results.push(data)).on('end', () => {
+            results.forEach(function(transact) {
+                const transaction = userService.showTransaction({txid: transact.txid});
+                userService.process(transaction).then(data => {
+                    console.log(data)
+                });
             });
-
-        console.log("got file ")
-
-
-        //convert the file to json object
-
-
+            console.log(results);
+        });
+        console.log(results, "+++++++++++++++++++")
         //update transactions on db
         // await userService.process(data);
-
         /**
          * send email notification status
          */
-
-
         /**
          * return result to caller
          */
         // return res.status(200).send({ success: true });
         return res.send({ file: "9usdf" })
-
     } catch (err) {
         console.log(err);
         if (err.name === 'SequelizeUniqueConstraintError') {
@@ -81,8 +77,6 @@ async function status(req, res) {
         });
     }
 }
-
-
 module.exports = {
     process,
     status,
