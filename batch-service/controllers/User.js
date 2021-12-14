@@ -4,6 +4,9 @@ const userService = require('../services/User');
 const csv = require('csv-parser')
 const fs = require('fs');
 const { fileURLToPath } = require('url');
+const path = require('path');
+const csvParser = require('csv-parser');
+var Readable = require('stream').Readable
 const results = [];
 
 async function process(req, res) {
@@ -16,18 +19,21 @@ async function process(req, res) {
             crossdomain: true,
         })
 
+        var s = new Readable()
+        s.push(file.data)
+        s.push(null)
 
-        fs.createReadStream(new Blob(file))
-            .pipe(csv())
-            .on('data', (data) => results.push(data))
-            .on('end', () => {
-                console.log(results);
-            });
+        
+        /**
+        *convert the file to json object
+        */
+        s.pipe(csv())
+        .on('data', (data) => results.push(data))
+        .on('end', () => {
+            console.log(results);
+        });
 
-        console.log("got file ")
-
-
-        //convert the file to json object
+        console.log(results, "+++++++++++++++++++")
 
 
         //update transactions on db
