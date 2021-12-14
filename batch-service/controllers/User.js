@@ -17,10 +17,14 @@ async function process(req, res) {
         })
 
 
-        fs.createReadStream(new Blob(file))
-            .pipe(csv())
-            .on('data', (data) => results.push(data))
-            .on('end', () => {
+        fs.createReadStream(new Blob(file)).pipe(csv()).on('data', (data) => results.push(data)).on('end', () => {
+            
+            // results.forEach(function(transaction) {
+            //     //var tableName = table.name;
+            //     //console.log(tableName);
+            // });
+
+
                 console.log(results);
             });
 
