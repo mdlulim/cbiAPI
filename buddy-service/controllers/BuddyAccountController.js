@@ -14,8 +14,8 @@ async function lookupbalance(req, res) {
 
 async function lookupaccount(req, res) {
     try {
-        const allBuddyAccounts = await buddyAccountService.index();
-        res.send(allBuddyAccounts);
+        const account = await buddyAccountService.lookupaccount();
+        res.send(account)
     } catch (err) {
         return res.status(500).send({
             success: false,
@@ -38,8 +38,8 @@ async function lookuptransactions(req, res) {
 
 async function eventtransfer(req, res) {
     try {
-        const allBuddyAccounts = await buddyAccountService.index();
-        res.send(allBuddyAccounts);
+        const transfer = await buddyAccountService.eventtransfer();
+        res.send(transfer);
     } catch (err) {
         return res.status(500).send({
             success: false,

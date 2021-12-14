@@ -23,7 +23,8 @@ async function lookupbalance() {
                         "type": "CRYPTO",
                         "currency": "CBI",
                         "balance": data.balance
-                }
+                },
+                message: 'ok'
             }
         }
     } catch (error) {
@@ -33,14 +34,22 @@ async function lookupbalance() {
 }
 
 async function lookupaccount() {
-    try {
-        const allbuddyAccounts = await Buddy.findAll();
+    try {    
         return {
             code: 200,
-            status: 'OK',
+            success: true,
             data: {
-                allbuddyAccounts
-            }
+                entity: 'BUDDY',
+                path: 'account',
+                env: 'staging',
+                version: '1.0.0',
+                timestamp: "2021-12-13T16:34:01.864572Z",
+                data: {
+                    account: '90000266',
+                    active: true
+                }
+            },
+            message: 'OK'
         }
     } catch (error) {
         console.error(error.message || null);
@@ -66,15 +75,29 @@ async function lookuptransactions() {
 
 async function eventtransfer() {
     try {
-        const allbuddyAccounts = await Buddy.findAll();
         return {
             code: 200,
-            status: 'OK',
+            success: true,
             data: {
-                allbuddyAccounts
-            }
+                entity: 'BUDDY',
+                path: 'transfer',
+                env: 'staging',
+                version: '1.0.0',
+                timestamp: Date.now(),
+                data: {
+                    id: 5,
+                    status: 'COMPLETED',
+                    reference: 'SUCCEED',
+                    created_at: '2021-10-14T12:25:25.000000Z',
+                    debit_completed: 1,
+                    credit_completed: 0,
+                    message: '4 CBI voucher issued from Buddy to 90000266. Reference: ABC4'
+                }
+            },
+            message: 'Successful Transaction'  
         }
     } catch (error) {
+        console.log('test')
         console.error(error.message || null);
         throw new Error('Could not process your request');
     }

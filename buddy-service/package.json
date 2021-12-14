@@ -29,6 +29,7 @@
     "sendmail": "^1.6.1",
     "sequelize": "^4.44.3",
     "sequelize-values": "^1.1.0",
+    "swagger-ui-express": "^4.2.0",
     "uuidv4": "^6.0.0"
   }
 }
