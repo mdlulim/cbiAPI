@@ -321,6 +321,13 @@ module.exports.set = app => {
     */
     app.put('/transactions/:id', authMiddleware.checkAuth, userController.updateTransaction);
 
+     /**
+     * Process Batch Transactions.
+     * 
+     * Process Batch Transactions.
+     */
+    app.post('/transactions/batch', authMiddleware.checkAuth, transactionController.batchProcessTransaction);
+
     /**
      * List Currencies
      * 
