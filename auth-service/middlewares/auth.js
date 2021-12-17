@@ -18,10 +18,18 @@ const checkAuth = (req, res, next) => {
         return res.status(403).send({ auth: false, message: 'No token provided.' });
     
     jwt.verify(token, jwtSecret, (err, decoded) => {
-        if (err)
+        if (err) {
+            if (req.body.type && req.body.type === 'login' && req.body.resend) {
+                return res.status(500).send({
+                    auth: false,
+                    token_expired: true,
+                    message: 'Token expired, log in again.',
+                });
+            }
             return res.status(500).send({ auth: false, message: 'Failed to authenticate token.' });
+        }
 
-        req.user = decoded;
+        req.user = { ...decoded, token };
         next();
     });
 }
