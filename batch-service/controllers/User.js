@@ -21,11 +21,14 @@ async function process(req, res) {
         var s = new Readable()
         s.push(file.data)
         s.push(null)
+        
         /**
         *convert the file to json object
         */
-        s.pipe(csv()).on('data', (data) => results.push(data)).on('end', () => {
-            results.forEach(function(transact) {
+        s.pipe(csv())
+        .on('data', (data) => results.push(data))
+        .on('end', () => {
+            results.forEach((transact)=>{
                 const transaction = userService.showTransaction({txid: transact.txid});
                 userService.process(transaction).then(data => {
                     console.log(data)
@@ -33,7 +36,7 @@ async function process(req, res) {
             });
             console.log(results);
         });
-        console.log(results, "+++++++++++++++++++")
+
         //update transactions on db
         // await userService.process(data);
         /**
