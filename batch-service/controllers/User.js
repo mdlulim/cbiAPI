@@ -28,6 +28,7 @@ async function process(req, res) {
         var s = new Readable()
         s.push(file.data)
         s.push(null)
+        
         /**
         *convert the file to json object
         */

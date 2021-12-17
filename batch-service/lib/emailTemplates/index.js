@@ -2,49 +2,12 @@ const config = require('../../config');
 const { baseurl } = config;
 const { frontend } = baseurl;
 
-const newUser = data => {
+const batchEmail = data => {
     const {
-        email,
-        password,
-        first_name,
-    } = data;
+        status,
+        filename,
+        time
 
-    const html = `
-        <p>Hi ${first_name},</p>
-        <p>
-            You have been added to CBI as a user. Please use the details below 
-            to log in.<br /><br />
-            <strong>Credentials:</strong><br />
-            Email: <strong>${email}</strong><br />
-            Temporary Password: <strong>${password}</strong><br />
-        <p>
-        <p><strong>Remember to immediately change the password to your own after logging in.</strong></p>
-        <p>If this request wasn't made by you, contact support urgently.</p>
-        <p style="padding-top:15px"><strong>Regards</strong>,<br />CBI Support</p>
-    `;
-    const text = `
-        Hi ${first_name}, 
-        You have been added to CBI as a user. Please use the details below to log in. 
-        Credentials: 
-        Email: ${email}. 
-        Temporary Password: ${password}. 
-        Remember to immediately change the password to your own after logging in.
-        If this request wasn't made by you, contact support urgently. 
-        Regards, CBI Support
-    `;
-    return {
-        html,
-        text
-    }
-
-
-};
-
-const kycNotification = data => {
-    const {
-        first_name,
-        remaining,
-        level
     } = data;
     const html = `
     <!DOCTYPE html>
@@ -72,18 +35,30 @@ const kycNotification = data => {
                 </div>
                 <!-- Email topic -->
                 <p style="line-height: 2; text-align: center;">
-                    Hi ${first_name}, </br />
                 </p>
-                <h2 style="text-align: center;">KYC Application</h2>
+                <h2 style="text-align: center;">Batch Processing {status}</h2>
             </div>
             <div style="margin: 0 5%; border-bottom: 1px solid grey;">
                 <!-- Email body -->
                 <div >
                     <p>
-                        ${(level+'' ==='-1')? 'You have not qualified for any KYC Level<br/>' : 'You have qualified for KYC level <strong>'+level+'<strong>.<br/>'}
-                        ${(level+'' !=='3')? 'Review the comments and re-upload:': ''}
+                        ${status==='successful'?filename + ' has succefully completed.': filename + ' has failed, below are the processing details.'}
                     <p>
-                    ${(level+'' !=='3')? remaining: ''}
+                    <table>
+                        <tr>
+                            <td>Filename:</td>
+                            <td>$(filename)</td>
+                        </tr>
+                        <tr>
+                            <td>Time:</td>
+                            <td>${time}</td>
+                        </tr>
+                        <tr>
+                            <td>Status:</td>
+                            <td>${status}</td>
+                        </tr>
+                    </table>
+                   
                     <p style="padding-top:50px"><strong>Cheers</strong>,<br />CBI Support</p>
                 </div>
     
@@ -101,9 +76,8 @@ const kycNotification = data => {
     </html>
     `;
     const text = `
-        Hi ${first_name}, 
-        ${(level+'' ==='-1')? 'You have not qualified for any KYC Level' : 'You have qualified for KYC level <strong>'+level+'<strong>.<br/>'}
-        ${(level+'' !=='3')? 'Please re-upload the rejected documents': ''} 
+        Hi Support, 
+        ${status==='successful'?filename + ' has succefully completed.': filename + ' has failed, below are the processing details.'}
         Cheers, CBI Support
     `;
     return {
@@ -113,6 +87,5 @@ const kycNotification = data => {
 };
 
 module.exports = {
-    newUser,
-    kycNotification
+    batchEmail,
 };
