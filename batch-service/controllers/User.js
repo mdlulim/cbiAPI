@@ -13,7 +13,7 @@ const results = [];
 async function process(req, res) {
     try {
         const fileStatus = await batchTransaction.showFile(req.body.id);
-        console.log(fileStatus.dataValues)
+        console.log(req)
         // if(fileStatus.dataValues.file_status === 'Completed'){
         //     return res.send({ success: false, message:'This file has already been processed' })
         // }
@@ -45,7 +45,31 @@ async function process(req, res) {
                     status: transact.STATUS
                   }
                    userService.process(data).then(res => {
-                       console.log(res)
+                       if(res.data && res.data.first_name){
+                         console.log(res.data)
+                         // send email to recipient
+                         emailHandler.transactionNotification({
+                            first_name  : data.first_name,
+                            email       : data.email,
+                            status      : data.status,
+                            amount      : data.amount,
+                            reference   : data.reference,
+                            currency_code       : data.currency_code,
+                            sender: `${req.user.first_name} ${req.user.last_name} (${req.user.referral_id})`,
+                        }).then((response) =>{
+                            console.log(response)
+                        });
+
+                     activityService.addActivity({
+                            user_id: req.user.id,
+                            action: `${req.user.group_name}.transactions.${data.data.tx_type}.${data.data.subtype}`,
+                            section: 'Transactions',
+                            subsection: getSubsection(data.data),
+                            description: `${data.data.first_name} ${data.data.status}  a ${data.data.subtype} of ${data.data.amount} ${data.data.currency_code}`,
+                            ip: null,
+                            data,
+                        })
+                       }
                   });
                   if(count-1 === index){
                       const data = {status: 'Completed'};
