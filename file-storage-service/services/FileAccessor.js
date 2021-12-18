@@ -1,5 +1,6 @@
 // Load dependencies
 const aws = require('aws-sdk');
+const { BatchTransactions } = require('../models/BatchTransactions');
 
 const { digitalocean } = require('../config');
 const { settings } = digitalocean;
@@ -28,6 +29,17 @@ async function getUrl(Key) {
     }
 }
 
+
+async function getBatchFiles() {
+    try {
+        return BatchTransactions.findAll({})
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process request');
+    }
+}
+
 module.exports = {
     getUrl,
+    getBatchFiles
 }

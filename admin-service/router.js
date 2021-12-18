@@ -11,7 +11,9 @@ const buddyAPIController = require('./controllers/BuddyAPIController');
 const buddyAccountController = require('./controllers/BuddyAccountController');
 const pagePermissionController = require('./controllers/PagePermission');
 const feeController = require('./controllers/Fee');
+const settingController = require('./controllers/Setting');
 const authMiddleware = require('./middlewares/auth');
+const companyController = require('./controllers/Company');
 
 
 module.exports.set = app => {
@@ -321,6 +323,13 @@ module.exports.set = app => {
     */
     app.put('/transactions/:id', authMiddleware.checkAuth, userController.updateTransaction);
 
+     /**
+     * Process Batch Transactions.
+     * 
+     * Process Batch Transactions.
+     */
+    app.post('/transactions/batch', authMiddleware.checkAuth, transactionController.batchProcessTransaction);
+
     /**
      * List Currencies
      * 
@@ -377,6 +386,40 @@ module.exports.set = app => {
      */
     app.put('/fees/:id', authMiddleware.checkAuth, feeController.update);
 
+       /**
+     * Create Setting
+     * 
+     * Create a setting.
+     */
+    app.post('/settings', authMiddleware.checkAuth, settingController.create);
+
+    /**
+     * List Setting
+     * 
+     * Get a list of settings belonging to CBI.
+     */
+    app.get('/settings', authMiddleware.checkAuth, settingController.index);
+
+    /**
+     * Retrieve Settings
+     * 
+     * Retrieve a company’s settings (profile).
+     */
+    app.get('/settings/:id', authMiddleware.checkAuth, settingController.show);
+
+    /**
+     * Update User
+     * 
+     * Update user details.
+     */
+    app.put('/settings/:id', authMiddleware.checkAuth, settingController.update);
+
+    /**
+     * List Companies
+     * 
+     * Get a list of Companies belonging to CBI.
+     */
+    app.get('/companies', authMiddleware.checkAuth, companyController.getCompanies);
     /**
      * List Countries
      * 

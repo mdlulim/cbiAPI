@@ -1,22 +1,20 @@
 const Sequelize = require('sequelize');
 const sequelize = require('../config/db');
 
-const Setting = sequelize.define('setting', {
+const BatchTransactions = sequelize.define('batch_transactions', {
     id: {
         type: Sequelize.UUID,
         defaultValue: Sequelize.UUIDV4,
         primaryKey: true,
     },
-    company_id: Sequelize.UUID,
-    category: Sequelize.STRING,
-    title: Sequelize.STRING,
-    subcategory: Sequelize.STRING,
-    key: Sequelize.STRING,
-    value: Sequelize.STRING,
+    file_name: Sequelize.STRING,
+    file_url: Sequelize.STRING,
+    file_status: Sequelize.STRING,
+    file_type: Sequelize.STRING,
 }, {
     timestamps: false
 });
 
 module.exports = {
-    Setting,
+    BatchTransactions,
 }

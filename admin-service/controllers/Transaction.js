@@ -4,6 +4,7 @@ const currencyService = require('../services/Currency');
 const userService = require('../services/User');
 const emailHandler = require('../helpers/emailHandler');
 const { decrypt } = require('../utils');
+var Readable = require('stream').Readable
 
 const getSubsection = (data) => {
     const {
@@ -198,11 +199,66 @@ async function allTransactions(req, res){
     }
 };
 
+async function batchProcessTransaction(req, res) {
+    try {
+        //get the file from S3 bucket
+        const file = await axios({
+            mode: 'no-cors',
+            method: 'GET',
+            url: req.body.url,
+            crossdomain: true,
+        })
+
+        var s = new Readable()
+        s.push(file.data)
+        s.push(null)
+
+        /**
+        *convert the file to json object
+        */
+        s.pipe(csv()).on('data', (data) => results.push(data)).on('end', () => {
+            console.log(results);
+        });
+
+        console.log(results, "+++++++++++++++++++")
+
+
+        //update transactions on db
+        // await userService.process(data);
+
+        /**
+         * send email notification status
+         */
+
+
+        /**
+         * return result to caller
+         */
+        // return res.status(200).send({ success: true });
+        return res.send({ file: "9usdf" })
+
+    } catch (err) {
+        console.log(err);
+        if (err.name === 'SequelizeUniqueConstraintError') {
+            console.log(err.errors[0].ValidationErrorItem);
+            return res.status(403).send({
+                success: false,
+                message: `Validation error.`
+            });
+        }
+        return res.send({
+            success: false,
+            message: 'Could not process request'
+        });
+    }
+}
+
 module.exports = {
     index,
     debitCreditUserAccount,
     show,
     allTransactions,
     getProofOfPayment,
+    batchProcessTransaction
 
 };

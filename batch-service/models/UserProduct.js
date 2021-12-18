@@ -1,22 +1,20 @@
 const Sequelize = require('sequelize');
 const sequelize = require('../config/db');
 
-const Setting = sequelize.define('setting', {
+const UserProduct = sequelize.define('user_product', {
     id: {
         type: Sequelize.UUID,
         defaultValue: Sequelize.UUIDV4,
         primaryKey: true,
     },
-    company_id: Sequelize.UUID,
-    category: Sequelize.STRING,
-    title: Sequelize.STRING,
-    subcategory: Sequelize.STRING,
-    key: Sequelize.STRING,
-    value: Sequelize.STRING,
+	user_id: Sequelize.UUID,
+	product_id: Sequelize.UUID,
+    created: Sequelize.DATE,
+	status: Sequelize.STRING,
 }, {
     timestamps: false
 });
 
 module.exports = {
-    Setting,
+    UserProduct,
 }

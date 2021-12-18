@@ -1,22 +1,24 @@
 const Sequelize = require('sequelize');
 const sequelize = require('../config/db');
 
-const Setting = sequelize.define('setting', {
+const Document = sequelize.define('document', {
     id: {
         type: Sequelize.UUID,
         defaultValue: Sequelize.UUIDV4,
         primaryKey: true,
     },
-    company_id: Sequelize.UUID,
+	user_id: Sequelize.UUID,
+    file: Sequelize.STRING,
     category: Sequelize.STRING,
-    title: Sequelize.STRING,
-    subcategory: Sequelize.STRING,
-    key: Sequelize.STRING,
-    value: Sequelize.STRING,
+    type: Sequelize.STRING,
+    note: Sequelize.STRING,
+    metadata: Sequelize.JSONB,
+    created: Sequelize.DATE,
+	status: Sequelize.STRING,
 }, {
     timestamps: false
 });
 
 module.exports = {
-    Setting,
+    Document,
 }

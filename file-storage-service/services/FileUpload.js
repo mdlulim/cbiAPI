@@ -2,6 +2,8 @@
 const aws = require('aws-sdk');
 const multer = require('multer');
 const multerS3 = require('multer-s3');
+const batchService = require('../services/Batch');
+
 
 const documentService = require('../services/Document');
 const userService = require('../services/User');
@@ -51,7 +53,6 @@ async function uploader(request, response, next) {
     try {
         return upload(request, response, function (error) {
             if (error) {
-                console.log('test')
                 console.log(error);
                 return response.status(403).send({
                     success: false,
@@ -79,6 +80,49 @@ async function uploader(request, response, next) {
     }
 }
 
+async function batch_uploader(request, response, next) {
+    try {
+        return upload(request, response, async function (error) {
+            if (error) {
+                console.log(error);
+                return response.status(403).send({
+                    success: false,
+                    message: error.message || 'error'
+                });
+            }
+            const data = {
+                success: true,
+                message: 'File uploaded successfully.',
+            };
+            if (request.query.filename) {
+                const { category, type } = request.params;
+                const { user } = request;
+                data.filename = `${category}/${type}/${user.id}/${request.query.filename}`;
+            }
+
+            /**
+            * if file successfully uploaded update db
+            */
+            const db_res = await batchService.create({
+                file_name: request.query.filename,
+                file_url: data.filename,
+                file_type: request.params.type
+            })
+
+            
+            return response.status(200).send(data);
+        });
+    } catch (error) {
+        console.log('test')
+        console.log(error.message || null)
+        return res.status(500).send({
+            success: false,
+            message: 'Could not process request'
+        });
+    }
+}
+
 module.exports = {
     uploader,
+    batch_uploader,
 }
