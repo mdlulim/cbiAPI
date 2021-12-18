@@ -14,9 +14,9 @@ async function process(req, res) {
     try {
         const fileStatus = await batchTransaction.showFile(req.body.id);
         console.log(fileStatus.dataValues)
-        if(fileStatus.dataValues.file_status === 'Completed'){
-            return res.send({ success: false, message:'This file has already been processed' })
-        }
+        // if(fileStatus.dataValues.file_status === 'Completed'){
+        //     return res.send({ success: false, message:'This file has already been processed' })
+        // }
         let count =0
         //get the file from S3 bucket
         const file = await axios({

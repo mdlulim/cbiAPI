@@ -13,6 +13,16 @@ async function bulkStatus(data) {
     return sendMail(from, email, 'CBI - Batch Processing', template);
 };
 
+async function transactionNotification(data) {
+    const { email } = data;
+    const template = emailTemplates.transactionNotification(data);
+    const from = {
+        name: 'CBI',
+        email: smtp.auth.user,
+    };
+    return sendMail(from, email, 'CBI - Transaction Notification', template);
+};
+
 
 module.exports = {
     bulkStatus,
