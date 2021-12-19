@@ -16,4 +16,13 @@ module.exports.set = app => {
      * Updates user records on db with data from batch file
      */
     app.post('/status', authMiddleware.checkAuth, userController.status);
+
+    /**
+     * This sets transactions included in csv file to stautus 'In Progress' 
+     * 
+     * Updates user records on db with data from batch file
+     */
+     app.post('/set-status', authMiddleware.checkAuth, userController.updateTransaction);
+
+
 };

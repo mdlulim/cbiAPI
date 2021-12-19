@@ -95,7 +95,38 @@ async function status(req, res) {
         });
     }
 }
+
+async function updateTransaction(req, res) {
+    try {
+        return userService.updateTransaction(req.body)
+            .then(data => res.send(data))
+            .catch(err => {
+                res.send({
+                    success: false,
+                    message: err.message,
+                });
+            });
+       
+        // return res.status(200).send({ success: true });
+       
+    } catch (err) {
+        console.log(err);
+        if (err.name === 'SequelizeUniqueConstraintError') {
+            console.log(err.errors[0].ValidationErrorItem);
+            return res.status(403).send({
+                success: false,
+                message: `Validation error.`
+            });
+        }
+        return res.send({
+            success: false,
+            message: 'Could not process request'
+        });
+    }
+}
+
 module.exports = {
     process,
     status,
+    updateTransaction
 }
