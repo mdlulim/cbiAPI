@@ -1,9 +1,9 @@
 const sequelize = require('../config/db');
 const { User } = require('../models/User');
-const { Transaction }  = require('../models/Transaction');
-const { Fee }  = require('../models/Fee');
-const { BatchTransaction }  = require('../models/BatchTransaction');
-const { Account }  = require('../models/Account');
+const { Transaction } = require('../models/Transaction');
+const { Fee } = require('../models/Fee');
+const { BatchTransaction } = require('../models/BatchTransaction');
+const { Account } = require('../models/Account');
 Transaction.belongsTo(User, { foreignKey: 'user_id', targetKey: 'id' });
 
 async function showTransaction(data) {
@@ -83,7 +83,7 @@ async function process(data) {
     }
 }
 
-async function updateBatchStatus(id, data){
+async function updateBatchStatus(id, data) {
     try {
         await BatchTransaction.update({
             file_status: data.status,
@@ -95,6 +95,28 @@ async function updateBatchStatus(id, data){
         throw new Error('Could not process your request');
     }
 }
+
+/**
+ * Sets transaction state
+  */
+async function updateTransaction(data) {
+    try {
+        const result = await sequelize.transaction(async (t) => {
+            data.forEach(async(row) => {
+                console.log(row)
+                await Transaction.update({
+                    status: row.status,
+                }, { where: { txid: row.txid }, transaction: t });
+            })
+        })
+        
+        return { success: true, message: 'Successfully modified' };
+    } catch (error) {
+        //console.error(error || null);
+        throw new Error('Could not process your request');
+    }
+}
+
 
 /**
  * List Users
@@ -126,5 +148,6 @@ module.exports = {
     process,
     status,
     showTransaction,
-    updateBatchStatus
+    updateBatchStatus,
+    updateTransaction,
 }
