@@ -415,6 +415,13 @@ module.exports.set = app => {
     app.put('/settings/:id', authMiddleware.checkAuth, settingController.update);
 
     /**
+     * Delete Setting
+     * 
+     * Delete Setting details.
+     */
+    app.delete("/settings/:id", authMiddleware.checkAuth, settingController.destroy);
+
+    /**
      * List Companies
      * 
      * Get a list of Companies belonging to CBI.

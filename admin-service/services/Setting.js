@@ -113,6 +113,15 @@ async function update(id, data) {
     }
 }
 
+async function destroy(id) {
+    try {
+        return Setting.destroy({ where: { id } });
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
 async function findByKey(key) {
     try {
         //console.log(key)
@@ -130,5 +139,6 @@ module.exports = {
     index,
     show,
     update,
-    findByKey
+    findByKey,
+    destroy
 }

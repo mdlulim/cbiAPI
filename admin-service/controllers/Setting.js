@@ -99,11 +99,28 @@ async function update(req, res) {
     }
 }
 
-
+async function destroy(req, res) {
+    try {
+        return settingService.destroy(req.params.id)
+        .then(() => res.send({ success: true }))
+        .catch(err => {
+            res.send({
+                success: false,
+                message: err.message,
+            });
+        });
+    } catch (error) {
+        return res.send({
+            success: false,
+            message: 'Could not process request'
+        });
+    }
+}
 
 module.exports = {
     create,
     index,
     show,
     update,
+    destroy
 }
