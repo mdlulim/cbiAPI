@@ -9,6 +9,7 @@ const Setting = sequelize.define('setting', {
     },
     company_id: Sequelize.UUID,
     category: Sequelize.STRING,
+    title: Sequelize.STRING,
     subcategory: Sequelize.STRING,
     key: Sequelize.STRING,
     value: Sequelize.STRING,

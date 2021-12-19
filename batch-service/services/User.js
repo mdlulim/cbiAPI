@@ -29,38 +29,54 @@ async function showFile(data) {
 }
 
 async function process(data) {
+  
     try {
-        if (data.subtype.toLowerCase() === "withdrawal") {
-            const user = await User.findOne({ where: { referral_id: data.referral_id } });
-            const userAccount = await Account.findOne({ where: { user_id: user.id } });
-            const transaction = await Transaction.findOne({ where: { txid: data.txid } });
-            const fee = await Fee.findOne({ where: { subtype: data.subtype.charAt(0).toUpperCase() + data.subtype.slice(1).toLowerCase(), group_id: user.dataValues.group_id } });
-            const withdrawalAmount = parseFloat(data.amount) + parseFloat(fee.dataValues.value)
+            if(data.subtype.toLowerCase() === "withdrawal"){
+                let myData = {}
+                const user =  await User.findOne({where : {referral_id: data.referral_id}});
+                const userAccount =  await Account.findOne({where : {user_id: user.id}});
+                const transaction =  await Transaction.findOne({where : {txid: data.txid}});
+                const fee =  await Fee.findOne({where : {subtype: data.subtype.charAt(0).toUpperCase() + data.subtype.slice(1).toLowerCase(), group_id: user.dataValues.group_id} });
+                const withdrawalAmount = parseFloat(data.amount)+parseFloat(fee.dataValues.value)
+//console.log(transaction)
+                if(parseFloat(data.status) === 0){
+                    const myData = {status: 'Completed'}
+                    if(transaction.dataValues.status != 'Completed'){
+                         myData = {
+                            first_name: user.first_name,
+                            email: user.email,
+                            amount: data.amount,
+                            currency_code: transaction.dataValues.currency.code,
+                            reference: data.txid
+                        }
+                        await Transaction.update(myData, {
+                            where: { txid: data.txid }
+                        });
+                    }
+                   
 
-            if (parseFloat(data.status) === 0) {
-                const myData = { status: 'Completed' }
-                if (transaction.dataValues.status != 'Completed') {
-                    await Transaction.update(myData, {
-                        where: { txid: data.txid }
-                    });
+                }else{
+                    //reject transaction
+                    //in progress
+                    let credit = {available_balance: parseFloat(userAccount.available_balance)+withdrawalAmount};
+                    let condition = {id: userAccount.id}
+                    if(transaction.dataValues.status != 'Completed'){
+                         myData = {
+                            first_name: user.first_name,
+                            email: user.email,
+                            amount: data.amount,
+                            currency_code: transaction.dataValues.currency.code,
+                            reference: data.txid
+                        }
+                        Account.update( credit, {where: condition})
+                        const myData = {status: 'Rejected'}
+                        await Transaction.update(myData, {
+                            where: { txid: data.txid }
+                        });
+                    }
                 }
-
-
-            } else {
-                //reject transaction
-                //in progress
-                let credit = { available_balance: parseFloat(userAccount.available_balance) + withdrawalAmount };
-                let condition = { id: userAccount.id }
-                if (transaction.dataValues.status != 'Completed') {
-                    Account.update(credit, { where: condition })
-                    const myData = { status: 'Rejected' }
-                    await Transaction.update(myData, {
-                        where: { txid: data.txid }
-                    });
-                }
+                return { success: true, message: 'Transaction was successfully modify', data: myData };
             }
-        }
-        return { success: true, message: 'Transaction was successfully modify' };
     } catch (error) {
         console.error(error || null);
         throw new Error('Could not process your request');
