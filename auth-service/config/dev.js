@@ -1,5 +1,5 @@
 config = {
-    port: process.env.PORT || 8080,
+    port: process.env.NODE_ENV ? 8080 : 8082,
     dbConnectionString: 'postgresql://doadmin:bMs2X9InUxyC9DTG@db-postgresql-ams3-49623-do-user-7844381-0.b.db.ondigitalocean.com:25060/defaultdb?sslmode=require',
     saltRounds: 2,
     jwtSecret: 'BbZJjyoXAdr8BUZuiKKARWimKfrSmQ6fv8kZ7OFfc',

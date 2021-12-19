@@ -1,4 +1,4 @@
-const Companies = require('../models/company').Company;
+const Companies = require('../models/Company').Company;
 
 const addCompany = company => Companies.create(company);
 
