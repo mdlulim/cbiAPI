@@ -12,6 +12,15 @@ async function lookupbalance(req, res) {
     }
 }
 
+/**
+ * @swagger
+ * /account:
+ * get:
+ *   description: Use to see if user has a valid wallet account
+ *   responses:
+ *     '200':
+ *       description: A successful response
+ */
 async function lookupaccount(req, res) {
     try {
         const account = await buddyAccountService.lookupaccount(req.body.identifier);
