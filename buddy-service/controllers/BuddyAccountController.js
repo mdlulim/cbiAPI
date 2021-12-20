@@ -14,7 +14,7 @@ async function lookupbalance(req, res) {
 
 async function lookupaccount(req, res) {
     try {
-        const account = await buddyAccountService.lookupaccount(req.body.reference);
+        const account = await buddyAccountService.lookupaccount(req.body.identifier);
         res.send(account)
     } catch (err) {
         return res.status(500).send({
