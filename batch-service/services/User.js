@@ -32,7 +32,7 @@ async function process(data) {
   
     try {
             if(data.subtype.toLowerCase() === "withdrawal"){
-                let myData = {}
+                let resData = {}
                 const user =  await User.findOne({where : {referral_id: data.referral_id}});
                 const userAccount =  await Account.findOne({where : {user_id: user.id}});
                 const transaction =  await Transaction.findOne({where : {txid: data.txid}});
@@ -42,9 +42,10 @@ async function process(data) {
                 if(parseFloat(data.status) === 0){
                     const myData = {status: 'Completed'}
                     if(transaction.dataValues.status != 'Completed'){
-                         myData = {
+                        resData = {
                             first_name: user.first_name,
                             email: user.email,
+                            status: data.status,
                             amount: data.amount,
                             currency_code: transaction.dataValues.currency.code,
                             reference: data.txid
@@ -61,9 +62,10 @@ async function process(data) {
                     let credit = {available_balance: parseFloat(userAccount.available_balance)+withdrawalAmount};
                     let condition = {id: userAccount.id}
                     if(transaction.dataValues.status != 'Completed'){
-                         myData = {
+                        resData = {
                             first_name: user.first_name,
                             email: user.email,
+                            status: data.status,
                             amount: data.amount,
                             currency_code: transaction.dataValues.currency.code,
                             reference: data.txid
@@ -75,7 +77,7 @@ async function process(data) {
                         });
                     }
                 }
-                return { success: true, message: 'Transaction was successfully modify', data: myData };
+                return { success: true, message: 'Transaction was successfully modify', data: resData };
             }
     } catch (error) {
         console.error(error || null);

@@ -508,9 +508,7 @@ async function updateBankAccounts(req, res){
 async function approveDeposit(req, res){
     try {
         return userService.approveDeposit(req.params.id, req.body).then(async (data) => {
-            console.log(data)
             if(data.success){
-               console.log(data)
                 //send email to recipient
                 await emailHandler.approveMembership({
                     first_name  : data.data.user.first_name,

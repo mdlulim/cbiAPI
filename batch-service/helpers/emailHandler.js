@@ -26,4 +26,5 @@ async function transactionNotification(data) {
 
 module.exports = {
     bulkStatus,
+    transactionNotification
 };
