@@ -23,7 +23,7 @@ const swaggerOptions = {
         info: {
             version: "1.0.0",
             title: "admin-service API",
-            description: "This is a REST API application made with Express. It retrieves Buddy information related to CBI.",
+            description: "This is a REST API application made with Express. It retrieves admin service information related to CBI.",
             contact: {
                 name: 'API Support',
                 url: 'https://cbiglobal.io',
