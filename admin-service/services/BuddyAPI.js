@@ -3,7 +3,7 @@ const axios = require('axios');
 const { Account } = require('../models/Account');
 const { Buddy } = require('../models/Buddy');
 const { customAlphabet } = require('nanoid');
-const { buddyTransaction } = require('../models/BuddyTransction');
+const { buddyTransaction } = require('../models/BuddyTransaction');
 
 async function lookupBalance() {
     try {
