@@ -19,34 +19,35 @@ const router = require('./router');
 // Extended: https://swagger.io/specification/#infoObject
 const swaggerOptions = {
     swaggerDefinition: {
-      info: {
-        version: "1.0.0",
-        title: "admin-service API",
-        description: "This is a REST API application made with Express. It retrieves Buddy information related to CBI.",
-        contact: {
-            name: 'API Support',
-            url: 'https://cbiglobal.io',
-            email: 'support@cbiglobal.io'
-        },
-        servers: [
-            {
-                url: 'http://dev.cbiglobal.io/v1/admin',
-                description: 'Development server',
+        openapi: '3.0.0',
+        info: {
+            version: "1.0.0",
+            title: "admin-service API",
+            description: "This is a REST API application made with Express. It retrieves Buddy information related to CBI.",
+            contact: {
+                name: 'API Support',
+                url: 'https://cbiglobal.io',
+                email: 'support@cbiglobal.io'
             },
-            {
-                url: 'http://dev.qa.cbiglobal.io/v1/admin',
-                description: 'QA server',
-            },
-            {
-                url: 'http://dev.release.cbiglobal.io/v1/admin',
-                description: 'Staging server',
-            },
-            {
-                url: 'http://api.cbiglobal.io/v1/admin',
-                description: 'Production server',
-            },
-        ]
-      }
+            servers: [
+                {
+                    url: 'http://dev.cbiglobal.io/v1/admin',
+                    description: 'Development server',
+                },
+                {
+                    url: 'http://dev.qa.cbiglobal.io/v1/admin',
+                    description: 'QA server',
+                },
+                {
+                    url: 'http://dev.release.cbiglobal.io/v1/admin',
+                    description: 'Staging server',
+                },
+                {
+                    url: 'http://api.cbiglobal.io/v1/admin',
+                    description: 'Production server',
+                },
+            ]
+        }
     },
     apis: ["router.js"]
 };
