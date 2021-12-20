@@ -1,13 +1,26 @@
+// add application performance monitoring 
+// var apm = require('elastic-apm-node').start({
+//     serviceName: 'auth-service',
+//     secretToken: 'K1dPeS59y0hO980e9d0ed4pI',
+//     serverUrl: 'https://apm-server-apm-http.default.svc.cluster.local:8200',
+//     environment: 'development',
+//     verifyServerCert: false
+//     })
+
 const express = require('express');
-const keys = require('./config/keys');
-const morgan = require('morgan');
 const bodyParser = require('body-parser');
-
+var cors = require('cors');
 const app = express();
+const config = require('./config');
+const router = require('./router');
 
-app.use(morgan('dev'));
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({
+    extended: true,
+}));
+app.use(express.static('client'));
+app.use(cors());
 
+router.set(app);
 
-require('./routes/appRoutes')(app);
-
-app.listen(8080);
+app.listen(config.port, () => console.log(`App listening on port ${config.port}`));
