@@ -1,5 +1,6 @@
 const sequelize = require('../config/db');
 const { EmailAddress } = require('../models/EmailAddress');
+const { MobileNumber } = require('../models/MobileNumber');
 const { User } = require('../models/User');
 const { UserDevice } = require('../models/UserDevice');
 const { Group } = require('../models/Group');
@@ -297,6 +298,18 @@ async function verify(data) {
     return { success: true };
 }
 
+async function findUser(data, attributes = []) {
+    const user = await User.findOne({
+        attributes,
+        where: data,
+        include: [{ model: Group }],
+    });
+    if (!user)
+        throw new Error('Authentication failed. User not found.');
+
+    return user;
+}
+
 async function tokensVerify(data) {
     const { Op } = sequelize;
     const { id, email, type } = data;
@@ -322,20 +335,27 @@ async function tokensVerify(data) {
             throw new Error('Account already verified');
         }
 
+        // update user record
         await User.update({
             updated: sequelize.fn('NOW'),
             verified: true,
             verification: {
                 email: true,
-                mobile: false,
+                mobile: true,
             }
-        }, { where: { email } });
+        }, { where: { id: user.id } });
 
+        // update email address to verified
         await EmailAddress.update({
             is_verified: true,
             updated: sequelize.fn('NOW'),
-        }, { where: { email } });
+        }, { where: { user_id: user.id } });
 
+        // update mobile number to verified
+        await MobileNumber.update({
+            is_verified: true,
+            updated: sequelize.fn('NOW'),
+        }, { where: { user_id: user.id } });
 
         // send welcome email
         await emailHandler.welcome({
@@ -899,6 +919,7 @@ module.exports = {
     deleteOtp,
     authenticate,
     verify,
+    findUser,
     tokensVerify,
     logout,
     logoutAll,

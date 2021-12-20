@@ -39,6 +39,11 @@ module.exports.set = app => {
     app.post('/tokens/verify', authMiddleware.checkAuth, authController.tokensVerify);
 
     /**
+     * Validate Token
+     */
+    app.post('/tokens/validate', authMiddleware.checkAuth, authController.tokensValidate);
+
+    /**
      * Login
      * 
      * Login a user with the credentials provided.
