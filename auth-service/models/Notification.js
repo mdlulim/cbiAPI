@@ -10,6 +10,7 @@ const Notification = sequelize.define('notification', {
     user_id: Sequelize.UUID,
     activity: Sequelize.STRING,
     description: Sequelize.STRING,
+    key: Sequelize.STRING,
     sms: Sequelize.BOOLEAN,
     email: Sequelize.BOOLEAN,
     push: Sequelize.BOOLEAN,

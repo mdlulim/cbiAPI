@@ -92,6 +92,71 @@ async function tokensVerify(req, res) {
     }
 }
 
+async function tokensValidate(req, res) {
+    try {
+        const { device, type } = req.body;
+        const { email } = req.user;
+        const user = await authService.findUser({
+            email,
+            verified: false,
+            blocked: false,
+        }, ['id', 'mobile']);
+
+        if (!user) {
+            return res.status(500).send({
+                success: false,
+                message: 'Access denied',
+            });
+        }
+
+        switch (type) {
+            case 'activation':
+                // send otp for mobile verification
+                // destroy all old OTP records
+                await otpService.destroyAll({
+                    user_id: user.id,
+                });
+
+                // create/log OTP record
+                const otpRecord = {
+                    device,
+                    transaction: 'member.register.verify',
+                    description: 'New member account activation/verification',
+                    user_id: user.id,
+                };
+                const otp = await otpService.create(otpRecord);
+
+                // send OTP auth
+                if (otp.code) {
+                    const mobile = user.mobile.replace('+', '');
+                    await sendOTPAuth('27783594927', otp.code);
+                }
+
+                // response
+                return res.send({
+                    auth: true,
+                    data: { mobile: user.mobile }
+                });
+
+            default: 
+                return res.send({
+                    auth: true
+                });
+        }
+
+    } catch (error) {
+        const messages = ['Access denied', 'Invalid code specified'];
+        var message = 'Could not process request';
+        if (messages.map(item => error.message.includes(item))) {
+            message = error.message;
+        }
+        return res.status(500).send({
+            success: false,
+            message,
+        });
+    }
+}
+
 async function tokensVerifyResend(req, res) {
     try {
         const {
@@ -587,24 +652,6 @@ async function register(req, res) {
         const newUser = await userService.create(user);
 
         if (newUser && newUser.id) {
-
-            // notify upline once referral has registered
-            if (sponsor && sponsor.id) {
-                await emailHandler.notifyReferrer({
-                    first_name: sponsor.first_name,
-                    email: sponsor.email,
-                    referral: `${first_name} ${last_name} - ${newUser.referral_id}`,
-                });
-            }
-
-            // send activation email (if is not a lead)
-            if (!isLead) {
-                await emailHandler.confirmEmail({
-                    first_name,
-                    email,
-                    token,
-                });
-            }
             
             // create user cbi wallet
             await accountService.create({
@@ -652,6 +699,24 @@ async function register(req, res) {
                 push: true,
             });
             await notificationService.create(notifications);
+
+            // notify upline once referral has registered
+            if (sponsor && sponsor.id) {
+                await emailHandler.notifyReferrer({
+                    first_name: sponsor.first_name,
+                    email: sponsor.email,
+                    referral: `${first_name} ${last_name} - ${newUser.referral_id}`,
+                });
+            }
+
+            // send activation email (if is not a lead)
+            if (!isLead) {
+                await emailHandler.confirmEmail({
+                    first_name,
+                    email,
+                    token,
+                });
+            }
 
             // response
             return res.send({
@@ -1380,7 +1445,20 @@ async function otp(req, res) {
 async function otpResend(req, res) {
     try {
         // get user
-        const user = await userService.show(req.user.id);
+        const { transaction } = req.body;
+        let user = null;
+        if (transaction === 'activation') {
+            user = await userService.show(req.user.email);
+        } else {
+            user = await userService.show(req.user.id);
+        }
+
+        if (!user) {
+            return res.status(500).send({
+                success: false,
+                message: 'Access denied'
+            });
+        }
 
         // destroy all old OTP records
         await otpService.destroyAll({
@@ -1415,16 +1493,28 @@ async function otpVerify(req, res) {
     try {
         // get otp record
         const { code, transaction } = req.body;
-        const otp = await otpService.show({
-            code,
-            transaction,
-        });
+        const otpFilters = { code, transaction };
+
+        if (transaction === 'activation') {
+            otpFilters.type = transaction;
+            otpFilters.transaction = 'member.register.verify';
+        }
+        
+        const otp = await otpService.show(otpFilters);
 
         if (otp && otp.id) {
             // destroy all old OTP records
             await otpService.destroyAll({
                 user_id: req.user.id,
             });
+
+            if (transaction === 'activation') {
+                const data = await authService.tokensVerify({
+                    ...req.user,
+                    ...otpFilters,
+                });
+                return res.send(data);
+            }
             return res.send({ success: true });
         }
 
@@ -1441,6 +1531,7 @@ async function otpVerify(req, res) {
 module.exports = {
     validate,
     tokensVerify,
+    tokensValidate,
     tokensVerifyResend,
     login,
     socialLogin,
