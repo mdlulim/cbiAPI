@@ -111,12 +111,8 @@ async function eventtransfer(data) {
             }
         })
 
-        newAvaliable = identifier.available_balance + parseFloat(data.amount).toFixed(2);
-        newBalance = identifier.balance + parseFloat(data.amount).toFixed(2);
-
-        console.log(newAvaliable)
-        console.log(newBalance)
-        console.log(data.amount)
+        newAvaliable = identifier.available_balance + data.amount;
+        newBalance = identifier.balance + data.amount;
 
         await Account.update({
             balance: newBalance,
