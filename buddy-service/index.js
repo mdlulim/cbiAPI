@@ -25,8 +25,11 @@ const swaggerDefinition = {
         version: '1.0.0',
         description:
         'This is a REST API application made with Express. It retrieves Buddy information related to CBI.',
+        ternsOfService: "http://cbiglobal.io/terms/",
         contact: {
-        name: 'Munyaradzi Muchenje',
+            name: 'API Support',
+            url: 'https://cbiglobal.io',
+            email: 'support@cbiglobal.io'
         },
     },
     servers: [
