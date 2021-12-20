@@ -14,7 +14,7 @@ async function lookupbalance(req, res) {
 
 async function lookupaccount(req, res) {
     try {
-        const account = await buddyAccountService.lookupaccount();
+        const account = await buddyAccountService.lookupaccount(req.body.reference);
         res.send(account)
     } catch (err) {
         return res.status(500).send({
@@ -38,7 +38,12 @@ async function lookuptransactions(req, res) {
 
 async function eventtransfer(req, res) {
     try {
-        const transfer = await buddyAccountService.eventtransfer();
+        const data = {
+            reference: req.body.reference,
+            identifier: req.body.identifier,
+            amount: req.body.amount
+        }
+        const transfer = await buddyAccountService.eventtransfer(data);
         res.send(transfer);
     } catch (err) {
         return res.status(500).send({

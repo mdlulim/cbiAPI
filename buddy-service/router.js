@@ -9,6 +9,6 @@ module.exports.set = app => {
     
     app.get('/transactions', buddyAccountController.lookuptransactions);
 
-    app.get('/eventtransfer', buddyAccountController.eventtransfer);
+    app.post('/transfer', buddyAccountController.eventtransfer);
 
 }
