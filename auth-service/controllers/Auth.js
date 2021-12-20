@@ -129,7 +129,7 @@ async function tokensValidate(req, res) {
                 // send OTP auth
                 if (otp.code) {
                     const mobile = user.mobile.replace('+', '');
-                    await sendOTPAuth('27783594927', otp.code);
+                    await sendOTPAuth(mobile, otp.code);
                 }
 
                 // response
