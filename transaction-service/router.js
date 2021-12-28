@@ -53,4 +53,12 @@ module.exports.set = app => {
      */
     app.get('/limits', authMiddleware.checkAuth, transactionController.limits);
 
+    
+    /**
+     * Handle btc deposits
+     * 
+     * Retrieve transaction limits by kyc level.
+     */
+     app.post('/ipn', transactionController.ipn);
+
 };
