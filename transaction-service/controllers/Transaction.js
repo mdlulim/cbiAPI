@@ -285,7 +285,7 @@ async function limits(req, res){
 async function ipn(req, res) {
     console.log("Data from IPN received, ", req.body)
     return transactionService.index(req.user.id, req.query)
-        .then(data => {console.log('################# Got data from IPN');res.send(data)})
+        .then(data => {console.log('################# Got data from IPN');return res.send(data)})
         .catch(err => {
             return res.status(500).send({
                 success: false,
