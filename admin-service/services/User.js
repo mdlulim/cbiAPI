@@ -13,8 +13,8 @@ const { Account }  = require('../models/Account');
 const { Fee }  = require('../models/Fee');
 const { Commission }  = require('../models/Commission');
 const { Setting }  = require('../models/Setting');
-
 const { KYC } = require('../models/KYC');
+
  
 Address.belongsTo(User, { foreignKey: 'user_id', targetKey: 'id' });
 EmailAddress.belongsTo(User, { foreignKey: 'user_id', targetKey: 'id' });
