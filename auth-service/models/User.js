@@ -43,6 +43,8 @@ const User = sequelize.define('user', {
 	permission_level:Sequelize.INTEGER,
 	expiry: Sequelize.DATE,
 	temp_lock_expiry: Sequelize.DATE,
+	deactivation_date: Sequelize.DATE,
+	cancellation_date: Sequelize.DATE,
 	autorenew: {
         type: Sequelize.BOOLEAN,
         defaultValue: false,

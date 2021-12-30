@@ -1,5 +1,7 @@
 const beneficiaryService = require('../services/Beneficiary');
 const activityService = require('../services/Activity');
+const userService = require('../services/User');
+const emailHandler = require('../helpers/emailHandler');
 
 async function create(req, res) {
     try {
@@ -54,25 +56,26 @@ async function index(req, res) {
 
 async function update(req, res) {
     try {
-        return beneficiaryService.update(req.params.id, req.body)
-        .then(async () => {
-            await activityService.add({
-                user_id: req.user.id,
-                action: `${req.user.group_name.toLowerCase()}.beneficiaries.update`,
-                description: `${req.user.first_name} updated beneficiaries`,
-                section: 'Profile',
-                subsection: 'Beneficiaries',
-                data: { id: req.params.id, data: req.body },
-                ip: null,
-            });
-            return res.send({ success: true });
-        })
-        .catch(err => {
-            res.send({
-                success: false,
-                message: err.message,
-            });
+        await beneficiaryService.update(req.params.id, req.body);
+        await activityService.add({
+            user_id: req.user.id,
+            action: `${req.user.group_name.toLowerCase()}.beneficiaries.update`,
+            description: `${req.user.first_name} updated beneficiary`,
+            data: { id: req.params.id, data: req.body },
+            subsection: 'Beneficiaries',
+            section: 'Profile',
+            ip: null,
         });
+        // send update email
+        const user = await userService.show(req.user.id);
+        const { email, first_name } = user;
+        await emailHandler.updateNotification({
+            subject: 'Beneficiary information updated',
+            message: `Beneficiary details for ${req.body.first_name} ${req.body.last_name} have been successfully updated.`,
+            first_name,
+            email,
+        });
+        return res.send({ success: true });
     } catch (error) {
         return res.send({
             success: false,
@@ -83,16 +86,31 @@ async function update(req, res) {
 
 async function destroy(req, res) {
     try {
-        return beneficiaryService.destroy(req.params.id)
-        .then(() => res.send({ success: true }))
-        .catch(err => {
-            res.send({
-                success: false,
-                message: err.message,
-            });
+        const beneficiary = await beneficiaryService.show(req.params.id);
+        await beneficiaryService.destroy(req.params.id);
+        await activityService.add({
+            user_id: req.user.id,
+            action: `${req.user.group_name.toLowerCase()}.beneficiaries.delete`,
+            description: `${req.user.first_name} delete beneficiary`,
+            data: { id: req.params.id, data: JSON.stringify(beneficiary) },
+            subsection: 'Beneficiaries',
+            section: 'Profile',
+            ip: null,
         });
+
+        // send update email
+        const user = await userService.show(req.user.id);
+        const { email, first_name } = user;
+        await emailHandler.updateNotification({
+            subject: 'Beneficiary information deleted',
+            message: `${beneficiary.first_name} ${beneficiary.last_name} has been successfully removed from your CBI beneficiaries.`,
+            first_name,
+            email,
+        });
+        return res.send({ success: true });
     } catch (error) {
-        return res.send({
+        console.log(error.message);
+        return res.status(500).send({
             success: false,
             message: 'Could not process request'
         });
