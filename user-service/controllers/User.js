@@ -86,8 +86,8 @@ async function update(req, res) {
                     user_id: req.user.id,
                     action: `${req.user.group_name.toLowerCase()}.profile.update`,
                     description: `${req.user.first_name} updated profile`,
-                    section: 'Account',
-                    subsection: 'Profile',
+                    section: req.body.section || 'Account',
+                    subsection: req.body.subsection || 'Profile',
                     data: { id: req.user.id, data: req.body },
                     ip: null,
                 });

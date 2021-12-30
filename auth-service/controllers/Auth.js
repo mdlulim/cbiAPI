@@ -3,6 +3,7 @@ const bcrypt = require('bcryptjs');
 const moment = require('moment');
 const rn = require('random-number');
 const generator = require('generate-password');
+const authenticator = require('authenticator');
 const config = require('../config');
 const sequelize = require('../config/db');
 const authService = require('../services/Auth');
@@ -13,6 +14,7 @@ const accountService = require('../services/Account');
 const emailAddressService = require('../services/EmailAddress');
 const mobileNumberService = require('../services/MobileNumber');
 const notificationService = require('../services/Notification');
+const passwordService = require('../services/Password');
 const errorHandler = require('../helpers/errorHandler');
 const activityService = require('../services/Activity');
 const sessionService = require('../services/Session');
@@ -968,6 +970,18 @@ async function passwordChange(req, res) {
 
         const salt = bcrypt.genSaltSync();
         const password = bcrypt.hashSync(new_password1, salt);
+        
+        // Validation: enforce a Password History to 24
+        const samePassword = await passwordService.show({
+            user_id: user.id,
+            password: new_password1,
+        });
+        if (samePassword && samePassword.id) {
+            return res.status(403).send({
+                success: false,
+                message: 'You have already used that password, try another'
+            });
+        }
 
         await userService.update(user.id, {
             salt,
@@ -985,6 +999,21 @@ async function passwordChange(req, res) {
             section: 'Account',
             subsection: 'Change password',
             data: { device },
+        });
+
+        // check if passwords history records have reached 24
+        const prevPasswords = await passwordService.index({ user_id: user.id });
+        if (prevPasswords.length === 24) {
+            const deletePassword = prevPasswords[prevPasswords.length - 1];
+            await passwordService.destroy({
+                id: deletePassword.id,
+            });
+        }
+
+        // log old password into passwords history
+        await passwordService.create({
+            password: old_password,
+            user_id: user.id,
         });
 
         // send email notification
@@ -1218,8 +1247,11 @@ async function mobileVerifyResend(req, res) {
  */
 async function mfa(req, res) {
     try {
+        const { id } = req.user;
+        const data = await authService.findUser({ id }, ['mfa']);
         return res.send({
             success: true,
+            data
         });
     } catch (error) {
         return res.status(500).send({
@@ -1378,8 +1410,18 @@ async function destroyMfaToken(req, res) {
  */
 async function mfaVerify(req, res) {
     try {
+        const user = await userService.show(req.user.id);
+        const { email } = user;
+        const formattedKey = authenticator.generateKey();
+        const formattedToken = authenticator.generateToken(formattedKey);
+        const result = authenticator.verifyToken(formattedKey, formattedToken);
+        const totpUri = authenticator.generateTotpUri(formattedKey, email, 'CBI Global', 'SHA1', 6, 30);
         return res.send({
             success: true,
+            formattedKey,
+            formattedToken,
+            result,
+            totpUri,
         });
     } catch (error) {
         return res.status(500).send({
