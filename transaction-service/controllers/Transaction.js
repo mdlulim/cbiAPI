@@ -5,6 +5,7 @@ const currencyService = require('../services/Currency');
 const documentService = require('../services/Document');
 const userService = require('../services/User');
 const emailHandler = require('../helpers/emailHandler');
+const coinpayment =  require('coinpayments');
 
 const getSubsection = (data) => {
     const {
@@ -280,20 +281,39 @@ async function limits(req, res){
     }
 };
 
-
-
 async function ipn(req, res) {
     console.log("Data from IPN received, ", req.body)
+    const data = req.body;
+
+    //convert ZAR to CBI
+    //data.fiat_amount
+
+    console.log("Data from IPN received, ", req.body)
     return res.send({res: "got data from you"})
-    // return transactionService.index(req.user.id, req.query)
-    //     .then(data => {console.log('################# Got data from IPN');return res.send(data)})
+    // return transactionService.approveDeposit(data)
+    // .then(data => {console.log('################# Got data from IPN');return res.send(data)})
     //     .catch(err => {
     //         return res.status(500).send({
     //             success: false,
     //             message: 'Could not process your request'
     //         });
     //     })
+};
 
+async function coinpayment_create(req, res) {
+    const client = new Coinpayments({
+        key: '6198f48a55ebd548512ba5106ee7e8b382cd8e7116db8ecda0732f65c34521b8',
+        secret: '27aedb32B7D525E06454A09f5ff8598575425e9900273Af0c4118Fb5255492Aa'
+    })
+
+    return await client.getBasicInfo()
+    .then(data => {console.log('################# Send query to coinpayment');return res.send(data)})
+        .catch(err => {
+            return res.status(500).send({
+                success: false,
+                message: 'Could not process your request'
+            });
+        })
 };
 
 module.exports = {
@@ -303,5 +323,6 @@ module.exports = {
     count,
     totals,
     limits,
-    ipn
+    ipn,
+    coinpayment_create
 };
