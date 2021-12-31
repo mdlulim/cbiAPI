@@ -1,19 +1,19 @@
 const Sequelize = require('sequelize');
 const sequelize = require('../config/db');
 
-const Notification = sequelize.define('notification', {
+const buddyTransaction = sequelize.define('buddy_transaction', {
     id: {
         type: Sequelize.UUID,
         defaultValue: Sequelize.UUIDV4,
         primaryKey: true,
     },
     user_id: Sequelize.UUID,
-    activity: Sequelize.STRING,
-    description: Sequelize.STRING,
-    key: Sequelize.STRING,
-    sms: Sequelize.BOOLEAN,
-    email: Sequelize.BOOLEAN,
-    push: Sequelize.BOOLEAN,
+    tx_type: Sequelize.STRING,
+    subtype: Sequelize.STRING,
+    note: Sequelize.STRING,
+    reference: Sequelize.STRING,
+    amount: Sequelize.FLOAT,
+    status: Sequelize.STRING,
     created: Sequelize.DATE,
     updated: Sequelize.DATE,
 }, {
@@ -21,5 +21,5 @@ const Notification = sequelize.define('notification', {
 });
 
 module.exports = {
-    Notification,
+    buddyTransaction,
 }

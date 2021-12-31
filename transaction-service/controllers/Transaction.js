@@ -280,6 +280,22 @@ async function limits(req, res){
     }
 };
 
+
+
+async function ipn(req, res) {
+    console.log("Data from IPN received, ", req.body)
+    return res.send({res: "got data from you"})
+    // return transactionService.index(req.user.id, req.query)
+    //     .then(data => {console.log('################# Got data from IPN');return res.send(data)})
+    //     .catch(err => {
+    //         return res.status(500).send({
+    //             success: false,
+    //             message: 'Could not process your request'
+    //         });
+    //     })
+
+};
+
 module.exports = {
     create,
     index,
@@ -287,4 +303,5 @@ module.exports = {
     count,
     totals,
     limits,
+    ipn
 };

@@ -22,7 +22,7 @@ const getTxid = (subtype, autoid) => {
  * @param {*} res 
  * @returns 
  */
-async function autorenew(req, res){
+async function autorenew(req, res) {
     try {
         /* 
          * Retrieve all wealth-creators whose membership is due to expire today
@@ -151,7 +151,7 @@ async function autorenew(req, res){
  * @param {*} res 
  * @returns 
  */
-async function autorenewNotify(req, res){
+async function autorenewNotify(req, res) {
     try {
         /* 
          * Retrive all wealth-creators whose membership is due to expire within next 5 days
@@ -173,7 +173,6 @@ async function autorenewNotify(req, res){
                 };
             }, (err, results) => {
                 if (err) throw err;
-                console.log(results);
                 return res.send({
                     success: true,
                     results,
@@ -228,7 +227,6 @@ async function productDailyEarnings(req, res){
             const { product_category } = product;
             switch (product_category.code) {
                 case FX:
-                    
                     break;
                     
                 case FP: return fixedPlansDailyEarnings(product, res);
@@ -316,6 +314,7 @@ async function fixedPlansDailyEarnings(product, res) {
     return async.map(investments, async (item, callback) => {
         const {
             id,
+            user,
             daily_interest,
             last_updated,
             invested_amount,

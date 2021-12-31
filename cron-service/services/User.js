@@ -80,7 +80,8 @@ async function update(data, id) {
 
 async function wcEligibleForAutoRenewNotify(query) {
     try {
-        const expiry = moment().add(5, 'days').format('YYYY-MM-DD');
+        const today   = moment().format('YYYY-MM-DD');
+        const expiry  = moment().add(5, 'days').format('YYYY-MM-DD');
         const options = {
             nest: true,
             type: sequelize.QueryTypes.SELECT
@@ -92,6 +93,7 @@ async function wcEligibleForAutoRenewNotify(query) {
         INNER JOIN "notifications" AS "notification" ON "user"."id" = "notification"."user_id" AND "notification"."key" = 'account-activity-updates'
         WHERE (
                 "user"."expiry" IS NOT NULL AND
+                "user"."expiry" >= to_date('${today}', 'YYYY-MM-DD') AND
                 "user"."expiry" <= to_date('${expiry}', 'YYYY-MM-DD')
             ) AND
             "user"."status" ILIKE 'Active' AND

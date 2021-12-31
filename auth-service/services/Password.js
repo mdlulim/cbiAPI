@@ -1,20 +1,35 @@
 const sequelize = require('../config/db');
-const { Beneficiary } = require('../models/Beneficiary');
+const { Password } = require('../models/Password');
+const { User } = require('../models/User');
+
+Password.belongsTo(User, { foreignKey: 'user_id', targetKey: 'id' });
+User.hasMany(Password, { foreignKey: 'user_id', targetKey: 'id' });
 
 async function create(data) {
     try {
-        return Beneficiary.create(data);
+        return Password.create(data);
     } catch (error) {
         console.error(error.message || null);
         throw new Error('Could not process your request');
     }
 }
 
-async function index(user_id) {
+async function show(condition) {
     try {
-        return Beneficiary.findAndCountAll({
-            where: { user_id },
-            order: [['created', 'DESC']],
+        const where = condition;
+        return Password.findOne({ where });
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
+async function index(condition) {
+    try {
+        const where = condition;
+        return Password.findAll({
+            where,
+            order: [[ 'created', 'DESC' ]]
         });
     } catch (error) {
         console.error(error.message || null);
@@ -22,10 +37,11 @@ async function index(user_id) {
     }
 }
 
-async function show(id) {
+async function count(condition) {
     try {
-        return Beneficiary.findOne({
-            where: { id }
+        const where = condition;
+        return Password.count({
+            where,
         });
     } catch (error) {
         console.error(error.message || null);
@@ -33,18 +49,9 @@ async function show(id) {
     }
 }
 
-async function update(id, data) {
+async function destroy(condition) {
     try {
-        return Beneficiary.update(data, { where: { id } });
-    } catch (error) {
-        console.error(error.message || null);
-        throw new Error('Could not process your request');
-    }
-}
-
-async function destroy(id) {
-    try {
-        return Beneficiary.destroy({ where: { id } });
+        return Password.destroy({ where: condition });
     } catch (error) {
         console.error(error.message || null);
         throw new Error('Could not process your request');
@@ -53,8 +60,8 @@ async function destroy(id) {
 
 module.exports = {
     create,
-    index,
     show,
-    update,
+    index,
+    count,
     destroy,
 }

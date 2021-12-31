@@ -42,7 +42,7 @@ const tokenPurchaseConfirmation = data => {
                 <!-- Email body -->
                 <div>
                     <p>
-                        You have successfully purchased ${tokens} ${product.title} for ${amount} ${product.currency.code}
+                        You have successfully purchased ${tokens.toFixed(4)} ${product.title} for ${amount.toFixed(4)} ${product.currency.code}
                     </p>
                     <p style="padding-top:50px"><strong>Cheers</strong>,<br />CBI Support</p>
                 </div>

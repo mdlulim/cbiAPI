@@ -23,8 +23,19 @@ async function kycNotification(data) {
     return sendMail(from, email, 'CBI - KYC Approval ', template);
 };
 
+async function updateNotification(data) {
+    const { email, subject } = data;
+    const template = emailTemplates.updateNotification(data);
+    const from = {
+        name: 'CBI',
+        email: smtp.auth.user,
+    };
+    return sendMail(from, email, `CBI - ${subject}`, template);
+};
+
 
 module.exports = {
     autoRenewStatusChange,
-    kycNotification
+    kycNotification,
+    updateNotification,
 };

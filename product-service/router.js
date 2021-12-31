@@ -38,6 +38,13 @@ module.exports.set = app => {
     app.get('/:permakey', authMiddleware.checkAuth, productController.show);
     
     /**
+     * Retrieve Single Product's Earnings
+     * 
+     * Retrieve current user’s product earnings.
+     */
+    app.get('/:permakey/earnings', authMiddleware.checkAuth, productController.earnings);
+    
+    /**
      * Retrieve Single Product
      * 
      * Retrieve current user’s product details.

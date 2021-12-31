@@ -452,8 +452,35 @@ module.exports.set = app => {
     app.put('/countries/:id/unblacklist', authMiddleware.checkAuth, countryController.unblacklist);
 
     // buddyAPI Routes
+    /**
+     * @swagger
+     * /lookup-balance:
+     *   get:
+     *     description: Retrieve balance of Buddy Main account. 
+     *     responses:
+     *       200:
+     *         description: successful response.
+     */
     app.get("/buddy/lookup-balance", authMiddleware.checkAuth, buddyAPIController.lookupBalance);
+    /**
+     * @swagger
+     * /lookup-transactions:
+     *   get:
+     *     description: Return true or false while validating CBI user identifier. 
+     *     responses:
+     *       200:
+     *         description: successful response.
+     */
     app.get("/buddy/lookup-transactions", authMiddleware.checkAuth, buddyAPIController.lookupTransaction);
+    /**
+     * @swagger
+     * /eventtransfer:
+     *   post:
+     *     description: Convert CBI's to Buddy $miles. 
+     *     responses:
+     *       200:
+     *         description: successful response.
+     */
     app.post("/buddy/eventtransfer", authMiddleware.checkAuth, buddyAPIController.eventTransfer);
 
     // buddyAccount Routes
@@ -483,5 +510,9 @@ module.exports.set = app => {
     app.get('/alltransactions', authMiddleware.checkAuth, transactionController.allTransactions);
     // Main Account Routes 
     app.get("/business-account", authMiddleware.checkAuth, accountController.mainaccount);
+
+    // Main Account Balance Story ID 2401
+    app.get("/transactions-type",  authMiddleware.checkAuth, transactionController.transactions);
+    app.get("/transactions-total", authMiddleware.checkAuth, transactionController.transactionstotal);
 
 };

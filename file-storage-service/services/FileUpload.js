@@ -59,6 +59,7 @@ async function uploader(request, response, next) {
                     message: error.message || 'error'
                 });
             }
+            
             const data = {
                 success: true,
                 message: 'File uploaded successfully.',
@@ -68,6 +69,7 @@ async function uploader(request, response, next) {
                 const { user } = request;
                 data.filename = `${category}/${type}/${user.id}/${request.query.filename}`;
             }
+            
             return response.status(200).send(data);
         });
     } catch (error) {

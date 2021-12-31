@@ -3,6 +3,7 @@ const sequelize = require('../config/db');
 const config = require('../config');
 const accountService = require('../services/Account');
 const activityService = require('../services/Activity');
+const commissionService  = require('../services/Commission');
 const investmentService  = require('../services/Investment');
 const productService  = require('../services/Product');
 const transactionService  = require('../services/Transaction');
@@ -390,6 +391,30 @@ async function show(req, res){
     }
 }
 
+async function earnings(req, res) {
+    try {
+        const { id } = req.user;
+        const { permakey } = req.params;
+        const { data } = await productService.show(permakey);
+        const earnings = await commissionService.index(id, data.id);
+        return res.send({
+            success: true,
+            data: {
+                count: null,
+                next: null,
+                previous: null,
+                results: earnings,
+            }
+        });
+    } catch (err) {
+        console.log(err.message)
+        return res.status(500).send({
+            success: false,
+            message: 'Could not process your request'
+        });
+    }
+}
+
 async function products(req, res){
     try {
         const products = await productService.products(req.params.id);
@@ -461,6 +486,7 @@ module.exports = {
     overview,
     subscribe,
     show,
+    earnings,
     products,
     categories,
     invest,

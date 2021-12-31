@@ -1,3 +1,4 @@
+const activityService = require('../services/Activity');
 const mobileNumberService = require('../services/MobileNumber');
 
 async function create(req, res) {
@@ -54,16 +55,29 @@ async function show(req, res) {
 
 async function update(req, res) {
     try {
-        return mobileNumberService.update(req.params.id, req.body)
-        .then(() => res.send({ success: true }))
-        .catch(err => {
-            res.send({
+        const { number } = req.body;
+        const mobile = await mobileNumberService.findByNumber(number);
+        if (mobile && mobile.id) {
+            return res.status(403).send({
                 success: false,
-                message: err.message,
+                message: 'Mobile number already exists, please try a different number.'
             });
-        });
+        }
+        return mobileNumberService.update(req, req.body)
+        .then(async () => {
+            await activityService.add({
+                user_id: req.user.id,
+                action: `${req.user.group_name.toLowerCase()}.profile.update`,
+                description: `${req.user.first_name} updated mobile number`,
+                section: 'Profile',
+                subsection: 'Settings > 2FA',
+                data: { id: req.user.id, data: req.body },
+                ip: null,
+            });
+            return res.send({ success: true });
+        })
     } catch (error) {
-        return res.send({
+        return res.status(500).send({
             success: false,
             message: 'Could not process request'
         });

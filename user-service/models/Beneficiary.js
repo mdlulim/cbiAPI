@@ -11,6 +11,7 @@ const Beneficiary = sequelize.define('beneficiary', {
     first_name: Sequelize.STRING,
     last_name: Sequelize.STRING,
     gender: Sequelize.STRING,
+    id_type: Sequelize.STRING,
     id_number: Sequelize.STRING,
     relationship: Sequelize.STRING,
     percentage: Sequelize.INTEGER,
