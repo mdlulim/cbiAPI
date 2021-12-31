@@ -5,6 +5,8 @@ const { Document } = require('../models/Document');
 const { KYCLimit } = require('../models/KYCLimit');
 const { Transaction }  = require('../models/Transaction');
 const { User }  = require('../models/User');
+const { Setting }  = require('../models/Setting');
+const { Account }  = require('../models/Account');
 
 Buddy.belongsTo(User, { foreignKey: 'user_id', targetKey: 'id' });
 BuddyTransaction.belongsTo(User, { foreignKey: 'user_id', targetKey: 'id' });
@@ -167,6 +169,103 @@ async function limits(kyc_level) {
     }
 }
 
+
+async function approveDeposit(data) {
+
+    //console.log(commissionData)
+    try {
+        const setting =  await Setting.findOne({where : {key: 'membership_fee'}});
+        let sponsorBalance = null;
+        let userBalance = null;
+        if(parseFloat(data.fiat_amount) < parseFloat(setting.dataValues.value)){
+            return { success: false, message: "Insufficient funds" };
+        }
+
+        if(data.status_text === 'Completed'){
+            // const user =  await User.findOne({where : {id: data.transaction.user_id}});
+            // const sponsor =  await User.findOne({where : {id: user.dataValues.sponsor}});
+        //console.log(setting)
+            const mainAccount =  await Account.findOne({where : {id: '3cf7d2c0-80e1-4264-9f2f-6487fd1680c2'}});
+            const userAccount =  await Account.findOne({where : {user_id: user.dataValues.id}});
+            const sponsorAccount =  await Account.findOne({where : {user_id: sponsor.dataValues.id}});
+
+            const userTopUp = parseFloat(data.transaction.amount) - parseFloat(setting.dataValues.value)+(parseFloat(setting.dataValues.value)* 25 / 100);
+
+            let companyCondition    = {id: mainAccount.dataValues.id};
+            let companyData         = {available_balance: parseFloat(mainAccount.dataValues.available_balance)+(parseFloat(setting.dataValues.value)* 50 / 100)};
+
+            let sponsorCondition    = {id: sponsorAccount.dataValues.id};
+            let sponsorData         = {available_balance: parseFloat(sponsorAccount.dataValues.available_balance)+(parseFloat(setting.dataValues.value)* 25 / 100)};
+            sponsorBalance          = parseFloat(sponsorAccount.dataValues.available_balance)+(parseFloat(setting.dataValues.value)* 25 / 100);
+
+            let userCondition       = {id: userAccount.dataValues.id};
+            let userData            = {available_balance: parseFloat(userAccount.dataValues.available_balance)+userTopUp};
+            userBalance             = parseFloat(userAccount.dataValues.available_balance)+userTopUp;
+
+            const user_id = user.dataValues.id;
+            let status = {status: data.status}
+            await Transaction.update(status, { where: { id } });
+
+            await Account.update(companyData,{ where : companyCondition });
+
+            await Account.update(sponsorData,{ where : sponsorCondition });
+
+            await Account.update(userData,{ where : userCondition });
+
+            await User.update({
+                status: 'Active',
+                blocked: false,
+                archived: false,
+                updated: sequelize.fn('NOW'),
+            }, { where: { id: user_id } });
+
+            const commissionData ={
+                user_id: user.id,
+                type: 'REFERRAL',
+                referral_id: sponsor.id,
+                status: 'Paid',
+                amount: parseFloat(setting.value)* 25 / 100,
+                currency_code: data.transaction.currency.code,
+                commission_date: Date.now()
+            }
+
+            const dataUser = {
+                status: data.status,
+                first_name: user.first_name,
+                email: user.email,
+                subtype: data.transaction.subtype,
+                tx_type: data.transaction.tx_type,
+                reference: data.transaction.reference,
+                amount: parseFloat(setting.value)* 25 / 100,
+                currency_code: data.transaction.currency.code,
+                available_balance: userBalance
+            }
+
+            const dataSponsor = {
+                status: data.status,
+                first_name: sponsor.first_name,
+                email: sponsor.email,
+                subtype: data.transaction.subtype,
+                tx_type: data.transaction.tx_type,
+                amount: parseFloat(setting.value)* 25 / 100,
+                currency_code: data.transaction.currency.code,
+                available_balance: sponsorBalance
+            }
+            await Commission.create(commissionData);
+            return { success: true, message: "Account was successfully updated", data: {user: dataUser, sponsor: dataSponsor} };
+    }else{
+        let status = {status: data.status}
+        await Transaction.update(status, { where: { id } });
+    }
+
+       
+    } catch (error) {
+        console.error(error || null);
+        throw new Error('Could not process your request');
+    }
+}
+
+
 module.exports = {
     create,
     index,
@@ -175,4 +274,5 @@ module.exports = {
     count,
     totals,
     limits,
+    approveDeposit,
 }
