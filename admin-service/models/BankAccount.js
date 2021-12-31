@@ -17,6 +17,7 @@ const BankAccount = sequelize.define('bank_account', {
     swift: Sequelize.STRING,
     iban: Sequelize.STRING,
     bic: Sequelize.STRING,
+    status: Sequelize.STRING,
     archived: Sequelize.BOOLEAN,
     created: Sequelize.DATE,
     updated: Sequelize.DATE,

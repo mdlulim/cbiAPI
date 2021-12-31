@@ -14,6 +14,7 @@ const feeController = require('./controllers/Fee');
 const settingController = require('./controllers/Setting');
 const authMiddleware = require('./middlewares/auth');
 const companyController = require('./controllers/Company');
+const bankAccountController = require('./controllers/BankAccount');
 
 
 module.exports.set = app => {
@@ -422,6 +423,20 @@ module.exports.set = app => {
     app.delete("/settings/:id", authMiddleware.checkAuth, settingController.destroy);
 
     /**
+     * List Companies
+     * 
+     * Get a list of Companies belonging to CBI.
+     */
+    app.get('/bank-accounts', authMiddleware.checkAuth, bankAccountController.index);
+    app.get('/bank-accounts/pending', authMiddleware.checkAuth, bankAccountController.getBankAccountsPending);
+    app.get('/bank-accounts/:id', authMiddleware.checkAuth, bankAccountController.show);
+    app.post('/bank-accounts/verify/:id', authMiddleware.checkAuth, bankAccountController.verifyBankAccount);
+
+    app.post('/bank-accounts/:id/auth/otp', authMiddleware.checkAuth, bankAccountController.otp);
+    app.post('/bank-accounts/:id/auth/otp/resend', authMiddleware.checkAuth, bankAccountController.otpResend);
+    app.post('/bank-accounts/:id/auth/otp/verify', authMiddleware.checkAuth, bankAccountController.otpVerify);
+
+        /**
      * List Companies
      * 
      * Get a list of Companies belonging to CBI.

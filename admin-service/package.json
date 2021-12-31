@@ -26,6 +26,7 @@
     "nodemailer": "^6.3.1",
     "pg": "^7.8.1",
     "querystring": "^0.2.0",
+    "random-number": "0.0.9",
     "sendmail": "^1.6.1",
     "sequelize": "^4.44.3",
     "sequelize-values": "^1.1.0",

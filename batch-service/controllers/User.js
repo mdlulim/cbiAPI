@@ -36,7 +36,7 @@ async function process(req, res) {
             //console.log(results.count)
              //const objs = JSON.parse(results)
              count = results.length
-             results.forEach(function(transact, index) {
+             results.forEach(async(transact, index) => {
                   let data = {
                     txid: transact.TX_ID,
                     referral_id: transact.REFERRAL,
@@ -44,7 +44,7 @@ async function process(req, res) {
                     amount: transact.AMOUNT,
                     status: transact.STATUS
                   }
-                   userService.process(data).then(res => {
+                   await userService.process(data).then(res => {
                        if(res.data && res.data.first_name){
                          console.log(res.data)
                          // send email to recipient

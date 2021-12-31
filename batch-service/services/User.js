@@ -5,6 +5,8 @@ const { Fee } = require('../models/Fee');
 const { BatchTransaction } = require('../models/BatchTransaction');
 const { Account } = require('../models/Account');
 Transaction.belongsTo(User, { foreignKey: 'user_id', targetKey: 'id' });
+Account.belongsTo(User, { foreignKey: 'user_id', targetKey: 'id' });
+User.hasOne(Account, { foreignKey: 'user_id', targetKey: 'id' });
 
 async function showTransaction(data) {
     try {
@@ -31,48 +33,88 @@ async function showFile(data) {
 async function process(data) {
   
     try {
-            if(data.subtype.toLowerCase() === "withdrawal"){
+            if(data.subtype.toLowerCase() === "withdraw"){
+                const transaction = await Transaction.findOne({
+                    attributes: [
+                        'currency',
+                        'status',
+                        'amount',
+                        'fee'
+                    ],
+                    where : {  
+                        txid: data.txid,
+                    },
+                    include : [{
+                        attributes: [
+                            'first_name',
+                            'email',
+                            'id',
+                        ],
+                        model: User,
+                        where: {
+                            referral_id: data.referral_id
+                        },
+                        include : [{
+                            attributes: [
+                                'id',
+                                'available_balance',
+                                'balance',
+                            ],
+                            model: Account
+                        }]
+                    }]
+                });
                 let resData = {}
-                const user =  await User.findOne({where : {referral_id: data.referral_id}});
-                const userAccount =  await Account.findOne({where : {user_id: user.id}});
-                const transaction =  await Transaction.findOne({where : {txid: data.txid}});
-                const fee =  await Fee.findOne({where : {subtype: data.subtype.charAt(0).toUpperCase() + data.subtype.slice(1).toLowerCase(), group_id: user.dataValues.group_id} });
-                const withdrawalAmount = parseFloat(data.amount)+parseFloat(fee.dataValues.value)
-//console.log(transaction)
+                const {
+                    user,
+                    currency,
+                    fee,
+                    id,
+                    amount,
+                    status
+                } = transaction;
+
+                const {
+                    first_name,
+                    email,
+                    account
+                } = user;
+
+                const withdrawalAmount = parseFloat(amount) + parseFloat(fee);
+                const condition = {id: account.id};
                 if(parseFloat(data.status) === 0){
-                    const myData = {status: 'Completed'}
-                    if(transaction.dataValues.status != 'Completed'){
+                    if(status !== 'Completed'){
+                        const debit = {balance: parseFloat(account.balance) - withdrawalAmount};
+                        const updateData = {status: 'Completed'}
                         resData = {
-                            first_name: user.first_name,
-                            email: user.email,
+                            first_name: first_name,
+                            email: email,
                             status: data.status,
-                            amount: data.amount,
-                            currency_code: transaction.dataValues.currency.code,
+                            amount: withdrawalAmount,
+                            currency_code: currency.code,
                             reference: data.txid
                         }
-                        await Transaction.update(myData, {
+
+                        Account.update( debit, {where: condition})
+                        await Transaction.update(updateData, {
                             where: { txid: data.txid }
                         });
                     }
-                   
 
                 }else{
-                    //reject transaction
-                    //in progress
-                    let credit = {available_balance: parseFloat(userAccount.available_balance)+withdrawalAmount};
-                    let condition = {id: userAccount.id}
-                    if(transaction.dataValues.status != 'Completed'){
+                    if(status != 'Completed'){
+                        const credit = {available_balance: parseFloat(account.available_balance) + withdrawalAmount};
                         resData = {
-                            first_name: user.first_name,
-                            email: user.email,
+                            first_name: first_name,
+                            email: email,
                             status: data.status,
-                            amount: data.amount,
-                            currency_code: transaction.dataValues.currency.code,
+                            amount: withdrawalAmount,
+                            currency_code: currency.code,
                             reference: data.txid
                         }
                         Account.update( credit, {where: condition})
-                        const myData = {status: 'Rejected'}
-                        await Transaction.update(myData, {
+                        const updateData = {status: 'Rejected'}
+                        await Transaction.update(updateData, {
                             where: { txid: data.txid }
                         });
                     }
@@ -103,12 +145,12 @@ async function updateBatchStatus(id, data) {
   */
 async function updateTransaction(data) {
     try {
-        const result = await sequelize.transaction(async (t) => {
+        const result = await sequelize.transaction(async (transaction) => {
             data.forEach(async(row) => {
                 console.log(row)
                 await Transaction.update({
                     status: row.status,
-                }, { where: { txid: row.txid }, transaction: t });
+                }, { where: { txid: row.txid }, transaction });
             })
         })
         
