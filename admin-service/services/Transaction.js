@@ -141,6 +141,39 @@ async function getProofOfPayment(txid) {
     }
 }
 
+async function transactions(subtype) {
+    try {
+        return Transaction.findAndCountAll({           
+            where: { subtype },
+            order: [['created', 'DESC']]
+        });
+    } catch (error) {
+        console.error(error || null);
+        throw new Error('Could not process your request');
+    }
+}
+
+async function transactionstotal(subtype) {
+    try {
+        data = await Transaction.sum('total_amount', {
+            where: {
+                subtype
+            }
+        })
+        return {
+            subtype, 
+            total_amount: data
+        }
+    } catch (error) {
+        console.error(error || null);
+        throw new Error('Could not process your request');
+    }
+}
+
+
+
+
+
 module.exports = {
     index,
     show,
@@ -149,5 +182,7 @@ module.exports = {
     creditWallet,
     debitWallet,
     allTransactions,
-    getProofOfPayment
+    getProofOfPayment,
+    transactions,
+    transactionstotal
 }

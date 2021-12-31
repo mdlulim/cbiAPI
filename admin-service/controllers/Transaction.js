@@ -253,12 +253,39 @@ async function batchProcessTransaction(req, res) {
     }
 }
 
+async function transactions(req, res){
+    try {
+        return transactionService.transactions(req.body.subtype)
+        .then(data => res.send(data));
+    } catch (err) {
+        return res.status(500).send({
+            success: false,
+            message: 'Could not process your request'
+        });
+    }
+};
+
+async function transactionstotal(req, res){
+    try {
+        response = await transactionService.transactionstotal(req.body.subtype)
+        res.send(response)
+    } catch (err) {
+        return res.status(500).send({
+            success: false,
+            message: 'Could not process your request'
+        });
+    }
+};
+
+
 module.exports = {
     index,
     debitCreditUserAccount,
     show,
     allTransactions,
     getProofOfPayment,
-    batchProcessTransaction
+    batchProcessTransaction,
+    transactions,
+    transactionstotal
 
 };
