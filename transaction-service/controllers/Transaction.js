@@ -301,7 +301,7 @@ async function ipn(req, res) {
 };
 
 async function coinpayment_create(req, res) {
-    const client = new Coinpayments({
+    const client = new coinpayment({
         key: '6198f48a55ebd548512ba5106ee7e8b382cd8e7116db8ecda0732f65c34521b8',
         secret: '27aedb32B7D525E06454A09f5ff8598575425e9900273Af0c4118Fb5255492Aa'
     })
