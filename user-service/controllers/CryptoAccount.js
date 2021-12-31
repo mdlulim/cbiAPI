@@ -3,7 +3,7 @@ const activityService = require('../services/Activity');
 
 async function create(req, res) {
     try {
-        return cryptoAccountService.create(req.body)
+        return cryptoAccountService.create({ ...req.body, user_id: req.user.id })
         .then(async () => {
             await activityService.add({
                 user_id: req.user.id,
@@ -42,7 +42,8 @@ async function index(req, res) {
             },
         });
     } catch (error) {
-        return res.send({
+        console.log(error.message)
+        return res.status(500).send({
             success: false,
             message: 'Could not process request'
         });

@@ -11,7 +11,7 @@ const CryptoAccount = sequelize.define('crypto_account', {
     address: Sequelize.STRING,
     code: Sequelize.STRING,
     metadata: Sequelize.JSON,
-    crypto_Sequelize: Sequelize.STRING,
+    crypto_type: Sequelize.STRING,
     status: Sequelize.STRING,
     created: Sequelize.DATE,
     updated: Sequelize.DATE,
