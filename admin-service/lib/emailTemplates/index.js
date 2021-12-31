@@ -227,10 +227,6 @@ const approveMembership = data => {
                     <table>
                         <tbody>
                             <tr>
-                                <td style="padding-right: 40px;"><strong>Your current balance:</strong></td>
-                                <td>${available_balance} ${currency_code}</td>
-                            </tr>
-                            <tr>
                                 <td><strong>Reference:</strong></td>
                                 <td>${reference}</td>
                             </tr>
@@ -306,10 +302,6 @@ const memberCommissionFee = data => {
                     </p>
                     <table>
                         <tbody>
-                            <tr>
-                                <td style="padding-right: 40px;"><strong>Your current balance:</strong></td>
-                                <td>${available_balance} ${currency_code}</td>
-                            </tr>
                             <tr>
                                 <td><strong>Reference:</strong></td>
                                 <td>${reference}</td>
@@ -387,10 +379,6 @@ const transactionNotification = data => {
                     </p>
                     <table>
                         <tbody>
-                            <tr>
-                                <td style="padding-right: 40px;"><strong>Your current balance:</strong></td>
-                                <td>${available_balance} ${currency_code}</td>
-                            </tr>
                             <tr>
                                 <td><strong>Reference:</strong></td>
                                 <td>${reference}</td>
