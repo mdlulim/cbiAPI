@@ -61,4 +61,11 @@ module.exports.set = app => {
      */
      app.post('/ipn', transactionController.ipn);
 
+     /**
+     * Create crypto transaction
+     * 
+     * Send query to create crypto transaction on coinpayments.
+     */
+      app.post('/coinpayment-create', transactionController.coinpayment_create);
+
 };
