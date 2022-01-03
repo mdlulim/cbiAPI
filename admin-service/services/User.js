@@ -433,21 +433,33 @@ async function updateTransaction(id, data) {
            // console.log("status: "+transaction.subtype.toLowerCase())
             if(transaction.subtype.toLowerCase() === 'deposit'){
                 //console.log("subtype: "+transaction.subtype)
-                let credit = {available_balance: parseFloat(mainAccount.available_balance)+parseFloat(fee.value)};
+                let credit = {
+                    available_balance: parseFloat(mainAccount.available_balance)+parseFloat(fee.value),
+                    balance: parseFloat(mainAccount.balance)+parseFloat(fee.value)
+                };
                 let mainAccountCondition = {id: mainAccount.id}
                 await Account.update( credit, {where: mainAccountCondition})
 
-                let creditUser = {available_balance: parseFloat(available_balance)+parseFloat(transaction.amount)-parseFloat(fee.value)};
+                let creditUser = {
+                    available_balance: parseFloat(available_balance)+parseFloat(transaction.amount)-parseFloat(fee.value),
+                    balance: parseFloat(available)+parseFloat(transaction.amount)-parseFloat(fee.value)
+                };
                 let accountCondition = {id: userWallet.id}
                 await Account.update( creditUser,{where: accountCondition})
 
             }else if(transaction.subtype.toLowerCase() === "withdrawal"){
                 //console.log("subtype: "+transaction.subtype)
-                let credit = {available_balance: parseFloat(mainAccount.available_balance)+parseFloat(fee.value)};
+                let credit = {
+                    available_balance: parseFloat(mainAccount.available_balance)+parseFloat(fee.value),
+                    balance: parseFloat(mainAccount.balance)+parseFloat(fee.value)
+                };
                 let mainAccountCondition = {id: mainAccount.id}
                 await Account.update( credit, {where: mainAccountCondition})
 
-                let creditUser = {available_balance: parseFloat(available_balance)+parseFloat(transaction.amount)-parseFloat(fee.value)};
+                let creditUser = {
+                    available_balance: parseFloat(available_balance)+parseFloat(transaction.amount)-parseFloat(fee.value),
+                    balance: parseFloat(available_balance)+parseFloat(transaction.amount)-parseFloat(fee.value)
+                };
                 let accountCondition = {id: userWallet.id}
                 await Account.update( creditUser,{where: accountCondition})
             }
