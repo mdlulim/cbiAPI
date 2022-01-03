@@ -336,7 +336,7 @@ const transactionNotification = data => {
         amount,
         first_name,
         currency_code,
-        available_balance,
+        subtype,
         reference,
     } = data;
 
@@ -375,7 +375,7 @@ const transactionNotification = data => {
                 <!-- Email body -->
                 <div >
                     <p>
-                        Your CBI wallet account has been credited with ${amount} ${currency_code} <br/>
+                        Your CBI wallet account has been ${subtype} with ${amount} ${currency_code} <br/>
                     </p>
                     <table>
                         <tbody>

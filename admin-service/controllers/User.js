@@ -365,10 +365,17 @@ async function transactions(req, res){
 
 async function updateTransaction(req, res){
     try {
-        const data = req.body.transaction;
-        // console.log(req.user);
+        const transact = req.body.transaction;
+        console.log(transact);
         return userService.updateTransaction(req.params.id, req.body).then(async (data) => {
            // console.log(data)
+           let subtype = transact.subtype;
+           if(transact.subtype.toLowerCase() === "withdrawal" || transact.subtype.toLowerCase() === "transfer"){
+            subtype= 'debited';
+           }else{
+            subtype = 'credited';
+           }
+
             if(data.success){
                 console.log(data)
                 // send email to recipient
@@ -377,8 +384,8 @@ async function updateTransaction(req, res){
                     email       : data.data.email,
                     status      : data.data.status,
                     amount      : data.data.amount,
+                    subtype     : data.subtype,
                     reference   : data.data.reference,
-                    available_balance   : data.data.available_balance,
                     currency_code       : data.data.currency_code,
                     sender: `${req.user.first_name} ${req.user.last_name} (${req.user.referral_id})`,
                 }).then((response) =>{
