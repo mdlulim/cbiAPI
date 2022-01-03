@@ -4,6 +4,7 @@ const config = require('../config');
 const accountService = require('../services/Account');
 const activityService = require('../services/Activity');
 const commissionService  = require('../services/Commission');
+const currencyService = require('../services/Currency');
 const investmentService  = require('../services/Investment');
 const productService  = require('../services/Product');
 const transactionService  = require('../services/Transaction');
@@ -13,6 +14,10 @@ const {
     wealthCreatorConfirmation,
     productPurchaseConfirmation,
 } = require('../helpers/emailHandler');
+
+const getTxid = (prefix, autoid) => {
+    return prefix.toUpperCase() + autoid.toString();
+};
 
 async function overview(req, res){
     try {
@@ -265,10 +270,7 @@ async function invest(req, res){
         // get user
         const user = await userService.show(req.user.id);
 
-        // retrieve product by id
-        const product = await productService.show(req.body.id);
-
-        // validate product
+        // validate product identifier
         if (!req.body.id) {
             return res.status(403)
             .send({
@@ -277,8 +279,12 @@ async function invest(req, res){
             });
         }
 
+        // retrieve product by id
+        const product = await productService.find(req.body.id, false);
+
         // amount
         const amount = parseFloat(req.body.amount);
+        const totalAmount = parseFloat(req.body.total_amount);
         const {
             id,
             fees,
@@ -287,6 +293,7 @@ async function invest(req, res){
             investment_period,
             minimum_investment,
             daily_interest,
+            product_code,
         } = product;
 
         const metadata = {
@@ -295,7 +302,7 @@ async function invest(req, res){
             daily_interest,
         };
 
-        const data = {
+        const investment = {
             fees,
             metadata,
             user_id: user.id,
@@ -308,25 +315,48 @@ async function invest(req, res){
         };
 
         // create investment and log product
-        const response = await investmentService.create(data);
-        await productService.subscribe({
-            ...req.body,
-            user_id: user.id,
-            product_id: id,
-        });
+        const response = await investmentService.create(investment);
 
         if (response) {
+            // log user product record
+            await productService.subscribe({
+                end_date: moment().add(investment_period, 'months').format('YYYY-MM-DD'),
+                user_id: user.id,
+                product_id: id,
+            });
+
             // retrive user wallet
             const wallet = await transactionService.wallet(user.id);
             const {
                 balance,
                 available_balance,
             } = wallet;
+
+            // log transaction
+            const currency = await currencyService.show(currency_code); // get currency
+            const transData = {
+                currency,
+                fee: null,
+                amount: amount,
+                total_amount: totalAmount,
+                user_id: user.id,
+                tx_type: 'debit',
+                subtype: 'product',
+                status: 'Completed',
+                note: `Bought ${title}`,
+                reference: `Buy-${product_code}`,
+                source_transaction: user.referral_id,
+                metadata: fees,
+            };
+            const transaction = await transactionService.create(transData);
+            const txid = getTxid(product_code, transaction.auto_id);
+            await transactionService.update({ txid }, transaction.id);
+            transaction.txid = txid;
             
             // deduct funds from user wallet
             await transactionService.debit({
-                balance: parseFloat(balance) - amount,
-                available_balance: parseFloat(available_balance) - amount,
+                balance: parseFloat(balance) - totalAmount,
+                available_balance: parseFloat(available_balance) - totalAmount,
                 updated: sequelize.fn('NOW'),
             }, wallet.id)
     
@@ -336,9 +366,9 @@ async function invest(req, res){
                 action: `${req.user.group_name}.account.debit`,
                 section: 'Account',
                 subsection: 'Debit',
-                description: `${amount} ${currency_code} debited from wallet for ${title}`,
+                description: `${totalAmount} ${currency_code} debited from wallet for ${title}`,
                 ip: null,
-                data,
+                data: investment,
             });
 
             let description = `${user.first_name} invested in a product (${title})`;
@@ -350,13 +380,13 @@ async function invest(req, res){
                 subsection: 'Invest',
                 description,
                 ip: null,
-                data,
+                data: investment,
             });
             
             // send product purchase confirmation email
             await productPurchaseConfirmation({
                 product,
-                amount: amount,
+                amount: totalAmount,
                 email: user.email,
                 first_name: user.first_name,
             });
@@ -459,6 +489,60 @@ async function categories(req, res) {
     }
 }
 
+async function subcategories(req, res) {
+    try {
+        const subcategories = await productService.subcategories(req.query);
+        const { count, rows } = subcategories;
+        return res.status(200).send({
+            success: true,
+            data: {
+                count,
+                next: null,
+                previous: null,
+                results: rows,
+            }
+        });
+    } catch (err) {
+        console.log(err.message);
+        return res.status(500).send({
+            success: false,
+            message: 'Could not process your request'
+        });
+    }
+}
+
+async function subcategory(req, res) {
+    try {
+        const subcategory = await productService.subcategory(req.params.permakey);
+        return res.status(200).send({
+            success: true,
+            data: subcategory,
+        });
+    } catch (err) {
+        console.log(err.message);
+        return res.status(500).send({
+            success: false,
+            message: 'Could not process your request'
+        });
+    }
+}
+
+async function category(req, res) {
+    try {
+        const category = await productService.category(req.params.permakey);
+        return res.status(200).send({
+            success: true,
+            data: category,
+        });
+    } catch (err) {
+        console.log(err.message);
+        return res.status(500).send({
+            success: false,
+            message: 'Could not process your request'
+        });
+    }
+}
+
 async function transactions(req, res){
     try {
         const { permakey } = req.params;
@@ -489,6 +573,9 @@ module.exports = {
     earnings,
     products,
     categories,
+    subcategories,
+    subcategory,
+    category,
     invest,
     transactions,
 };

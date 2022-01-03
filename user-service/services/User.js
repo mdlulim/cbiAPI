@@ -310,13 +310,13 @@ async function activities(user, query) {
                 user_id: user.id,
                 action: {
                     [Op.or]: {
-                        [Op.ne]: `${user.group_name}.login.verify`,
-                        [Op.ne]: `${user.group_name}.social.login.verify`
+                        [Op.notILike]: 'admin.%',
+                        [Op.notILike]: '%.login'
                     }
-                }
+                },
             },
             offset: 0,
-            limit: 5,
+            limit: 6,
             order: [[ 'created', 'DESC' ]]
         })
     } catch (error) {
