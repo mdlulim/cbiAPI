@@ -17,11 +17,32 @@ module.exports.set = app => {
     app.get('/', authMiddleware.checkAuth, productController.index);
     
     /**
-     * Retrieve Single Product
+     * Retrieve Product Categories
+     * 
+     * Retrieve product categories.
+     */
+    app.get('/categories', authMiddleware.checkAuth, productController.categories);
+    
+    /**
+     * Retrieve Single Product Category
      * 
      * Retrieve current user’s product details.
      */
-    app.get('/categories', authMiddleware.checkAuth, productController.categories);
+    app.get('/categories/:permakey', authMiddleware.checkAuth, productController.category);
+    
+    /**
+     * Retrieve Sub Categories
+     * 
+     * Retrieve product subcategories by category.
+     */
+    app.get('/subcategories', authMiddleware.checkAuth, productController.subcategories);
+    
+    /**
+     * Retrieve Sub Categories
+     * 
+     * Retrieve product subcategories by category.
+     */
+    app.get('/subcategories/:permakey', authMiddleware.checkAuth, productController.subcategory);
     
     /**
      * Retrieve Single Product

@@ -1,7 +1,7 @@
 const Sequelize = require('sequelize');
 const sequelize = require('../config/db');
 
-const ProductCategory = sequelize.define('product_category', {
+const ProductSubCategory = sequelize.define('product_subcategory', {
     id: {
         type: Sequelize.UUID,
         defaultValue: Sequelize.UUIDV4,
@@ -15,10 +15,11 @@ const ProductCategory = sequelize.define('product_category', {
 	permakey: Sequelize.STRING,
     archived: Sequelize.BOOLEAN,
     sort_order: Sequelize.INTEGER,
+	category_id: Sequelize.UUID,
 }, {
     timestamps: false
 });
 
 module.exports = {
-    ProductCategory,
+    ProductSubCategory,
 }
