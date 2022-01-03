@@ -8,8 +8,9 @@ const emailHandler = require('../helpers/emailHandler');
 const { sendOTPAuth } = require('../helpers/smsHandler');
 
 async function create(req, res) {
+    let data = req.body;
     try {
-        return bankAccountService.create(req.body)
+        return await bankAccountService.create(data)
         .then(() => res.send({ success: true }))
         .catch(err => {
             res.send({
@@ -18,6 +19,7 @@ async function create(req, res) {
             });
         });
     } catch (error) {
+        console.log(error)
         return res.send({
             success: false,
             message: 'Could not process request'

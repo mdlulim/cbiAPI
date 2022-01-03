@@ -557,6 +557,21 @@ async function approveDeposit(id, data) {
                 updated: sequelize.fn('NOW'),
             }, { where: { id: user_id } });
 
+            const sponsorCommission = {
+                user_id: sponsor.id,
+                tx_type: 'credit',
+                subtype: 'referral',
+                note:'CBI Referral Commission',
+                status: 'Completed',
+                reference: 'Pay Referral',
+                amount: parseFloat(setting.value)* 25 / 100,
+                fee: 0,
+                total_amount: parseFloat(setting.value)* 25 / 100,
+                balance: 0,
+                currency: data.transaction.currency,
+                source_transaction: data.transaction.user_id
+            }
+
             const commissionData ={
                 user_id: sponsor.id,
                 type: 'REFERRAL',
@@ -576,7 +591,7 @@ async function approveDeposit(id, data) {
                 reference: data.transaction.reference,
                 amount: parseFloat(setting.value)* 25 / 100,
                 currency_code: data.transaction.currency.code,
-                available_balance: userBalance
+                available_balance: userBalance,
             }
 
             const dataSponsor = {
@@ -589,8 +604,9 @@ async function approveDeposit(id, data) {
                 currency_code: data.transaction.currency.code,
                 available_balance: sponsorBalance
             }
+
             await Commission.create(commissionData);
-            return { success: true, message: "Account was successfully updated", data: {user: dataUser, sponsor: dataSponsor} };
+            return { success: true, message: "Account was successfully updated", data: {user: dataUser, sponsor: dataSponsor, commission: sponsorCommission} };
     }else{
         let status = {status: data.status}
         await Transaction.update(status, { where: { id } });

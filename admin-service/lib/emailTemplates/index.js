@@ -185,7 +185,6 @@ const approveMembership = data => {
         amount,
         first_name,
         currency_code,
-        available_balance,
         reference,
     } = data;
 
@@ -259,9 +258,7 @@ const memberCommissionFee = data => {
     const {
         amount,
         first_name,
-        username,
         currency_code,
-        available_balance,
         reference,
     } = data;
 
