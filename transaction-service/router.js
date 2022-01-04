@@ -51,7 +51,7 @@ module.exports.set = app => {
      * 
      * Retrieve transaction limits by kyc level.
      */
-    app.get('/limits', authMiddleware.checkAuth, transactionController.limits);
+    app.get('/limits/:kyc_level', authMiddleware.checkAuth, transactionController.limits);
 
     
     /**

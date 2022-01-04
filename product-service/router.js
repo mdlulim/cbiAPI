@@ -85,4 +85,11 @@ module.exports.set = app => {
      * Invest to a Product
      */
     app.post('/invest', authMiddleware.checkAuth, productController.invest);
+    
+    /**
+     * Cancel product
+     * 
+     * Cancel/suspend a User Product
+     */
+    app.delete('/cancel/:id', authMiddleware.checkAuth, productController.cancel);
 };

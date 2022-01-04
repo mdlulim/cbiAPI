@@ -260,17 +260,11 @@ async function totals(req, res){
 
 async function limits(req, res){
     try {
-        const user = await userService.show(req.user.id);
-        if (user.kyc && user.kyc.level) {
-            const limits = await transactionService.limits(user.kyc.level);
-            return res.send({
-                success: true,
-                data: limits,
-            });
-        }
+        const { kyc_level } = req.params;
+        const limits = await transactionService.limits(kyc_level);
         return res.send({
             success: true,
-            data: null,
+            data: limits,
         });
     } catch (err) {
         console.log(err.message)

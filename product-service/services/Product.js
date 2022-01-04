@@ -22,10 +22,21 @@ Product.belongsTo(Currency, { foreignKey: 'currency_code', targetKey: 'code' });
 
 async function index(user_id) {
     try {
+        const { fn, Op } = sequelize;
         const products = await Product.findAndCountAll({
             include: [{
                 model: UserProduct,
-                where: { user_id }
+                where: {
+                    user_id,
+                    status: 'Active',
+                    [Op.or]: {
+                        end_date: { [Op.eq]: null },
+                        [Op.and]: {
+                            start_date: { [Op.lte]: fn('NOW') },
+                            end_date: { [Op.gte]: fn('NOW') },
+                        }
+                    }
+                }
             },{
                 model: Currency
             }, {
@@ -43,6 +54,18 @@ async function index(user_id) {
                 results: rows,
             }
         };
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
+async function update(data, id) {
+    try {
+        data.updated = sequelize.fn('NOW');
+        return UserProduct.update(data, {
+            where: { id }
+        });
     } catch (error) {
         console.error(error.message || null);
         throw new Error('Could not process your request');
@@ -249,6 +272,7 @@ module.exports = {
     find,
     show,
     index,
+    update,
     overview,
     subscribe,
     products,
