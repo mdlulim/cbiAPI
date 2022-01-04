@@ -440,9 +440,10 @@ async function updateTransaction(id, data) {
                 let mainAccountCondition = {id: mainAccount.id}
                 await Account.update( credit, {where: mainAccountCondition})
 
+                
                 let creditUser = {
                     available_balance: parseFloat(available_balance)+parseFloat(transaction.amount)-parseFloat(fee.value),
-                    balance: parseFloat(available)+parseFloat(transaction.amount)-parseFloat(fee.value)
+                    balance: parseFloat(available_balance)+parseFloat(transaction.amount)-parseFloat(fee.value)
                 };
                 let accountCondition = {id: userWallet.id}
                 await Account.update( creditUser,{where: accountCondition})
@@ -469,7 +470,8 @@ async function updateTransaction(id, data) {
             where: { id }
         });
 
-        return { success: true, message: 'Transaction was updated successfully',
+        return { success: true, 
+            message: 'Transaction was updated successfully',
             data: {
                 status: data.status,
                 first_name: user.first_name,
@@ -482,6 +484,7 @@ async function updateTransaction(id, data) {
                 currency_code: data.transaction.currency.code,
         } };
     } catch (error) {
+        console.log(error)
         console.error(error.message || null);
         throw new Error('Could not process your request');
     }

@@ -443,6 +443,7 @@ module.exports.set = app => {
     app.post('/company-bank-accounts', authMiddleware.checkAuth, CompanyBankAccount.create);
     app.get('/company-bank-accounts/:id', authMiddleware.checkAuth, CompanyBankAccount.show);
     app.put('/company-bank-accounts/:id', authMiddleware.checkAuth, CompanyBankAccount.update);
+    app.delete("/company-bank-accounts/:id", authMiddleware.checkAuth, CompanyBankAccount.destroy);
 
     app.post('/bank-accounts/:id/auth/otp', authMiddleware.checkAuth, bankAccountController.otp);
     app.post('/bank-accounts/:id/auth/otp/resend', authMiddleware.checkAuth, bankAccountController.otpResend);

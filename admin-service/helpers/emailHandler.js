@@ -43,6 +43,7 @@ async function updatingUserStatus(data) {
     return sendMail(from, email, 'CBI - Membership Status Notification', template);
 };
 async function transactionNotification(data) {
+    console.log(data)
     const { email } = data;
     const template = emailTemplates.transactionNotification(data);
     const from = {

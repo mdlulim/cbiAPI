@@ -64,19 +64,16 @@ async function show(req, res) {
 
 async function update(req, res) {
     try {
-        return CompanyBankAccount.update(req.params.id, req.body)
-        .then(() => res.send({ success: true, message: '' }))
-        .catch(err => {
-            res.send({
-                success: false,
-                message: err.message,
-            });
+        await CompanyBankAccount.update(req.params.id, req.body);
+
+        return res.send({
+            success: true, message: 'Bank details was successfully updated'
         });
     } catch (error) {
-        return res.send({
+        return {
             success: false,
             message: 'Could not process request'
-        });
+        };
     }
 }
 
