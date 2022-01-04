@@ -5,10 +5,16 @@ const emailHandler = require('../helpers/emailHandler');
 const activityService = require('../services/Activity');
 const groupService = require('../services/Group');
 const userService = require('../services/User');
+const transactionService = require('../services/Transaction');
 
 function cleanEmail(email) {
     return email ? email.trim() : email;
 }
+
+
+const getTxid = (subtype, autoid) => {
+    return subtype.substr(0, 3).toUpperCase() + autoid.toString();
+};
 
 const getSubsection = (data) => {
     const {
@@ -365,10 +371,17 @@ async function transactions(req, res){
 
 async function updateTransaction(req, res){
     try {
-        const data = req.body.transaction;
-        // console.log(req.user);
+        const transact = req.body.transaction;
+
         return userService.updateTransaction(req.params.id, req.body).then(async (data) => {
            // console.log(data)
+           let subtype = transact.subtype;
+           if(transact.subtype.toLowerCase() === "withdrawal" || transact.subtype.toLowerCase() === "transfer"){
+            subtype= 'debited';
+           }else{
+            subtype = 'credited';
+           }
+
             if(data.success){
                 console.log(data)
                 // send email to recipient
@@ -377,8 +390,8 @@ async function updateTransaction(req, res){
                     email       : data.data.email,
                     status      : data.data.status,
                     amount      : data.data.amount,
+                    subtype     : data.subtype,
                     reference   : data.data.reference,
-                    available_balance   : data.data.available_balance,
                     currency_code       : data.data.currency_code,
                     sender: `${req.user.first_name} ${req.user.last_name} (${req.user.referral_id})`,
                 }).then((response) =>{
@@ -507,8 +520,33 @@ async function updateBankAccounts(req, res){
 
 async function approveDeposit(req, res){
     try {
+
         return userService.approveDeposit(req.params.id, req.body).then(async (data) => {
             if(data.success){
+                const transaction = await transactionService.create(data.data.commission);
+
+                if (!transaction) {
+                    return res.status(403).send({
+                        success: false,
+                        message: 'Could not process request transaction'
+                    });
+                }
+
+                // log activity
+                await activityService.addActivity({
+                    user_id: transaction.user_id,
+                    action: `${req.user.group_name}.transactions.${transaction.tx_type}.${transaction.subtype}`,
+                    section: 'Transactions',
+                    subsection: getSubsection(transaction),
+                    description: `${req.user.first_name} made a ${transaction.subtype} of ${transaction.amount} ${transaction.currency.code}`,
+                    ip: null,
+                    data,
+                });
+
+                const txid = getTxid(transaction.subtype, transaction.dataValues.auto_id);
+                let transData = { txid: txid, status: 'Completed' }
+                await transactionService.update(transData, transaction.id);
+                transaction.txid = txid;
                 //send email to recipient
                 await emailHandler.approveMembership({
                     first_name  : data.data.user.first_name,
@@ -516,21 +554,20 @@ async function approveDeposit(req, res){
                     status      : data.data.user.status,
                     amount      : data.data.user.amount,
                     reference   : data.data.user.reference,
-                    available_balance   : data.data.user.available_balance,
                     currency_code       : data.data.user.currency_code,
                     sender: `${req.user.first_name} ${req.user.last_name} (${req.user.referral_id})`,
                 })
+
                 await emailHandler.memberCommissionFee({
                     first_name  : data.data.sponsor.first_name,
                     email       : data.data.sponsor.email,
                     status      : data.data.sponsor.status,
                     amount      : data.data.sponsor.amount,
                     reference   : data.data.user.first_name,
-                    available_balance   : data.data.sponsor.available_balance,
                     currency_code       : data.data.sponsor.currency_code,
                     sender: `${req.user.first_name} ${req.user.last_name} (${req.user.referral_id})`,
                 })
-                
+
                await activityService.addActivity({
                     user_id: req.user.id,
                     action: `${req.user.group_name}.transactions.${data.data.user.tx_type}.${data.data.user.subtype}`,
@@ -540,6 +577,8 @@ async function approveDeposit(req, res){
                     ip: null,
                     data,
                 })
+
+
             }
            return res.send({ success: data.success, message: data.message})
         });

@@ -185,7 +185,6 @@ const approveMembership = data => {
         amount,
         first_name,
         currency_code,
-        available_balance,
         reference,
     } = data;
 
@@ -227,10 +226,6 @@ const approveMembership = data => {
                     <table>
                         <tbody>
                             <tr>
-                                <td style="padding-right: 40px;"><strong>Your current balance:</strong></td>
-                                <td>${available_balance} ${currency_code}</td>
-                            </tr>
-                            <tr>
                                 <td><strong>Reference:</strong></td>
                                 <td>${reference}</td>
                             </tr>
@@ -263,9 +258,7 @@ const memberCommissionFee = data => {
     const {
         amount,
         first_name,
-        username,
         currency_code,
-        available_balance,
         reference,
     } = data;
 
@@ -307,10 +300,6 @@ const memberCommissionFee = data => {
                     <table>
                         <tbody>
                             <tr>
-                                <td style="padding-right: 40px;"><strong>Your current balance:</strong></td>
-                                <td>${available_balance} ${currency_code}</td>
-                            </tr>
-                            <tr>
                                 <td><strong>Reference:</strong></td>
                                 <td>${reference}</td>
                             </tr>
@@ -344,7 +333,7 @@ const transactionNotification = data => {
         amount,
         first_name,
         currency_code,
-        available_balance,
+        subtype,
         reference,
     } = data;
 
@@ -383,14 +372,10 @@ const transactionNotification = data => {
                 <!-- Email body -->
                 <div >
                     <p>
-                        Your CBI wallet account has been credited with ${amount} ${currency_code} <br/>
+                        Your CBI wallet account has been ${subtype} with ${amount} ${currency_code} <br/>
                     </p>
                     <table>
                         <tbody>
-                            <tr>
-                                <td style="padding-right: 40px;"><strong>Your current balance:</strong></td>
-                                <td>${available_balance} ${currency_code}</td>
-                            </tr>
                             <tr>
                                 <td><strong>Reference:</strong></td>
                                 <td>${reference}</td>
