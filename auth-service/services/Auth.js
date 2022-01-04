@@ -97,11 +97,14 @@ async function authenticate(data) {
             // Check device
             const { browser, is_mobile } = device;
             const userDevice = await UserDevice.findOne({
-                ipv4: geoinfo.IPv4,
-                is_mobile,
-                browser,
+                where: {
+                    user_id: record.id,
+                    ipv4: geoinfo.IPv4,
+                    is_mobile,
+                    browser,
+                }
             });
-            if (userDevice) {
+            if (userDevice && userDevice.id) {
                 newDeviceLogin = false;
                 if (userDevice.blacklisted) {
                     throw new Error('Authentication failed. Access denied.');
@@ -209,9 +212,12 @@ async function socialAuth(data) {
             // Check device
             const { browser, is_mobile } = device;
             const userDevice = await UserDevice.findOne({
-                ipv4: geoinfo.IPv4,
-                is_mobile,
-                browser,
+                where: {
+                    user_id: record.id,
+                    ipv4: geoinfo.IPv4,
+                    is_mobile,
+                    browser,
+                }
             });
             if (userDevice) {
                 newDeviceLogin = false;
@@ -508,9 +514,12 @@ async function verifyLogin(data) {
             } = device;
             const location = `${city}, ${state} - ${country_name} ${postal}`;
             const userDevice = await UserDevice.findOne({
-                ipv4: IPv4,
-                is_mobile,
-                browser,
+                where: {
+                    user_id: id,
+                    ipv4: IPv4,
+                    is_mobile,
+                    browser,
+                }
             });
             if (userDevice) {
                 if (userDevice.blacklisted) {

@@ -3,6 +3,7 @@ const { Account }  = require('../models/Account');
 const { Currency }  = require('../models/Currency');
 const { Product }  = require('../models/Product');
 const { ProductCategory }  = require('../models/ProductCategory');
+const { ProductSubCategory }  = require('../models/ProductSubCategory');
 const { UserProduct }  = require('../models/UserProduct');
 const { User }  = require('../models/User');
 
@@ -10,7 +11,12 @@ Account.belongsTo(User, { foreignKey: 'user_id', targetKey: 'id' });
 
 Product.belongsTo(UserProduct, { foreignKey: 'id', targetKey: 'product_id' });
 User.belongsTo(UserProduct, { foreignKey: 'id', targetKey: 'user_id' });
-Product.belongsTo(ProductCategory, { foreignKey: 'category_id', targetKey: 'id' });
+
+Product.belongsTo(ProductSubCategory, { foreignKey: 'subcategory_id', targetKey: 'id' });
+ProductSubCategory.hasMany(Product, { foreignKey: 'subcategory_id', targetKey: 'id' });
+
+ProductSubCategory.belongsTo(ProductCategory, { foreignKey: 'category_id', targetKey: 'id' });
+ProductCategory.hasMany(ProductSubCategory, { foreignKey: 'category_id', targetKey: 'id' });
 
 Product.belongsTo(Currency, { foreignKey: 'currency_code', targetKey: 'code' });
 
@@ -23,7 +29,8 @@ async function index(user_id) {
             },{
                 model: Currency
             }, {
-                model: ProductCategory
+                model: ProductSubCategory,
+                include: [{ model: ProductCategory }],
             }]
         });
         const { count, rows } = products;
@@ -46,7 +53,7 @@ async function overview(query) {
     try {
         const { Op } = sequelize;
         const products = await Product.findAndCountAll({
-            include: [{ model: Currency }, { model: ProductCategory }],
+            include: [{ model: Currency }, { model: ProductSubCategory }],
             order: [['sort_order', 'ASC']],
             where: {
                 archived: false,
@@ -71,16 +78,19 @@ async function overview(query) {
     }
 }
 
-async function find(id) {
+async function find(id, return_object = true) {
     try {
         const product = await Product.findOne({
             where: { id },
-            include: [{ model: Currency }, { model: ProductCategory }]
+            include: [{ model: Currency }, { model: ProductSubCategory }]
         });
-        return {
-            success: true,
-            data: product,
-        };
+        if (return_object) {
+            return {
+                success: true,
+                data: product,
+            };
+        }
+        return product;
     } catch (error) {
         console.error(error.message || null);
         throw new Error('Could not process your request');
@@ -91,7 +101,13 @@ async function show(permakey) {
     try {
         const product = await Product.findOne({
             where: { permakey },
-            include: [{ model: Currency }, { model: ProductCategory }]
+            include: [{
+                model: Currency
+            },
+            {
+                model: ProductSubCategory,
+                include: [{ model: ProductCategory }],
+            }]
         });
         return {
             success: true,
@@ -107,7 +123,7 @@ async function findByCode(product_code) {
     try {
         return Product.findOne({
             where: { product_code },
-            include: [{ model: Currency }, { model: ProductCategory }]
+            include: [{ model: Currency }, { model: ProductSubCategory }]
         });
     } catch (error) {
         console.error(error.message || null);
@@ -133,7 +149,7 @@ async function products(category_id) {
             include: [{
                 model: Currency
             }, {
-                model: ProductCategory
+                model: ProductSubCategory
             }]
         });
     } catch (error) {
@@ -145,7 +161,60 @@ async function products(category_id) {
 async function categories() {
     try {
         return ProductCategory.findAndCountAll({
-            order: [[ "title", "ASC" ]]
+            where: { archived: false },
+            order: [[ 'sort_order', 'ASC' ], [ 'title', 'ASC' ]]
+        });
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
+async function subcategories() {
+    try {
+        return ProductSubCategory.findAndCountAll({
+            where: { archived: false },
+            include: [{
+                model: ProductCategory,
+            }, {
+                model: Product,
+                order: [[ 'sort_order', 'ASC' ]],
+                include: [{ model: Currency }],
+            }],
+            order: [[ 'sort_order', 'ASC' ], [ 'title', 'ASC' ]]
+        });
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
+async function subcategory(permakey) {
+    try {
+        return ProductSubCategory.findOne({
+            where: { permakey, archived: false },
+            include: [{
+                model: ProductCategory,
+            }, {
+                model: Product,
+                order: [[ 'sort_order', 'ASC' ]],
+                include: [{ model: Currency }]
+            }],
+            order: [[ 'sort_order', 'ASC' ], [ 'title', 'ASC' ]]
+        });
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
+async function category(permakey) {
+    try {
+        return ProductCategory.findOne({
+            where: { permakey, archived: false },
+            include: [{
+                model: ProductSubCategory,
+            }]
         });
     } catch (error) {
         console.error(error.message || null);
@@ -184,6 +253,9 @@ module.exports = {
     subscribe,
     products,
     categories,
+    subcategories,
+    subcategory,
+    category,
     findByCode,
     transactions,
 }
