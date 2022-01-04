@@ -404,7 +404,6 @@ async function transactions(user_id) {
 }
 
 async function updateTransaction(id, data) {
-   
     try {
         const myData = {status: data.status}
         const transaction = data.transaction;
@@ -412,35 +411,58 @@ async function updateTransaction(id, data) {
         const user =  await User.findOne({where : {id: transaction.user_id}});
 
         const fee =  await Fee.findOne({where : {subtype: transaction.subtype.charAt(0).toUpperCase() + transaction.subtype.slice(1), group_id: user.dataValues.group_id} });
-        let userBalance = {};
+       if(!fee.value){
+           return {success: false, message: 'Transaction fee is not configured!'}
+       }
+      
         if(data.status === 'Completed'){
             const mainAccount =  await Account.findOne({where : {id: '3cf7d2c0-80e1-4264-9f2f-6487fd1680c2'}});
             const userWallet =  await Account.findOne({
                 where: { user_id },
             });
+            let isBalance = isNaN(userWallet.available_balance);
+            let available_balance = userWallet.available_balance;
+            if(isBalance){
+                available_balance = 0;
+            }
+
             //9001127.1990
-            //console.log("status: "+data.status)
+            //console.log("======================================Fees==============================")
+
+           // return user
            // console.log("status: "+transaction.subtype.toLowerCase())
             if(transaction.subtype.toLowerCase() === 'deposit'){
                 //console.log("subtype: "+transaction.subtype)
-                let credit = {available_balance: parseFloat(mainAccount.available_balance)+parseFloat(fee.dataValues.value)};
+                let credit = {
+                    available_balance: parseFloat(mainAccount.available_balance)+parseFloat(fee.value),
+                    balance: parseFloat(mainAccount.balance)+parseFloat(fee.value)
+                };
                 let mainAccountCondition = {id: mainAccount.id}
-                Account.update( credit, {where: mainAccountCondition})
+                await Account.update( credit, {where: mainAccountCondition})
 
-                let creditUser = {available_balance: parseFloat(userWallet.available_balance)+parseFloat(transaction.amount)-parseFloat(fee.dataValues.value)};
-                userBalance = parseFloat(userWallet.available_balance)+parseFloat(transaction.amount)-parseFloat(fee.dataValues.value);
+                
+                let creditUser = {
+                    available_balance: parseFloat(available_balance)+parseFloat(transaction.amount)-parseFloat(fee.value),
+                    balance: parseFloat(available_balance)+parseFloat(transaction.amount)-parseFloat(fee.value)
+                };
                 let accountCondition = {id: userWallet.id}
-                Account.update( creditUser,{where: accountCondition})
+                await Account.update( creditUser,{where: accountCondition})
 
             }else if(transaction.subtype.toLowerCase() === "withdrawal"){
                 //console.log("subtype: "+transaction.subtype)
-                let credit = {available_balance: parseFloat(mainAccount.available_balance)+parseFloat(fee.dataValues.value)};
+                let credit = {
+                    available_balance: parseFloat(mainAccount.available_balance)+parseFloat(fee.value),
+                    balance: parseFloat(mainAccount.balance)+parseFloat(fee.value)
+                };
                 let mainAccountCondition = {id: mainAccount.id}
-                Account.update( credit, {where: mainAccountCondition})
+                await Account.update( credit, {where: mainAccountCondition})
 
-                let creditUser = {available_balance: parseFloat(userWallet.available_balance)+parseFloat(transaction.amount)-parseFloat(fee.dataValues.value)};
+                let creditUser = {
+                    available_balance: parseFloat(available_balance)+parseFloat(transaction.amount)-parseFloat(fee.value),
+                    balance: parseFloat(available_balance)+parseFloat(transaction.amount)-parseFloat(fee.value)
+                };
                 let accountCondition = {id: userWallet.id}
-                Account.update( creditUser,{where: accountCondition})
+                await Account.update( creditUser,{where: accountCondition})
             }
            
         }
@@ -448,7 +470,8 @@ async function updateTransaction(id, data) {
             where: { id }
         });
 
-        return { success: true, message: 'Transaction was updated successfully',
+        return { success: true, 
+            message: 'Transaction was updated successfully',
             data: {
                 status: data.status,
                 first_name: user.first_name,
@@ -459,9 +482,9 @@ async function updateTransaction(id, data) {
                 fee: fee.dataValues.value,
                 reference: data.transaction.reference,
                 currency_code: data.transaction.currency.code,
-                available_balance: userBalance
         } };
     } catch (error) {
+        console.log(error)
         console.error(error.message || null);
         throw new Error('Could not process your request');
     }
@@ -501,14 +524,23 @@ async function approveDeposit(id, data) {
             const userTopUp = parseFloat(data.transaction.amount) - parseFloat(setting.dataValues.value)+(parseFloat(setting.dataValues.value)* 25 / 100);
 
             let companyCondition    = {id: mainAccount.dataValues.id};
-            let companyData         = {available_balance: parseFloat(mainAccount.dataValues.available_balance)+(parseFloat(setting.dataValues.value)* 50 / 100)};
+            let companyData         = {
+                available_balance: parseFloat(mainAccount.dataValues.available_balance)+(parseFloat(setting.dataValues.value)* 50 / 100),
+                balance: parseFloat(mainAccount.dataValues.balance)+(parseFloat(setting.dataValues.value)* 50 / 100),
+            };
 
             let sponsorCondition    = {id: sponsorAccount.dataValues.id};
-            let sponsorData         = {available_balance: parseFloat(sponsorAccount.dataValues.available_balance)+(parseFloat(setting.dataValues.value)* 25 / 100)};
+            let sponsorData         = {
+                available_balance: parseFloat(sponsorAccount.dataValues.available_balance)+(parseFloat(setting.dataValues.value)* 25 / 100),
+                balance: parseFloat(sponsorAccount.dataValues.balance)+(parseFloat(setting.dataValues.value)* 25 / 100)
+            };
             sponsorBalance          = parseFloat(sponsorAccount.dataValues.available_balance)+(parseFloat(setting.dataValues.value)* 25 / 100);
 
             let userCondition       = {id: userAccount.dataValues.id};
-            let userData            = {available_balance: parseFloat(userAccount.dataValues.available_balance)+userTopUp};
+            let userData            = {
+                available_balance: parseFloat(userAccount.dataValues.available_balance)+userTopUp,
+                balance: parseFloat(userAccount.dataValues.balance)+userTopUp
+            };
             userBalance             = parseFloat(userAccount.dataValues.available_balance)+userTopUp;
 
             const user_id = user.dataValues.id;
@@ -528,10 +560,25 @@ async function approveDeposit(id, data) {
                 updated: sequelize.fn('NOW'),
             }, { where: { id: user_id } });
 
+            const sponsorCommission = {
+                user_id: sponsor.id,
+                tx_type: 'credit',
+                subtype: 'referral',
+                note:'CBI Referral Commission',
+                status: 'Completed',
+                reference: 'Pay Referral',
+                amount: parseFloat(setting.value)* 25 / 100,
+                fee: 0,
+                total_amount: parseFloat(setting.value)* 25 / 100,
+                balance: 0,
+                currency: data.transaction.currency,
+                source_transaction: data.transaction.user_id
+            }
+
             const commissionData ={
-                user_id: user.id,
+                user_id: sponsor.id,
                 type: 'REFERRAL',
-                referral_id: sponsor.id,
+                referral_id: user.id,
                 status: 'Paid',
                 amount: parseFloat(setting.value)* 25 / 100,
                 currency_code: data.transaction.currency.code,
@@ -547,7 +594,7 @@ async function approveDeposit(id, data) {
                 reference: data.transaction.reference,
                 amount: parseFloat(setting.value)* 25 / 100,
                 currency_code: data.transaction.currency.code,
-                available_balance: userBalance
+                available_balance: userBalance,
             }
 
             const dataSponsor = {
@@ -560,8 +607,9 @@ async function approveDeposit(id, data) {
                 currency_code: data.transaction.currency.code,
                 available_balance: sponsorBalance
             }
+
             await Commission.create(commissionData);
-            return { success: true, message: "Account was successfully updated", data: {user: dataUser, sponsor: dataSponsor} };
+            return { success: true, message: "Account was successfully updated", data: {user: dataUser, sponsor: dataSponsor, commission: sponsorCommission} };
     }else{
         let status = {status: data.status}
         await Transaction.update(status, { where: { id } });

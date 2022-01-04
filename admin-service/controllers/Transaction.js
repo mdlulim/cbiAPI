@@ -268,6 +268,7 @@ async function transactions(req, res){
 async function transactionstotal(req, res){
     try {
         response = await transactionService.transactionstotal(req.body.subtype)
+        console.log(response)
         res.send(response)
     } catch (err) {
         return res.status(500).send({
