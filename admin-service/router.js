@@ -16,6 +16,7 @@ const authMiddleware = require('./middlewares/auth');
 const companyController = require('./controllers/Company');
 const bankAccountController = require('./controllers/BankAccount');
 const CompanyBankAccount = require('./controllers/CompanyBankAccount');
+const KYCLimitController = require('./controllers/KYCLimit');
 
 
 module.exports.set = app => {
@@ -449,6 +450,16 @@ module.exports.set = app => {
     app.post('/bank-accounts/:id/auth/otp/resend', authMiddleware.checkAuth, bankAccountController.otpResend);
     app.post('/bank-accounts/:id/auth/otp/verify', authMiddleware.checkAuth, bankAccountController.otpVerify);
 
+        /**
+     * List KYC Limits
+     * 
+     * Get a list of KYC Limits belonging to CBI.
+     */
+    app.get('/kyc-limits', authMiddleware.checkAuth, KYCLimitController.index);
+    app.post('/kyc-limits', authMiddleware.checkAuth, KYCLimitController.create);
+    app.get('/kyc-limits/:id', authMiddleware.checkAuth, KYCLimitController.show);
+    app.put('/kyc-limits/:id', authMiddleware.checkAuth, KYCLimitController.update);
+    app.delete("/kyc-limits/:id", authMiddleware.checkAuth, KYCLimitController.destroy);
         /**
      * List Companies
      * 
