@@ -565,6 +565,41 @@ async function transactions(req, res){
     }
 }
 
+async function cancel(req, res){
+    try {
+        const { id } = req.params;
+        const product = await productService.find(id, false);
+        const data = {
+            status: 'Cancelled',
+            end_date: new Date().toISOString(),
+        };
+        return productService.update(data, id)
+        .then(async () => {
+    
+            // log activities
+            await activityService.addActivity({
+                user_id: req.user.id,
+                action: `${req.user.group_name}.product.cancel`,
+                section: 'Product',
+                subsection: 'Cancellation',
+                description: `Cancellation request for ${product.title}`,
+                ip: null,
+                data,
+            });
+
+            return res.status(200).send({
+                success: true,
+            });
+        });
+    } catch (err) {
+        console.log(err.message);
+        return res.status(500).send({
+            success: false,
+            message: 'Could not process your request'
+        });
+    }
+}
+
 module.exports = {
     index,
     overview,
@@ -578,4 +613,5 @@ module.exports = {
     category,
     invest,
     transactions,
+    cancel,
 };
