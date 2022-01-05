@@ -1,5 +1,6 @@
 const authMiddleware = require('./middlewares/auth');
 const feeController = require('./controllers/Fee');
+const coinPaymentController = require('./controllers/CoinPayment');
 const transactionController = require('./controllers/Transaction');
 
 module.exports.set = app => {
@@ -56,16 +57,21 @@ module.exports.set = app => {
     
     /**
      * Handle btc deposits
-     * 
-     * Retrieve transaction limits by kyc level.
      */
-     app.post('/ipn', transactionController.ipn);
+     app.post('/coinpayments/ipn', coinPaymentController.ipn);
 
-     /**
+    /**
      * Create crypto transaction
      * 
      * Send query to create crypto transaction on coinpayments.
      */
-      app.post('/coinpayment-create', transactionController.coinpayment_create);
+      app.post('/coinpayments/create', authMiddleware.checkAuth, coinPaymentController.create);
+
+    /**
+     * Create crypto transaction
+     * 
+     * Send query to create crypto transaction on coinpayments.
+     */
+    app.post('/coinpayments/convert', authMiddleware.checkAuth, coinPaymentController.convert);
 
 };
