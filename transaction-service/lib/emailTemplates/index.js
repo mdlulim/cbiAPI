@@ -9,17 +9,6 @@ const depositRequestNotification = data => {
         currency_code,
         reference,
     } = data;
-    // const html = `
-    //     <p>Hi ${first_name},</p>
-    //     <h3>Deposit Request Notification</h3>
-    //     <p>
-    //         This is to confirm a deposit request of ${amount} ${currency_code} into your CBI Global wallet. 
-    //         Once this transaction has been verified and approved, you will be notified. Your transaction
-    //         reference number is <strong>${reference}</strong>.
-    //     </p>
-    //     <p>If you don't recognize this activity, please contact us immediately at <a href="mailto:support@cbiglobal.io">support@cbiglobal.io</a>.</p>
-    //     <p style="padding-top:15px"><strong>Regards</strong>,<br />CBI Support</p>
-    // `;
     const html = `
     <!DOCTYPE html>
     <html lang="en">
@@ -40,7 +29,7 @@ const depositRequestNotification = data => {
                 margin: 0 auto;
                 line-height: 1.5;">
             <div style="padding: 20px 0; margin-bottom: 20px; background-image: linear-gradient(310deg,#141727,#3a416f);color: white; ">
-                <div style="display: flex; flex-direction: column; align-items: center;">
+                <div style="align-items: center; text-align: center;">
                     <img src="https://cdn-cbigold.ams3.digitaloceanspaces.com/public/email/CDC3837FF1DF9ADC1FF459D0278FD.png" style="height: 50px;" alt="">
                 </div>
                 <!-- Email topic -->
@@ -98,16 +87,6 @@ const transferSendNotification = data => {
         reference,
         recipient,
     } = data;
-    // const html = `
-    //     <p>Hi ${first_name},</p>
-    //     <h3>Transfer Notification</h3>
-    //     <p>
-    //         This is to confirm that you transfered ${amount} ${currency_code} from your CBI Global wallet to <strong>${recipient}</strong>. Your transaction
-    //         reference number is <strong>${reference}</strong>.
-    //     </p>
-    //     <p>If you don't recognize this activity, please contact us immediately at <a href="mailto:support@cbiglobal.io">support@cbiglobal.io</a>.</p>
-    //     <p style="padding-top:15px"><strong>Regards</strong>,<br />CBI Support</p>
-    // `;
     const html = `
     <!DOCTYPE html>
     <html lang="en">
@@ -128,7 +107,7 @@ const transferSendNotification = data => {
                 margin: 0 auto;
                 line-height: 1.5;">
             <div style="padding: 20px 0; margin-bottom: 20px; background-image: linear-gradient(310deg,#141727,#3a416f);color: white;">
-                <div style="display: flex; flex-direction: column; align-items: center;">
+                <div style="align-items: center; text-align: center;">
                     <img src="https://cdn-cbigold.ams3.digitaloceanspaces.com/public/email/CDC3837FF1DF9ADC1FF459D0278FD.png" style="height: 50px;" alt="">
                 </div>
                 <!-- Email topic -->
@@ -190,15 +169,6 @@ const transferReceiptNotification = data => {
         currency_code,
         sender,
     } = data;
-    // const html = `
-    //     <p>Hi ${first_name},</p>
-    //     <h3>Transaction Notification</h3>
-    //     <p>
-    //         This is to confirm that you received an amount of ${amount} ${currency_code} into your CBI Global wallet from <strong>${sender}</strong>.
-    //     </p>
-    //     <p>If you don't recognize this activity, please contact us immediately at <a href="mailto:support@cbiglobal.io">support@cbiglobal.io</a>.</p>
-    //     <p style="padding-top:15px"><strong>Regards</strong>,<br />CBI Support</p>
-    // `;
     const html = `
     <!DOCTYPE html>
     <html lang="en">
@@ -219,7 +189,7 @@ const transferReceiptNotification = data => {
                 margin: 0 auto;
                 line-height: 1.5;">
             <div style="padding: 20px 0; margin-bottom: 20px; background-image: linear-gradient(310deg,#141727,#3a416f);color: white;">
-                <div style="display: flex; flex-direction: column; align-items: center;">
+                <div style="align-items: center; text-align: center;">
                     <img src="https://cdn-cbigold.ams3.digitaloceanspaces.com/public/email/CDC3837FF1DF9ADC1FF459D0278FD.png" style="height: 50px;" alt="">
                 </div>
                 <!-- Email topic -->

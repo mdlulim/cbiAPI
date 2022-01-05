@@ -27,7 +27,7 @@ const autoRenewStatusChange = data => {
                 margin: 0 auto;
                 line-height: 1.5;">
             <div style="padding: 20px 0; margin-bottom: 20px; background-image: linear-gradient(310deg,#141727,#3a416f); color: white; ">
-                <div style="align-items: center;">
+                <div style="align-items: center; text-align: center;">
                     <img src="https://cdn-cbigold.ams3.digitaloceanspaces.com/public/email/CDC3837FF1DF9ADC1FF459D0278FD.png" style="height: 50px;" alt="">
                 </div>
                 <!-- Email topic -->
@@ -123,7 +123,7 @@ const updateNotification = data => {
                 margin: 0 auto;
                 line-height: 1.5;">
             <div style="padding: 20px 0; margin-bottom: 20px; background-image: linear-gradient(310deg,#141727,#3a416f); color: white; ">
-                <div style="align-items: center;">
+                <div style="align-items: center; text-align: center;">
                     <img src="https://cdn-cbigold.ams3.digitaloceanspaces.com/public/email/CDC3837FF1DF9ADC1FF459D0278FD.png" style="height: 50px;" alt="">
                 </div>
                 <!-- Email topic -->

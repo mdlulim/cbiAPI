@@ -10,6 +10,10 @@ config = {
         admin: 'http://admin.qa.cbiglobal.io',
         frontend: 'http://qa.cbiglobal.io',
     },
+    coinPayments: {
+        key: '6198f48a55ebd548512ba5106ee7e8b382cd8e7116db8ecda0732f65c34521b8',
+        secret: '27aedb32B7D525E06454A09f5ff8598575425e9900273Af0c4118Fb5255492Aa',
+    },
     mail: {
         smtp: {
             host: 'mail.cbiglobal.io',
