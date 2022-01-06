@@ -1,6 +1,6 @@
 const { Fee }  = require('../models/Fee');
 const { Commission }  = require('../models/Commission');
-
+const { Group }  = require('../models/Group');
 
 async function create(data) {
     try {
@@ -29,7 +29,7 @@ async function index(query) {
         delete where.limit;
 
         if (where.group) {
-            groupWhere.name = where.group;
+            groupWhere.id = where.group;
             delete where.group;
         }
 
@@ -47,6 +47,15 @@ async function index(query) {
                 'updated',
             ],
             where,
+            include: [
+                {
+                    attributes: [
+                        'id',
+                        'name',
+                        'label',
+                    ],
+                    model: Group, 
+                    where: groupWhere }],
             order: [['created', 'DESC']],
             offset: offset || 0,
             limit: limit || 100,

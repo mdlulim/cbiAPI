@@ -141,10 +141,31 @@ async function getProofOfPayment(txid) {
     }
 }
 
-async function transactions(subtype) {
+async function transactions(query) {
     try {
-        return Transaction.findAndCountAll({           
-            where: { subtype },
+        const { offset, limit } = query;
+        const where = query || {};
+        const userWhere = {};
+        delete where.offset;
+        delete where.limit;
+
+        if (where.user) {
+            userWhere.id = where.user;
+            delete where.user;
+        }
+        return Transaction.findAndCountAll({
+            where: { status: "Completed" },
+            include: [
+                {
+                    attributes: [
+                        'first_name',
+                        'last_name',
+                        'referral_id',
+                        'email',
+                        'id',
+                    ],
+                    model: User, 
+                    where: userWhere }],
             order: [['created', 'DESC']]
         });
     } catch (error) {
@@ -153,17 +174,30 @@ async function transactions(subtype) {
     }
 }
 
-async function transactionstotal(subtype) {
+async function transactionstotal() {
     try {
-        data = await Transaction.sum('total_amount', {
-            where: {
-                subtype
-            }
+       const  deposit = await Transaction.sum('fee', {
+            where: {subtype: "deposit" }
         })
-        return {
-            subtype, 
-            total_amount: data
+        const  withdrawal = await Transaction.sum('fee', {
+            where: {subtype: "withdrawal" }
+        })
+
+        const  transfer = await Transaction.sum('fee', {
+            where: {subtype: "transfer" }
+        })
+
+        const  product = await Transaction.sum('fee', {
+            where: {subtype: "product" }
+        })
+        const data = {
+            deposit: deposit,
+            withdrawal: withdrawal,
+            transfer: transfer,
+            product: product,
+            total: deposit + withdrawal + transfer + product
         }
+        return { data: data }
     } catch (error) {
         console.error(error || null);
         throw new Error('Could not process your request');

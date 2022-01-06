@@ -255,8 +255,16 @@ async function batchProcessTransaction(req, res) {
 
 async function transactions(req, res){
     try {
-        return transactionService.transactions(req.body.subtype)
-        .then(data => res.send(data));
+        const transactions = await transactionService.transactions(req.query);
+        const { count, rows } = transactions;
+        return res.send({
+            success: true,
+            data: {
+                count,
+                results: rows,
+            }
+        });
+
     } catch (err) {
         return res.status(500).send({
             success: false,
@@ -267,9 +275,13 @@ async function transactions(req, res){
 
 async function transactionstotal(req, res){
     try {
-        response = await transactionService.transactionstotal(req.body.subtype)
+        response = await transactionService.transactionstotal()
+        console.log("=============================response=============================")
         console.log(response)
-        res.send(response)
+        return res.send({
+            success: true,
+            data: response.data
+        });
     } catch (err) {
         return res.status(500).send({
             success: false,
