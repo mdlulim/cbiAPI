@@ -17,14 +17,12 @@ function create(req, res){
 
 async function index(req, res) {
     try {
-        return feeService.index(req.query)
-        .then(data => res.send(data))
-        .catch(err => {
-            res.send({
-                success: false,
-                message: err.message,
-            });
+        const fees = await feeService.index(req.query);
+        return res.send({
+            success: true,
+            data: fees
         });
+
     } catch (error) {
         return res.send({
             success: false,

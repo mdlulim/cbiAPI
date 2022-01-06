@@ -435,6 +435,15 @@ module.exports.set = app => {
     app.get('/bank-accounts/:id', authMiddleware.checkAuth, bankAccountController.show);
     app.post('/bank-accounts/verify/:id', authMiddleware.checkAuth, bankAccountController.verifyBankAccount);
 
+        /**
+     * List Transaction Fees
+     * 
+     * Get a list of Transaction Fees belonging to CBI.
+     */
+    app.get('/fees', authMiddleware.checkAuth, feeController.index);
+    app.post('/fees', authMiddleware.checkAuth, feeController.create);
+    app.get('/fees/:id', authMiddleware.checkAuth, feeController.show);
+    app.put('/fees/:id', authMiddleware.checkAuth, feeController.update);
     /**
      * List Companies
      * 
@@ -536,7 +545,7 @@ module.exports.set = app => {
     app.get("/business-account", authMiddleware.checkAuth, accountController.mainaccount);
 
     // Main Account Balance Story ID 2401
-    app.get("/transactions-type",  authMiddleware.checkAuth, transactionController.transactions);
+    app.post("/transactions-type",  authMiddleware.checkAuth, transactionController.transactions);
     app.get("/transactions-total", authMiddleware.checkAuth, transactionController.transactionstotal);
 
 };
