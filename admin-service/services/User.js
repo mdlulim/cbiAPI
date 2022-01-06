@@ -575,6 +575,21 @@ async function approveDeposit(id, data) {
                 source_transaction: data.transaction.user_id
             }
 
+            const mainCommission = {
+                user_id: sponsor.id,
+                tx_type: 'credit',
+                subtype: 'registration',
+                note:'CBI Registration Fee',
+                status: 'Completed',
+                reference: 'Pay Main Account',
+                amount: parseFloat(setting.value)* 25 / 100,
+                fee: 0,
+                total_amount: parseFloat(setting.value)* 25 / 100,
+                balance: 0,
+                currency: data.transaction.currency,
+                source_transaction: data.transaction.user_id
+            }
+
             const commissionData ={
                 user_id: sponsor.id,
                 type: 'REFERRAL',
@@ -609,7 +624,10 @@ async function approveDeposit(id, data) {
             }
 
             await Commission.create(commissionData);
-            return { success: true, message: "Account was successfully updated", data: {user: dataUser, sponsor: dataSponsor, commission: sponsorCommission} };
+            return { 
+                success: true, 
+                message: "Account was successfully updated", 
+                data: {user: dataUser, sponsor: dataSponsor, commission: sponsorCommission, main: mainCommission } };
     }else{
         let status = {status: data.status}
         await Transaction.update(status, { where: { id } });

@@ -37,7 +37,6 @@ async function debitCreditUserAccount(req, res) {
 
         // get user
         const user = await userService.show(req.params.id);
-        //console.log(user)
 
         if (tx_type === 'credit') {
             switch (subtype) {
@@ -126,7 +125,6 @@ async function debitCreditUserAccount(req, res) {
         }
 
     } catch (error) {
-        //console.log(error);
         return res.status(500).send({
             success: false,
             message: 'Could not process request'
@@ -174,7 +172,6 @@ async function show(req, res) {
 async function getProofOfPayment(req, res) {
     try {
         const files = await transactionService.getProofOfPayment(req.params.id);
-        //console.log(files)
         return res.send({
             success: true,
             data: files
@@ -217,10 +214,10 @@ async function batchProcessTransaction(req, res) {
         *convert the file to json object
         */
         s.pipe(csv()).on('data', (data) => results.push(data)).on('end', () => {
-            console.log(results);
+           // console.log(results);
         });
 
-        console.log(results, "+++++++++++++++++++")
+       // console.log(results, "+++++++++++++++++++")
 
 
         //update transactions on db
@@ -238,9 +235,8 @@ async function batchProcessTransaction(req, res) {
         return res.send({ file: "9usdf" })
 
     } catch (err) {
-        console.log(err);
         if (err.name === 'SequelizeUniqueConstraintError') {
-            console.log(err.errors[0].ValidationErrorItem);
+           // console.log(err.errors[0].ValidationErrorItem);
             return res.status(403).send({
                 success: false,
                 message: `Validation error.`
@@ -275,9 +271,7 @@ async function transactions(req, res){
 
 async function transactionstotal(req, res){
     try {
-        response = await transactionService.transactionstotal()
-        console.log("=============================response=============================")
-        console.log(response)
+        const response = await transactionService.transactionstotal()
         return res.send({
             success: true,
             data: response.data

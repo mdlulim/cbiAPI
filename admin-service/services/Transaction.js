@@ -190,11 +190,15 @@ async function transactionstotal() {
         const  product = await Transaction.sum('fee', {
             where: {subtype: "product" }
         })
+        const  registration = await Transaction.sum('amount', {
+            where: {subtype: "registration" }
+        })
         const data = {
             deposit: deposit,
             withdrawal: withdrawal,
             transfer: transfer,
             product: product,
+            registration: registration,
             total: deposit + withdrawal + transfer + product
         }
         return { data: data }
