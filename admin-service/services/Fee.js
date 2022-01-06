@@ -2,6 +2,8 @@ const { Fee }  = require('../models/Fee');
 const { Commission }  = require('../models/Commission');
 const { Group }  = require('../models/Group');
 
+Fee.belongsTo(Group, { foreignKey: 'group_id', targetKey: 'id' });
+
 async function create(data) {
     try {
         return Fee.create(data);

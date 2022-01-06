@@ -18,26 +18,11 @@ function create(req, res){
 async function index(req, res) {
     try {
         const fees = await feeService.index(req.query);
-        console.log("=======================fees============================")
-        console.log(fees)
-
-        const { count, rows } = fees;
         return res.send({
             success: true,
-            data: {
-                count,
-                results: rows,
-            }
+            data: fees
         });
 
-        // return feeService.index(req.query)
-        // .then(data => res.send(data))
-        // .catch(err => {
-        //     res.send({
-        //         success: false,
-        //         message: err.message,
-        //     });
-        // });
     } catch (error) {
         return res.send({
             success: false,
