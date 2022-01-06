@@ -3,6 +3,16 @@ const emailTemplates = require('../lib/emailTemplates');
 const config = require('../config');
 const { smtp } = config.mail;
 
+async function cryptoDepositRequestNotification(data) {
+    const { email } = data;
+    const template = emailTemplates.cryptoDepositRequestNotification(data);
+    const from = {
+        name: 'CBI',
+        email: smtp.auth.user,
+    };
+    return sendMail(from, email, 'CBI - Pending Deposit Request Notification', template);
+};
+
 async function depositRequestNotification(data) {
     const { email } = data;
     const template = emailTemplates.depositRequestNotification(data);
@@ -34,6 +44,7 @@ async function transferReceiptNotification(data) {
 };
 
 module.exports = {
+    cryptoDepositRequestNotification,
     depositRequestNotification,
     transferSendNotification,
     transferReceiptNotification,

@@ -15,6 +15,7 @@ const EventStore = sequelize.define('event_store', {
 	status: Sequelize.STRING,
 	ref: Sequelize.STRING,
 	ref_id: Sequelize.UUID,
+	metadata: Sequelize.JSONB,
 	created: Sequelize.DATE,
 	updated: Sequelize.DATE,
 }, {
