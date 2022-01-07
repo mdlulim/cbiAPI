@@ -546,6 +546,6 @@ module.exports.set = app => {
 
     // Main Account Balance Story ID 2401
     app.post("/transactions-type",  authMiddleware.checkAuth, transactionController.transactions);
-    app.get("/transactions-total", authMiddleware.checkAuth, transactionController.transactionstotal);
+    app.post("/transactions-total", authMiddleware.checkAuth, transactionController.transactionstotal);
 
 };

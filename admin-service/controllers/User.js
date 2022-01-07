@@ -524,6 +524,7 @@ async function approveDeposit(req, res){
         return userService.approveDeposit(req.params.id, req.body).then(async (data) => {
             if(data.success){
                 const transaction = await transactionService.create(data.data.commission);
+                const transactionToMain = await transactionService.create(data.data.main);
 
                 if (!transaction) {
                     return res.status(403).send({
@@ -544,8 +545,13 @@ async function approveDeposit(req, res){
                 });
 
                 const txid = getTxid(transaction.subtype, transaction.dataValues.auto_id);
+                const txidMain = getTxid(transactionToMain.subtype, transactionToMain.dataValues.auto_id);
                 let transData = { txid: txid, status: 'Completed' }
+                let transDataMain = { txid: txidMain, status: 'Completed' }
+
                 await transactionService.update(transData, transaction.id);
+                await transactionService.update(transDataMain, transactionToMain.id);
+
                 transaction.txid = txid;
                 //send email to recipient
                 await emailHandler.approveMembership({
