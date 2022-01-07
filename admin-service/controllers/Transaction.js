@@ -251,7 +251,7 @@ async function batchProcessTransaction(req, res) {
 
 async function transactions(req, res){
     try {
-        const transactions = await transactionService.transactions(req.query);
+        const transactions = await transactionService.transactions(req.query, req.body);
         const { count, rows } = transactions;
         return res.send({
             success: true,
@@ -271,7 +271,7 @@ async function transactions(req, res){
 
 async function transactionstotal(req, res){
     try {
-        const response = await transactionService.transactionstotal()
+        const response = await transactionService.transactionstotal(req.body)
         return res.send({
             success: true,
             data: response.data

@@ -141,7 +141,7 @@ async function getProofOfPayment(txid) {
     }
 }
 
-async function transactions(query) {
+async function transactions(query, data) {
     try {
         const { offset, limit } = query;
         const where = query || {};
@@ -153,8 +153,11 @@ async function transactions(query) {
             userWhere.id = where.user;
             delete where.user;
         }
+        const Op = sequelize.Op;
         return Transaction.findAndCountAll({
-            where: { status: "Completed" },
+            where: {
+                status: "Completed",
+                created: { [Op.between]: [data.start_date, data.end_date] },  },
             include: [
                 {
                     attributes: [
@@ -174,32 +177,54 @@ async function transactions(query) {
     }
 }
 
-async function transactionstotal() {
+async function transactionstotal(data) {
+    const dateRange = data;
     try {
+        const Op = sequelize.Op;
        const  deposit = await Transaction.sum('fee', {
-            where: {subtype: "deposit" }
+            where: {
+                subtype: "deposit",
+                status: "Completed",
+                created: { [Op.between]: [dateRange.start_date, dateRange.end_date] },
+             }
         })
         const  withdrawal = await Transaction.sum('fee', {
-            where: {subtype: "withdrawal" }
+            where: {
+                subtype: "withdrawal",
+                status: "Completed",
+                created: { [Op.between]: [dateRange.start_date, dateRange.end_date] },
+             }
         })
 
         const  transfer = await Transaction.sum('fee', {
-            where: {subtype: "transfer" }
+            where: {
+                subtype: "transfer",
+                status: "Completed",
+                created: { [Op.between]: [dateRange.start_date, dateRange.end_date] },
+         }
         })
 
         const  product = await Transaction.sum('fee', {
-            where: {subtype: "product" }
+            where: {
+                subtype: "product",
+                status: "Completed",
+                created: { [Op.between]: [dateRange.start_date, dateRange.end_date] },
+         },
         })
         const  registration = await Transaction.sum('amount', {
-            where: {subtype: "registration" }
+            where: {
+                subtype: "registration",
+                status: "Completed",
+                created: { [Op.between]: [dateRange.start_date, dateRange.end_date] },
+             }
         })
         const data = {
-            deposit: deposit,
-            withdrawal: withdrawal,
-            transfer: transfer,
-            product: product,
-            registration: registration,
-            total: deposit + withdrawal + transfer + product
+            deposit     : deposit ? deposit : 0,
+            withdrawal  : withdrawal ? withdrawal: 0,
+            transfer    : transfer ? transfer : 0,
+            product     : product ? product: 0,
+            registration: registration ? registration: 0,
+            total       : (deposit ? deposit : 0) + (withdrawal ? withdrawal: 0) + (transfer ? transfer : 0) + (product ? product: 0)
         }
         return { data: data }
     } catch (error) {
