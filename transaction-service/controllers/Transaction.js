@@ -28,6 +28,7 @@ async function create(req, res) {
         } = req.body;
 
         // get currency
+        let sendEmail = true;
         const currency = await currencyService.show(currency_code);
         const data = {
             ...req.body,
@@ -111,15 +112,21 @@ async function create(req, res) {
                         })
                     });
                 }
+
+                if (data.metadata && data.metadata.type === 'crypto') {
+                    sendEmail = false;
+                }
     
                 // send email to member
-                await emailHandler.depositRequestNotification({
-                    first_name: user.first_name,
-                    email: user.email,
-                    reference: txid,
-                    amount: data.amount.toFixed(data.currency.divisibility),
-                    currency_code: data.currency.code,
-                });
+                if (sendEmail) {
+                    await emailHandler.depositRequestNotification({
+                        first_name: user.first_name,
+                        email: user.email,
+                        reference: txid,
+                        amount: data.amount.toFixed(data.currency.divisibility),
+                        currency_code: data.currency.code,
+                    });
+                }
             }
         }
 
