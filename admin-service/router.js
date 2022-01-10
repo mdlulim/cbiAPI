@@ -402,6 +402,7 @@ module.exports.set = app => {
      * Get a list of settings belonging to CBI.
      */
     app.get('/settings', authMiddleware.checkAuth, settingController.index);
+    app.get('/settings/commission', authMiddleware.checkAuth, settingController.getSettingCommissions);
 
     /**
      * Retrieve Settings
