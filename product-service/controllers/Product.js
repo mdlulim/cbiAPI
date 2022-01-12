@@ -1,3 +1,4 @@
+const axios = require('axios');
 const moment = require('moment');
 const sequelize = require('../config/db');
 const config = require('../config');
@@ -7,13 +8,17 @@ const commissionService  = require('../services/Commission');
 const currencyService = require('../services/Currency');
 const investmentService  = require('../services/Investment');
 const productService  = require('../services/Product');
+const settingService = require('../services/Setting');
 const transactionService  = require('../services/Transaction');
 const userService = require('../services/User');
 const {
+    cbiX7SellConfirmation,
     tokenPurchaseConfirmation,
     wealthCreatorConfirmation,
     productPurchaseConfirmation,
+    cancellationRequestConfirmation,
 } = require('../helpers/emailHandler');
+const { calculateSellCBIX7 } = require('../utils');
 
 const getTxid = (prefix, autoid) => {
     return prefix.toUpperCase() + autoid.toString();
@@ -47,15 +52,17 @@ async function subscribe(req, res){
     try {
         // get product details
         const product = await productService.findByCode(req.body.product_code);
+        const { product_subcategory } = product;
+        const { code } = product_subcategory;
 
         // get user
         const user = await userService.show(req.user.id);
 
         // product check
-        const isWC    = config.products.WC === product.product_category.code;
-        // const isFP    = config.products.FP === product.product_category.code;
-        const isFX    = config.products.FX === product.product_category.code;
-        const isCBIx7 = config.products.CBIx7 === product.product_category.code;
+        const isWC    = config.products.WC === code;
+        const isFP    = config.products.FP === code;
+        const isFX    = config.products.FX === code;
+        const isCBIx7 = config.products.CBIx7 === code;
 
         // validate product
         if (!product) {
@@ -252,6 +259,243 @@ async function subscribe(req, res){
                 });
             }
         }
+
+        // response
+        return res.send({ success: true });
+
+    } catch (err) {
+        console.log(err.message)
+        return res.status(500).send({
+            success: false,
+            message: 'Could not process your request'
+        });
+    }
+}
+
+async function unsubscribe(req, res){
+    try {
+        const { id } = req.body;
+
+        // retrieve user information
+        const user = await userService.show(req.user.id);
+
+        // retrieve product information
+        const product = await productService.find(id, false);
+        const { product_subcategory } = product;
+        const { code } = product_subcategory;
+
+        // product check
+        const isWC    = config.products.WC === code;
+        const isFP    = config.products.FP === code;
+        const isFX    = config.products.FX === code;
+        const isCBIx7 = config.products.CBIx7 === code;
+
+        // sell CBIx7 tokens
+        if (isCBIx7) {
+            return sellCBIx7Tokens({
+                user,
+                product,
+                ...req.body,
+            }, res);
+        }
+
+        if (isWC || isFP || isFX) {
+            return cancelProduct({
+                user,
+                product,
+                ...req.body,
+                isWC,
+                isFP,
+                isFX,
+            }, res);
+        }
+
+        // response
+        return res.send({ success: false });
+
+    } catch (err) {
+        console.log(err.message)
+        return res.status(500).send({
+            success: false,
+            message: 'Could not process your request'
+        });
+    }
+}
+
+async function cancelProduct(data, res) {
+    try {
+        const {
+            user,
+            isWC,
+            product,
+        } = data;
+
+        let description = `${user.first_name} logged cancellation request for a product (${product.title})`;
+        if (isWC) {
+            description = `${user.first_name} logged cancellation request for Wealth Creator subscription`;
+        }
+
+        // update user product
+        await productService.update({
+            user_id: user.id,
+            status: 'Pending Cancellation',
+        }, product.id, false);
+
+        // log activity
+        await activityService.addActivity({
+            user_id: user.id,
+            action: isWC ? 'wealth-creator.cancel' : `${user.group.name}.products.cancel`,
+            section: 'Products',
+            subsection: 'Cancel',
+            description,
+            data: null,
+            ip: null,
+        });
+            
+        // send cancellation request confirmation email
+        await cancellationRequestConfirmation({
+            product,
+            email: user.email,
+            first_name: user.first_name,
+        });
+
+        // response
+        return res.send({ success: true });
+
+    } catch (err) {
+        console.log(err.message)
+        return res.status(500).send({
+            success: false,
+            message: 'Could not process your request'
+        });
+    }
+}
+
+async function sellCBIx7Tokens(data, res) {
+    try {
+        const {
+            user,
+            tokens,
+            product,
+        } = data;
+        const { exchange } = config;
+        const { fees } = product;
+
+        // fetch USD/ZAR rate
+        const rate = await axios({
+            mode: 'no-cors',
+            method: 'GET',
+            url: `${exchange.baseurl}exchangerate/USD/ZAR?apikey=${exchange.apikey}`,
+            headers: { 'Content-Type': 'application/json' },
+            crossdomain: true,
+        })
+        .then((json) => json.data)
+        .then(res => {
+          const { rate } = res;
+          return rate || null;
+        });
+
+        // get user product
+        const userProduct = await productService.userProduct(user.id, product.id);
+
+        // validate token balance
+        if (parseFloat(userProduct.tokens) < parseFloat(tokens)) {
+            return res.status(403).send({
+                success: false,
+                message: 'Insufficient token balance available',
+            });
+        }
+
+        // retrieve settings
+        const configuration = await settingService.config();
+        var settings = {};
+
+        if (configuration && configuration.length > 0) {
+            configuration.map(item => {
+                const { key, value } = item;
+                settings[key] = value;
+            });
+        }
+        const {
+            cbi_zar_value,
+            bpt_value,
+        } = settings;
+        
+        // calculate
+        const calculations = calculateSellCBIX7({
+            fees,
+            usd: rate,
+            bpt: bpt_value,  // BPT value - configurable attribute on the admin side
+            exchangeRate: cbi_zar_value, // CBI to ZAR value - configurable attribute on the admin side
+            tokenAmount: tokens, // The number of tokens the member/WC would like to sell at a point in time.
+        });
+            
+        // get and update wallet balance
+        const wallet = await accountService.show(user.id);
+
+        // update wallet balance
+        await accountService.update({
+            balance: parseFloat(wallet.balance) + calculations.amount,
+            available_balance: parseFloat(wallet.available_balance) + calculations.amount,
+        }, wallet.id);
+
+        // update user product
+        await productService.update({
+            tokens: parseFloat(userProduct.tokens) - parseFloat(tokens),
+            status: 'Active',
+        }, userProduct.id);
+
+        // insert transaction
+        var transaction = await transactionService.create({
+            tx_type: 'credit',
+            subtype: 'product',
+            user_id: user.id,
+            fee: 0,
+            amount: calculations.amount,
+            reference: `${product.product_code}-Sell`,
+            note: `Sold to ${product.title} product`,
+            total_amount: calculations.amount,
+            source_transaction: userProduct.id,
+            destination_transaction: wallet.id,
+            currency: product.currency,
+            status: 'Completed',
+            metadata: {
+                tokens,
+                product,
+                calculations,
+                refid: userProduct.id,
+                entity: 'user_products',
+            },
+        });
+
+        // update transaction
+        var txid = product.product_code + transaction.auto_id;
+        await transactionService.update({ txid }, transaction.id);
+
+        // log activity
+        const description = `${user.first_name} sold a product (${product.title})`;
+        await activityService.addActivity({
+            user_id: user.id,
+            action: `${user.group.name}.products.sell`,
+            section: 'Products',
+            subsection: 'Sell',
+            description,
+            ip: null,
+            data: {
+                tokens,
+                product,
+                calculations,
+            },
+        });
+            
+        // send token sell confirmation email
+        await cbiX7SellConfirmation({
+            tokens,
+            product,
+            email: user.email,
+            amount: calculations.amount,
+            first_name: user.first_name,
+        });
 
         // response
         return res.send({ success: true });
@@ -604,6 +848,7 @@ module.exports = {
     index,
     overview,
     subscribe,
+    unsubscribe,
     show,
     earnings,
     products,

@@ -51,6 +51,46 @@ const sendMail = async (from, recipients, subject, body, callback = null, error 
     }
 };
 
+function calculateSellCBIX7(data) {
+    const {
+        exchangeRate,
+        tokenAmount, // The number of tokens the member/WC would like to sell at a point in time.
+        fees,
+        bpt,  // BPT value - configurable attribute on the admin side
+        usd,
+    } = data;
+
+    console.log('params', data);
+
+    // step 1
+    let amount = parseFloat(parseFloat(tokenAmount) * parseFloat(bpt));
+
+    // step 2
+    // Calculate CBI Dollar value by Dividing the ZAR Value with the USD Value Now
+    amount /= usd;
+
+    // Convert the Total CBIs to ZAR Value 
+    // Results here/below will give total CBI exchange value (For now ZAR is used: CBI * ZAR value)
+    amount *= exchangeRate;
+
+    // ZAR Value / CBI Value configured by Admin
+    // amount /= exchangeRate;
+
+    // Subtract slippage fee from revised amount after admin fee deduction | Attribute (slippage_fee)
+    // slippage fee is a percentage, use percentage value to calculate fee
+    let slippage = 0;
+    if (fees.slippage_percentage_sell) slippage = fees.slippage_percentage_sell;
+    const feeAmount = parseFloat(amount * (parseFloat(slippage) / 100));
+    amount -= feeAmount;
+
+    // return final token amount
+    return {
+        amount,
+        feeAmount,
+    };
+}
+
 module.exports = {
     sendMail,
+    calculateSellCBIX7,
 };

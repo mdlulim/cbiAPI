@@ -9,6 +9,10 @@ config = {
         admin: 'https://admin.cbiglobal.io',
         frontend: 'https://demo.cbiglobal.io',
     },
+    exchange: {
+        baseurl: 'https://rest.coinapi.io/v1/',
+        apikey: '0FCA5251-0895-436A-AF36-7BB934265A3A',
+    },
     products: {
         CBIx7: 'CBIX7',
         WC: 'WC',

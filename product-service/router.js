@@ -80,6 +80,13 @@ module.exports.set = app => {
     app.post('/subscribe', authMiddleware.checkAuth, productController.subscribe);
     
     /**
+     * Unsubscribe
+     * 
+     * Unsubscribe a User from a Product
+     */
+    app.post('/unsubscribe', authMiddleware.checkAuth, productController.unsubscribe);
+    
+    /**
      * Invest
      * 
      * Invest to a Product
