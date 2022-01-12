@@ -523,6 +523,7 @@ async function approveDeposit(req, res){
 
         return userService.approveDeposit(req.params.id, req.body).then(async (data) => {
             if(data.success){
+                
                 const transaction = await transactionService.create(data.data.commission);
                 const transactionToMain = await transactionService.create(data.data.main);
 
@@ -535,11 +536,11 @@ async function approveDeposit(req, res){
 
                 // log activity
                 await activityService.addActivity({
-                    user_id: transaction.user_id,
-                    action: `${req.user.group_name}.transactions.${transaction.tx_type}.${transaction.subtype}`,
+                    user_id: req.body.transaction.user_id,
+                    action: `${req.user.group_name}.transactions.${req.body.transaction.tx_type}.${req.body.transactionsubtype}`,
                     section: 'Transactions',
-                    subsection: getSubsection(transaction),
-                    description: `${req.user.first_name} made a ${transaction.subtype} of ${transaction.amount} ${transaction.currency.code}`,
+                    subsection: getSubsection(req.body.transaction),
+                    description: `${req.user.first_name} approved a ${req.body.transaction.subtype} of ${req.body.transaction.amount} ${req.body.transaction.currency.code}`,
                     ip: null,
                     data,
                 });
@@ -584,9 +585,11 @@ async function approveDeposit(req, res){
                     data,
                 })
 
-
+                return res.send({ success: data.success, message: data.message})
+            }else{
+                return res.send({ success: data.success, message: data.message})
             }
-           return res.send({ success: data.success, message: data.message})
+           
         });
     } catch (err) {
         return res.status(500).send({
