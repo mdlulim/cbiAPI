@@ -64,22 +64,29 @@ async function deposit(req, res) {
             item_number: transaction.txid,
             ipn_url: `${config.baseurl.api}transactions/coinpayments/ipn`,
         };
+
+        // store third-party event log
+        const event = await eventStoreService.create({
+            action: 'transaction.create.deposit',
+            provider: 'coinpayments',
+            description: 'Create Coin Payments Deposit Transaction',
+            request: createTransaction,
+            response: null,
+            status: 'SUBMITTED TO COINPAYMENTS',
+            ref: 'transactions',
+            ref_id: transaction.id,
+        });
+
         const client = new CoinPayments(config.coinPayments);
         return client.createTransaction(createTransaction)
             .then(async data => {
                 const { address } = data;
 
-                // store third-party event log
-                await eventStoreService.create({
-                    action: 'transaction.create.deposit',
-                    provider: 'coinpayments',
-                    description: 'Create Coin Payments Deposit Transaction',
-                    request: createTransaction,
+                // update store third-party event log
+                await eventStoreService.update({
                     response: data,
-                    status: 'SUBMITTED TO COINPAYMENTS',
-                    ref: 'transactions',
-                    ref_id: transaction.id,
-                });
+                    status: 'COINPAYMENTS SUCCESS',
+                }, event.id);
 
                 // update transaction record
                 await transactionService.update({
@@ -109,8 +116,15 @@ async function deposit(req, res) {
                     },
                 });
             })
-            .catch(err => {
+            .catch(async err => {
                 console.log(err.message)
+
+                // update store third-party event log
+                await eventStoreService.update({
+                    response: err.message || err,
+                    status: 'COINPAYMENTS ERROR',
+                }, event.id);
+
                 return res.status(500).send({
                     success: false,
                     message: 'Could not process your request'
@@ -143,21 +157,28 @@ async function withdraw(req, res) {
             cmd: 'create_withdrawal',
             ipn_url: `${config.baseurl.api}transactions/coinpayments/ipn`,
         };
+
+        // insert store third-party event log
+        const event = await eventStoreService.create({
+            action: 'transaction.create.withdrawal',
+            provider: 'coinpayments',
+            description: 'Create Coin Payments Withdrawal Transaction',
+            request: createWithdrawal,
+            response: null,
+            status: 'SUBMITTED TO COINPAYMENTS',
+            ref: 'transactions',
+            ref_id: transaction.id,
+        });
+
         const client = new CoinPayments(config.coinPayments);
         return client.createWithdrawal(createWithdrawal)
             .then(async data => {
 
-                // store third-party event log
-                await eventStoreService.create({
-                    action: 'transaction.create.withdrawal',
-                    provider: 'coinpayments',
-                    description: 'Create Coin Payments Withdrawal Transaction',
-                    request: createWithdrawal,
+                // update store third-party event log
+                await eventStoreService.update({
                     response: data,
-                    status: 'SUBMITTED TO COINPAYMENTS',
-                    ref: 'transactions',
-                    ref_id: transaction.id,
-                });
+                    status: 'COINPAYMENTS SUCCESS',
+                }, event.id);
 
                 // update transaction record
                 await transactionService.update({
@@ -172,8 +193,15 @@ async function withdraw(req, res) {
                     success: true,
                 });
             })
-            .catch(err => {
+            .catch(async err => {
                 console.log(err.message)
+
+                // update store third-party event log
+                await eventStoreService.update({
+                    response: err.message || err,
+                    status: 'COINPAYMENTS ERROR',
+                }, event.id);
+
                 return res.status(500).send({
                     success: false,
                     message: 'Could not process your request'
@@ -215,8 +243,37 @@ async function convert(req, res) {
     }
 };
 
+async function balances(req, res) {
+    try {
+        const all = (req.query && req.query.all) || 1;
+        const client = new CoinPayments(config.coinPayments);
+        const options = { all };
+        return client.balances(options)
+            .then(async data => {
+                return res.send({
+                    success: true,
+                    data,
+                });
+            })
+            .catch(err => {
+                console.log(err.message)
+                return res.status(500).send({
+                    success: false,
+                    message: 'Could not process your request'
+                });
+            });
+    } catch (err) {
+        console.log(err.message)
+        return res.status(500).send({
+            success: false,
+            message: 'Could not process your request'
+        });
+    }
+};
+
 module.exports = {
     ipn,
     create,
     convert,
+    balances,
 };

@@ -74,4 +74,11 @@ module.exports.set = app => {
      */
     app.post('/coinpayments/convert', authMiddleware.checkAuth, coinPaymentController.convert);
 
+    /**
+     * GET Coin Balances
+     * 
+     * Send query to create crypto transaction on coinpayments.
+     */
+    app.get('/coinpayments/balances', authMiddleware.checkAuth, coinPaymentController.balances);
+
 };
