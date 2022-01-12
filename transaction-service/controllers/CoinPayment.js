@@ -121,7 +121,7 @@ async function deposit(req, res) {
 
                 // update store third-party event log
                 await eventStoreService.update({
-                    response: err,
+                    response: err.message || err,
                     status: 'COINPAYMENTS ERROR',
                 }, event.id);
 
@@ -171,43 +171,42 @@ async function withdraw(req, res) {
         });
 
         const client = new CoinPayments(config.coinPayments);
-        const response = await client.createWithdrawal(createWithdrawal);
-        console.log(response);
-            // .then(async data => {
+        return client.createWithdrawal(createWithdrawal)
+            .then(async data => {
 
-            //     // update store third-party event log
-            //     await eventStoreService.update({
-            //         response: data,
-            //         status: 'COINPAYMENTS SUCCESS',
-            //     }, event.id);
+                // update store third-party event log
+                await eventStoreService.update({
+                    response: data,
+                    status: 'COINPAYMENTS SUCCESS',
+                }, event.id);
 
-            //     // update transaction record
-            //     await transactionService.update({
-            //         metadata: {
-            //             type: 'crypto',
-            //             currency,
-            //             data,
-            //         }
-            //     }, transaction.id);
+                // update transaction record
+                await transactionService.update({
+                    metadata: {
+                        type: 'crypto',
+                        currency,
+                        data,
+                    }
+                }, transaction.id);
 
-            //     return res.send({
-            //         success: true,
-            //     });
-            // })
-            // .catch(async err => {
-            //     console.log(err.message)
+                return res.send({
+                    success: true,
+                });
+            })
+            .catch(async err => {
+                console.log(err.message)
 
-            //     // update store third-party event log
-            //     await eventStoreService.update({
-            //         response: err,
-            //         status: 'COINPAYMENTS ERROR',
-            //     }, event.id);
+                // update store third-party event log
+                await eventStoreService.update({
+                    response: err.message || err,
+                    status: 'COINPAYMENTS ERROR',
+                }, event.id);
 
-            //     return res.status(500).send({
-            //         success: false,
-            //         message: 'Could not process your request'
-            //     });
-            // });
+                return res.status(500).send({
+                    success: false,
+                    message: 'Could not process your request'
+                });
+            });
     } catch (err) {
         console.log(err.message)
         return res.status(500).send({
@@ -244,8 +243,37 @@ async function convert(req, res) {
     }
 };
 
+async function balances(req, res) {
+    try {
+        const all = (req.query && req.query.all) || 1;
+        const client = new CoinPayments(config.coinPayments);
+        const options = { all };
+        return client.balances(options)
+            .then(async data => {
+                return res.send({
+                    success: true,
+                    data,
+                });
+            })
+            .catch(err => {
+                console.log(err.message)
+                return res.status(500).send({
+                    success: false,
+                    message: 'Could not process your request'
+                });
+            });
+    } catch (err) {
+        console.log(err.message)
+        return res.status(500).send({
+            success: false,
+            message: 'Could not process your request'
+        });
+    }
+};
+
 module.exports = {
     ipn,
     create,
     convert,
+    balances,
 };
