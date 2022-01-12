@@ -513,6 +513,24 @@ async function approveDeposit(id, data) {
             return { success: false, message: "Insufficient funds" };
         }
 
+        const commission =  await Setting.findAll({category: 'commission'})
+        const userFee               = commission.filter(option => option.key === 'user_fee')[0];
+        const mainAccountCommission = commission.filter(option => option.key === 'main_account_commission')[0];
+        const sponsorCommission     = commission.filter(option => option.key === 'referral_commission')[0];
+
+        if(!userFee.value){
+            return { success: false, message: "Registration user fee is not configered on the commission structure" };
+        }
+
+        if(!mainAccountCommission.value){
+            return { success: false, message: "Commission for CBI main account is not configered in the commission structure" };
+        }
+
+        if(!sponsorCommission.value){
+            return { success: false, message: "Commission for sponsor is not configered in the commission structure" };
+        }
+
+
         if(data.status === 'Completed'){
             const user =  await User.findOne({where : {id: data.transaction.user_id}});
             const sponsor =  await User.findOne({where : {id: user.dataValues.sponsor}});
@@ -521,20 +539,20 @@ async function approveDeposit(id, data) {
             const userAccount =  await Account.findOne({where : {user_id: user.dataValues.id}});
             const sponsorAccount =  await Account.findOne({where : {user_id: sponsor.dataValues.id}});
 
-            const userTopUp = parseFloat(data.transaction.amount) - parseFloat(setting.dataValues.value)+(parseFloat(setting.dataValues.value)* 25 / 100);
+            const userTopUp = parseFloat(data.transaction.amount) - parseFloat(setting.dataValues.value)+(parseFloat(setting.dataValues.value)* parseFloat(userFee.value) / 100);
 
             let companyCondition    = {id: mainAccount.dataValues.id};
             let companyData         = {
-                available_balance: parseFloat(mainAccount.dataValues.available_balance)+(parseFloat(setting.dataValues.value)* 50 / 100),
-                balance: parseFloat(mainAccount.dataValues.balance)+(parseFloat(setting.dataValues.value)* 50 / 100),
+                available_balance: parseFloat(mainAccount.dataValues.available_balance)+(parseFloat(setting.dataValues.value)* parseFloat(mainAccountCommission.value) / 100),
+                balance: parseFloat(mainAccount.dataValues.balance)+(parseFloat(setting.dataValues.value)* parseFloat(mainAccountCommission.value) / 100),
             };
 
             let sponsorCondition    = {id: sponsorAccount.dataValues.id};
             let sponsorData         = {
-                available_balance: parseFloat(sponsorAccount.dataValues.available_balance)+(parseFloat(setting.dataValues.value)* 25 / 100),
-                balance: parseFloat(sponsorAccount.dataValues.balance)+(parseFloat(setting.dataValues.value)* 25 / 100)
+                available_balance: parseFloat(sponsorAccount.dataValues.available_balance)+(parseFloat(setting.dataValues.value)* parseFloat(sponsorCommission.value) / 100),
+                balance: parseFloat(sponsorAccount.dataValues.balance)+(parseFloat(setting.dataValues.value)* parseFloat(sponsorCommission.value) / 100)
             };
-            sponsorBalance          = parseFloat(sponsorAccount.dataValues.available_balance)+(parseFloat(setting.dataValues.value)* 25 / 100);
+            sponsorBalance          = parseFloat(sponsorAccount.dataValues.available_balance)+(parseFloat(setting.dataValues.value)* parseFloat(sponsorCommission.value) / 100);
 
             let userCondition       = {id: userAccount.dataValues.id};
             let userData            = {
@@ -560,16 +578,16 @@ async function approveDeposit(id, data) {
                 updated: sequelize.fn('NOW'),
             }, { where: { id: user_id } });
 
-            const sponsorCommission = {
+            const sponsorCommissionData = {
                 user_id: sponsor.id,
                 tx_type: 'credit',
                 subtype: 'referral',
                 note:'CBI Referral Commission',
                 status: 'Completed',
                 reference: 'Pay Referral',
-                amount: parseFloat(setting.value)* 25 / 100,
+                amount: parseFloat(setting.value)* parseFloat(sponsorCommission.value) / 100,
                 fee: 0,
-                total_amount: parseFloat(setting.value)* 25 / 100,
+                total_amount: parseFloat(setting.value)* parseFloat(sponsorCommission.value) / 100,
                 balance: 0,
                 currency: data.transaction.currency,
                 source_transaction: data.transaction.user_id
@@ -582,9 +600,9 @@ async function approveDeposit(id, data) {
                 note:'CBI Registration Fee',
                 status: 'Completed',
                 reference: 'Pay Main Account',
-                amount: parseFloat(setting.value)* 25 / 100,
+                amount: parseFloat(setting.value)* parseFloat(mainAccountCommission.value) / 100,
                 fee: 0,
-                total_amount: parseFloat(setting.value)* 25 / 100,
+                total_amount: parseFloat(setting.value)* parseFloat(mainAccountCommission.value) / 100,
                 balance: 0,
                 currency: data.transaction.currency,
                 source_transaction: data.transaction.user_id
@@ -595,7 +613,7 @@ async function approveDeposit(id, data) {
                 type: 'REFERRAL',
                 referral_id: user.id,
                 status: 'Paid',
-                amount: parseFloat(setting.value)* 25 / 100,
+                amount: parseFloat(setting.value)* parseFloat(sponsorCommission.value) / 100,
                 currency_code: data.transaction.currency.code,
                 commission_date: Date.now()
             }
@@ -607,7 +625,7 @@ async function approveDeposit(id, data) {
                 subtype: data.transaction.subtype,
                 tx_type: data.transaction.tx_type,
                 reference: data.transaction.reference,
-                amount: parseFloat(setting.value)* 25 / 100,
+                amount: parseFloat(setting.value)* parseFloat(userFee.value) / 100,
                 currency_code: data.transaction.currency.code,
                 available_balance: userBalance,
             }
@@ -618,16 +636,16 @@ async function approveDeposit(id, data) {
                 email: sponsor.email,
                 subtype: data.transaction.subtype,
                 tx_type: data.transaction.tx_type,
-                amount: parseFloat(setting.value)* 25 / 100,
+                amount: parseFloat(setting.value)* parseFloat(sponsorCommission.value) / 100,
                 currency_code: data.transaction.currency.code,
                 available_balance: sponsorBalance
             }
 
             await Commission.create(commissionData);
             return { 
-                success: true, 
+                success: true,
                 message: "Account was successfully updated", 
-                data: {user: dataUser, sponsor: dataSponsor, commission: sponsorCommission, main: mainCommission } };
+                data: {user: dataUser, sponsor: dataSponsor, commission: sponsorCommissionData, main: mainCommission } };
     }else{
         let status = {status: data.status}
         await Transaction.update(status, { where: { id } });

@@ -63,6 +63,24 @@ async function index(req, res) {
     }
 }
 
+async function getSettingCommissions(req, res) {
+    try {
+        return settingService.getSettingCommissions(req.query)
+        .then(data => res.send(data))
+        .catch(err => {
+            res.send({
+                success: false,
+                message: err.message,
+            });
+        });
+    } catch (error) {
+        return res.send({
+            success: false,
+            message: 'Could not process request 2'
+        });
+    }
+}
+
 async function show(req, res) {
     try {
         return settingService.show(req.params.id)
@@ -120,6 +138,7 @@ async function destroy(req, res) {
 module.exports = {
     create,
     index,
+    getSettingCommissions,
     show,
     update,
     destroy

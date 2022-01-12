@@ -63,6 +63,58 @@ async function index(query) {
 }
 
 /**
+ * List Settings
+ * 
+ * Get a list of settings belonging to CBI.
+ * 
+ * @param {object} query
+ * @returns
+ */
+async function getSettingCommissions(query) {
+    try {
+        const { offset, limit } = query;
+        const where = query || {};
+        const groupWhere = {};
+
+        delete where.offset;
+        delete where.limit;
+
+        if (where.group) {
+            groupWhere.name = where.group;
+            delete where.group;
+        }
+
+        const settings = await Setting.findAndCountAll({
+            attributes: [
+                'id',
+                'title',
+                'category',
+                'key',
+                'value',
+                'company_id',
+                'subcategory',
+            ],
+            where: {category: 'commission'},
+            offset: offset || 0,
+            limit: limit || 100,
+        });
+        const { count, rows } = settings;
+        return {
+            success: true,
+            data: {
+                count,
+                next: null,
+                previous: null,
+                results: rows,
+            }
+        };
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
+/**
  * Retrieve Setting
  * 
  * Retrieve a company’s setting.
@@ -137,6 +189,7 @@ async function findByKey(key) {
 module.exports = {
     create,
     index,
+    getSettingCommissions,
     show,
     update,
     findByKey,
