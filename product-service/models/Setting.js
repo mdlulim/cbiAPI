@@ -8,7 +8,8 @@ const Setting = sequelize.define('setting', {
         primaryKey: true,
     },
     company_id: Sequelize.UUID,
-    channel: Sequelize.STRING,
+    category: Sequelize.STRING,
+    subcategory: Sequelize.STRING,
     key: Sequelize.STRING,
     value: Sequelize.STRING,
 }, {
