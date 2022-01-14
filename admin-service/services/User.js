@@ -55,7 +55,11 @@ async function index(query) {
         delete where.limit;
 
         if (where.group) {
-            groupWhere.name = where.group;
+            if (where.group === 'admin') {
+                groupWhere.channel = where.group;
+            } else {
+                groupWhere.name = where.group;
+            }
             delete where.group;
         }
         const users = await User.findAndCountAll({
