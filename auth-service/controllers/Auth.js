@@ -270,7 +270,7 @@ async function login(req, res) {
          * If user group is "admin",
          * allow user to log in, otherwise perform verify login
          */
-        const isAdmin = group.name === 'admin';
+        const isAdmin = group.channel === 'admin';
 
         if (isAdmin) {
             const expires = new Date();
