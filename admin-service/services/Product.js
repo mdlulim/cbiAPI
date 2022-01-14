@@ -2,6 +2,7 @@ const sequelize = require('../config/db');
 const { Currency } = require('../models/Currency');
 const { Product } = require('../models/Product');
 const { ProductCategory } = require('../models/ProductCategory');
+const { ProductSubCategory } = require('../models/ProductSubCategory');
 const { UserProduct } = require('../models/UserProduct');
 const User = require('../models/User');
 
@@ -113,6 +114,26 @@ async function categories(query) {
     }
 }
 
+async function getSubcategories(query) {
+    try {
+        const { offset, limit } = query;
+        const where = query || {};
+
+        delete where.offset;
+        delete where.limit;
+
+        return ProductSubCategory.findAndCountAll({
+            where,
+            order: [['title', 'ASC']],
+            offset: offset || 0,
+            limit: limit || 100,
+        });
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
 async function getMembersByProductId(product_id) {
     try {
 
@@ -140,6 +161,17 @@ async function show(id) {
 async function showCategory(id) {
     try {
         return ProductCategory.findOne({
+            where: { id },
+        });
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request in service');
+    }
+}
+
+async function showSubcategory(id) {
+    try {
+        return ProductSubCategory.findOne({
             where: { id },
         });
     } catch (error) {
@@ -199,6 +231,25 @@ async function updateCategory(id, data) {
     }
 }
 
+/**
+ * 
+ * Update Product Subcatecory
+ * 
+ * Update company’s product Subcatecory.
+ * 
+ * @param {string} id
+ * @param {string} data 
+ * @returns 
+ */
+async function updateSubcategory(id, data) {
+    try {
+        return ProductSubCategory.update(data, { where: { id } });
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
 async function destroy(id) {
     try {
         return Product.destroy(id);
@@ -221,4 +272,7 @@ module.exports = {
     getMembersByProductId,
     updateCategory,
     showCategory,
+    getSubcategories,
+    showSubcategory,
+    updateSubcategory,
 }

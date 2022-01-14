@@ -170,6 +170,22 @@ async function showCategory(req, res) {
     }
 }
 
+async function showSubcategory(req, res) {
+    try {
+        const category = await productService.showSubcategory(req.params.id);
+        return res.send({
+            success: true,
+            data: category
+        });
+    } catch (error) {
+        console.log(error)
+        return res.send({
+            success: false,
+            message: 'Could not process request'
+        });
+    }
+}
+
 async function update(req, res) {
     try {
         const data = req.body;
@@ -207,6 +223,33 @@ async function updateCategory(req, res) {
                 message: err.message,
             });
         });
+}
+
+// async function updateSubcategory(req, res) {
+//     return productService.updateSubcategory(req.params.id, req.body)
+//     .then(data => res.send(data))
+//     .catch(err => {
+//         console.log(err.message)
+//         res.send({
+//             success: false,
+//             message: err.message,
+//         });
+//     });
+// }
+
+async function updateSubcategory(req, res) {
+    try {
+        await productService.updateSubcategory(req.params.id, req.body);
+
+        return res.send({
+            success: true, message: 'successfully updated'
+        });
+    } catch (error) {
+        return {
+            success: false,
+            message: 'Could not process request'
+        };
+    }
 }
 
 async function destroy(req, res) {
@@ -255,6 +298,28 @@ async function categories(req, res) {
     }
 }
 
+async function getSubcategories(req, res) {
+    try {
+        const categories = await productService.getSubcategories(req.query);
+        const { count, rows } = categories;
+        return res.send({
+            success: true,
+            data: {
+                count,
+                next: null,
+                previous: null,
+                results: rows,
+            }
+        });
+    } catch (error) {
+        console.log(error.message)
+        return res.send({
+            success: false,
+            message: 'Could not process request'
+        });
+    }
+}
+
 module.exports = {
     createCategory,
     create,
@@ -268,4 +333,7 @@ module.exports = {
     categories,
     updateCategory,
     showCategory,
+    getSubcategories,
+    showSubcategory,
+    updateSubcategory,
 };
