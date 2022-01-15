@@ -46,7 +46,7 @@ async function create(req, res) {
                 message: 'Validation error. Same product name already exists'
             });
         }
-       
+
         await productService.create(data);
         await activityService.addActivity({
             user_id: req.user.id,
@@ -104,6 +104,47 @@ async function history(req, res) {
                 previous: null,
                 results: products[0],
             }
+        });
+    } catch (error) {
+        console.log(error.message)
+        return res.send({
+            success: false,
+            message: 'Could not process request'
+        });
+    }
+}
+
+
+
+async function cancel(req, res) {
+    try {
+        const products = await productService.cancel(req.query);
+        const { count, rows } = products;
+
+        return res.send({
+            success: true,
+            data: {
+                count,
+                next: null,
+                previous: null,
+                results: rows,
+            }
+        });
+    } catch (error) {
+        console.log(error.message)
+        return res.send({
+            success: false,
+            message: 'Could not process request'
+        });
+    }
+}
+
+async function cancelStatus(req, res) {
+    try {
+        const data = req.body;
+        await productService.cancelStatus(data.id, { status: data.status });
+        return res.send({
+            success: true,
         });
     } catch (error) {
         console.log(error.message)
@@ -198,7 +239,7 @@ async function update(req, res) {
 }
 
 async function updateCategory(req, res) {
-        return productService.updateCategory(req.params.id, req.body)
+    return productService.updateCategory(req.params.id, req.body)
         .then(data => res.send(data))
         .catch(err => {
             console.log(err.message)
@@ -268,4 +309,6 @@ module.exports = {
     categories,
     updateCategory,
     showCategory,
+    cancel,
+    cancelStatus
 };

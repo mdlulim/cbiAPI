@@ -3,13 +3,14 @@ const { Currency } = require('../models/Currency');
 const { Product } = require('../models/Product');
 const { ProductCategory } = require('../models/ProductCategory');
 const { UserProduct } = require('../models/UserProduct');
-const User = require('../models/User');
+const { User } = require('../models/User');
 
 Product.belongsTo(Currency, { foreignKey: 'currency_code', targetKey: 'code' });
 Product.belongsTo(ProductCategory, { foreignKey: 'category_id', targetKey: 'id' });
 
 Product.belongsTo(UserProduct, { foreignKey: 'id', targetKey: 'product_id' });
-//User.belongsTo(UserProduct, { foreignKey: 'id', targetKey: 'user_id' });
+UserProduct.belongsTo(User, { foreignKey: 'user_id', targetKey: 'id' });
+UserProduct.belongsTo(Product, { foreignKey: 'product_id', targetKey: 'id' });
 
 async function createCategory(data) {
     try {
@@ -53,15 +54,15 @@ async function index(query) {
 async function history(query) {
     try {
 
-        return sequelize.query("SELECT users.first_name, users.last_name, users.referral_id, users.id, user_products.id, user_products.user_id, user_products.product_id, user_products.created, user_products.status, user_products.start_date, user_products.end_date, user_products.income,"+
-        "user_products.tokens, products.id, products.title, products.type, products.category_title, products.category_id, products.fees"+
-        " FROM public.user_products"+
-        " LEFT JOIN users"+
-        " ON user_products.user_id = users.id"+
-        " LEFT JOIN products"+
-        " ON user_products.product_id = products.id"+
-        " ORDER BY created DESC"
-                );
+        return sequelize.query("SELECT users.first_name, users.last_name, users.referral_id, users.id, user_products.id, user_products.user_id, user_products.product_id, user_products.created, user_products.status, user_products.start_date, user_products.end_date, user_products.income," +
+            "user_products.tokens, products.id, products.title, products.type, products.category_title, products.category_id, products.fees" +
+            " FROM public.user_products" +
+            " LEFT JOIN users" +
+            " ON user_products.user_id = users.id" +
+            " LEFT JOIN products" +
+            " ON user_products.product_id = products.id" +
+            " ORDER BY created DESC"
+        );
 
     } catch (error) {
         console.error(error.message || null);
@@ -93,6 +94,35 @@ async function history(query) {
     // }
 }
 
+async function cancel(query) {
+    try {
+        const { offset, limit } = query;
+        const where = { status: ['Pending Cancellation', 'Cancellation Complete', 'Cancellation Rejected']};
+
+        delete where.offset;
+        delete where.limit;
+
+        return UserProduct.findAndCountAll({
+            where,
+            include: [{ model: User }, { model: Product }],
+            offset: offset || 0,
+            limit: limit || 100,
+        });
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
+async function cancelStatus(id, data) {
+    try {
+        return UserProduct.update(data, { where: { id } });
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
 async function categories(query) {
     try {
         const { offset, limit } = query;
@@ -116,8 +146,8 @@ async function categories(query) {
 async function getMembersByProductId(product_id) {
     try {
 
-        return sequelize.query("SELECT * FROM users ur JOIN user_products up ON ur.id = up.user_id  WHERE up.product_id ='"+product_id+"'"
-                );
+        return sequelize.query("SELECT * FROM users ur JOIN user_products up ON ur.id = up.user_id  WHERE up.product_id ='" + product_id + "'"
+        );
 
     } catch (error) {
         console.error(error.message || null);
@@ -129,7 +159,7 @@ async function show(id) {
     try {
         return Product.findOne({
             where: { id },
-            include: [ { model: ProductCategory }],
+            include: [{ model: ProductCategory }],
         });
     } catch (error) {
         console.error(error.message || null);
@@ -221,4 +251,6 @@ module.exports = {
     getMembersByProductId,
     updateCategory,
     showCategory,
+    cancel,
+    cancelStatus,
 }
