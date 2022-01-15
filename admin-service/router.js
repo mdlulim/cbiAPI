@@ -63,7 +63,7 @@ module.exports.set = app => {
     app.get('/users/:id/emails', authMiddleware.checkAuth, userController.emails);
 
     app.get('/users/email/:email', authMiddleware.checkAuth, userController.email);
-    
+
 
     /**
      * Retrieve User Mobiles
@@ -282,6 +282,20 @@ module.exports.set = app => {
      */
     app.get('/products/history', authMiddleware.checkAuth, productController.history);
 
+    /**
+     * List Cancelled Products
+     * 
+     * Get a list of cancelled products.
+     */
+    app.get('/products/cancel', authMiddleware.checkAuth, productController.cancel);
+
+    /**
+     * List Cancelled Products
+     * 
+     * Get a list of cancelled products.
+     */
+     app.put('/products/cancel', authMiddleware.checkAuth, productController.cancelStatus);
+
 
     /**
      * Retrieve Product
@@ -324,7 +338,7 @@ module.exports.set = app => {
      * Retrieve a company’s transaction.
      */
     app.get('/transactions/:id', authMiddleware.checkAuth, transactionController.show);
-    
+
     app.get('/pop/deposits/:id', authMiddleware.checkAuth, transactionController.getProofOfPayment);
 
     /**
@@ -334,11 +348,11 @@ module.exports.set = app => {
     */
     app.put('/transactions/:id', authMiddleware.checkAuth, userController.updateTransaction);
 
-     /**
-     * Process Batch Transactions.
-     * 
-     * Process Batch Transactions.
-     */
+    /**
+    * Process Batch Transactions.
+    * 
+    * Process Batch Transactions.
+    */
     app.post('/transactions/batch', authMiddleware.checkAuth, transactionController.batchProcessTransaction);
 
     /**
@@ -369,11 +383,11 @@ module.exports.set = app => {
      */
     app.delete('/currencies/:code', authMiddleware.checkAuth, currencyController.destroy);
 
-     /**
-     * Create Fee
-     * 
-     * Create a fee.
-     */
+    /**
+    * Create Fee
+    * 
+    * Create a fee.
+    */
     app.post('/fees', authMiddleware.checkAuth, feeController.create);
 
     /**
@@ -397,11 +411,11 @@ module.exports.set = app => {
      */
     app.put('/fees/:id', authMiddleware.checkAuth, feeController.update);
 
-       /**
-     * Create Setting
-     * 
-     * Create a setting.
-     */
+    /**
+  * Create Setting
+  * 
+  * Create a setting.
+  */
     app.post('/settings', authMiddleware.checkAuth, settingController.create);
 
     /**
@@ -444,11 +458,11 @@ module.exports.set = app => {
     app.get('/bank-accounts/:id', authMiddleware.checkAuth, bankAccountController.show);
     app.post('/bank-accounts/verify/:id', authMiddleware.checkAuth, bankAccountController.verifyBankAccount);
 
-        /**
-     * List Transaction Fees
-     * 
-     * Get a list of Transaction Fees belonging to CBI.
-     */
+    /**
+ * List Transaction Fees
+ * 
+ * Get a list of Transaction Fees belonging to CBI.
+ */
     app.get('/fees', authMiddleware.checkAuth, feeController.index);
     app.post('/fees', authMiddleware.checkAuth, feeController.create);
     app.get('/fees/:id', authMiddleware.checkAuth, feeController.show);
@@ -468,21 +482,21 @@ module.exports.set = app => {
     app.post('/bank-accounts/:id/auth/otp/resend', authMiddleware.checkAuth, bankAccountController.otpResend);
     app.post('/bank-accounts/:id/auth/otp/verify', authMiddleware.checkAuth, bankAccountController.otpVerify);
 
-        /**
-     * List KYC Limits
-     * 
-     * Get a list of KYC Limits belonging to CBI.
-     */
+    /**
+ * List KYC Limits
+ * 
+ * Get a list of KYC Limits belonging to CBI.
+ */
     app.get('/kyc-limits', authMiddleware.checkAuth, KYCLimitController.index);
     app.post('/kyc-limits', authMiddleware.checkAuth, KYCLimitController.create);
     app.get('/kyc-limits/:id', authMiddleware.checkAuth, KYCLimitController.show);
     app.put('/kyc-limits/:id', authMiddleware.checkAuth, KYCLimitController.update);
     app.delete("/kyc-limits/:id", authMiddleware.checkAuth, KYCLimitController.destroy);
-        /**
-     * List Companies
-     * 
-     * Get a list of Companies belonging to CBI.
-     */
+    /**
+ * List Companies
+ * 
+ * Get a list of Companies belonging to CBI.
+ */
     app.get('/companies', authMiddleware.checkAuth, companyController.getCompanies);
     /**
      * List Countries
@@ -554,7 +568,7 @@ module.exports.set = app => {
     app.get("/business-account", authMiddleware.checkAuth, accountController.mainaccount);
 
     // Main Account Balance Story ID 2401
-    app.post("/transactions-type",  authMiddleware.checkAuth, transactionController.transactions);
+    app.post("/transactions-type", authMiddleware.checkAuth, transactionController.transactions);
     app.post("/transactions-total", authMiddleware.checkAuth, transactionController.transactionstotal);
 
 };

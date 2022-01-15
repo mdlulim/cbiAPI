@@ -9,6 +9,7 @@ const Group = sequelize.define('group', {
     },
     name: Sequelize.STRING,
     label: Sequelize.STRING,
+    channel: Sequelize.STRING,
     description: Sequelize.STRING,
     is_default: Sequelize.BOOLEAN,
     is_public: Sequelize.BOOLEAN,
