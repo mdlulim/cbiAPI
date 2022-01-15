@@ -611,6 +611,20 @@ async function cryptoAccounts(req, res){
     }
 }
 
+async function resendPassword(req, res){
+    try {
+
+        const data = {}
+        const result = await transactionService.update(req.params.id, data);
+        return res.send({ success: result.success, message: result.message})
+    } catch (err) {
+        return res.status(500).send({
+            success: false,
+            message: 'Could not process your request'
+        });
+    }
+}
+
 module.exports = {
     create,
     index,
@@ -632,4 +646,5 @@ module.exports = {
     updateBankAccounts,
     approveDeposit,
     email,
+    resendPassword
 }

@@ -302,12 +302,9 @@ module.exports = {
     getMembersByProductId,
     updateCategory,
     showCategory,
-<<<<<<< HEAD
     getSubcategories,
     showSubcategory,
     updateSubcategory,
-=======
     cancel,
     cancelStatus,
->>>>>>> 4357507a150b3d7be23f56f888562bf854a7d80b
 }

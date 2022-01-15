@@ -812,6 +812,18 @@ async function findByPropertyValue(prop, value) {
     }
 };
 
+async function resetPassword(id, data){
+    try {
+        await User.update(data,{ where : id })
+        return { 
+            success: true,
+            message: "Password was successfully resend"}
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
 module.exports = {
     create,
     index,
@@ -834,4 +846,5 @@ module.exports = {
     findByPropertyValue,
     updateBankAccounts,
     email,
+    resetPassword,
 }
