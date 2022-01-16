@@ -812,16 +812,31 @@ async function findByPropertyValue(prop, value) {
     }
 };
 
-async function resetPassword(id, data){
+async function findByEmail(email) {
     try {
-        await User.update(data,{ where : id })
-        return { 
-            success: true,
-            message: "Password was successfully resend"}
+        return User.findOne({
+            where: {
+                email,
+                archived: false,
+                blocked: false,
+                verified: true,
+            },
+            include: [{ model: Group }],
+        });
     } catch (error) {
         console.error(error.message || null);
         throw new Error('Could not process your request');
     }
+}
+
+async function resetPassword(id, data){
+        try {
+            data.updated = sequelize.fn('NOW');
+            return User.update(data, { where: { id } });
+        } catch (error) {
+            console.error(error.message || null);
+            throw new Error('Could not process your request');
+        }
 }
 
 module.exports = {
@@ -846,5 +861,6 @@ module.exports = {
     findByPropertyValue,
     updateBankAccounts,
     email,
+    findByEmail,
     resetPassword,
 }

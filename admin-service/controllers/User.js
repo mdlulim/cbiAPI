@@ -1,7 +1,7 @@
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 const generator = require('generate-password');
 const emailHandler = require('../helpers/emailHandler');
-
 const activityService = require('../services/Activity');
 const groupService = require('../services/Group');
 const userService = require('../services/User');
@@ -41,21 +41,21 @@ async function create(req, res) {
 
         // validate email
         if (!email) {
-            return res.status(403).send({
+            return res.send({
                 success: false,
                 message: 'Validation error. Email address is required.'
             });
         }
         // validate first name
         if (!first_name) {
-            return res.status(403).send({
+            return res.send({
                 success: false,
                 message: 'Validation error. First name is required.'
             });
         }
         // validate last name
         if (!last_name) {
-            return res.status(403).send({
+            return res.send({
                 success: false,
                 message: 'Validation error. Last name is required.'
             });
@@ -63,7 +63,7 @@ async function create(req, res) {
         
         // validate last name
         if (!group_id) {
-            return res.status(403).send({
+            return res.send({
                 success: false,
                 message: 'Validation error. User role is required.'
             });
@@ -72,7 +72,7 @@ async function create(req, res) {
         // check if the email address already exists
         const emailCheck = await userService.findByPropertyValue('email', email);
         if (emailCheck && emailCheck.id) {
-            return res.status(403).send({
+            return res.send({
                 success: false,
                 message: 'Validation error. Email address already exists.'
             });
@@ -82,7 +82,7 @@ async function create(req, res) {
             // check if the username already exists
             const usernameCheck = await userService.findByPropertyValue('username', username);
             if (usernameCheck && usernameCheck.id) {
-                return res.status(403).send({
+                return res.send({
                     success: false,
                     message: 'Validation error. Username already exists.'
                 });
@@ -126,9 +126,9 @@ async function create(req, res) {
                 email,
             });
         }
-
+        console.log(req.body)
         // response
-        return res.status(200).send({ success: true });
+        return res.send({ success: true, message: 'User was successfully created'});
 
     } catch (err) {
         console.log(err);
@@ -584,7 +584,7 @@ async function approveDeposit(req, res){
                     ip: null,
                     data,
                 })
-
+                
                 return res.send({ success: data.success, message: data.message})
             }else{
                 return res.send({ success: data.success, message: data.message})
@@ -611,16 +611,58 @@ async function cryptoAccounts(req, res){
     }
 }
 
-async function resendPassword(req, res){
+/**
+ * Reset Password
+ * 
+ * Send a password reset email.
+ */
+async function passwordReset(req, res) {
     try {
+        const { email } = req.body;
 
-        const data = {}
-        const result = await transactionService.update(req.params.id, data);
-        return res.send({ success: result.success, message: result.message})
-    } catch (err) {
+        const user = await User.findByEmail(email);
+
+        if (!user) {
+            return res.status(405).send({
+                success: false,
+                message: 'Email address not registered.'
+            });
+        }
+
+        const code = generator.generate({ length: 4, numbers: true });
+        const token = jwt.sign({
+            code,
+            email,
+        }, config.jwtSecret);
+
+        const verification = {
+            ...user.verification,
+            token,
+        };
+
+        await User.resetPassword(user.id, {
+            verification,
+            // verify_token: token,
+            updated: sequelize.fn('NOW'),
+        });
+
+        // send reset password email
+        const { first_name } = user;
+        await emailHandler.resetPassword({
+            first_name,
+            email,
+            token,
+        });
+
+        return res.send({
+            success: true,
+            message: 'Password was successfully sent to '+first_name
+        });
+    } catch (error) {
+        console.log('error', error.message)
         return res.status(500).send({
             success: false,
-            message: 'Could not process your request'
+            message: 'Could not process request'
         });
     }
 }
@@ -646,5 +688,5 @@ module.exports = {
     updateBankAccounts,
     approveDeposit,
     email,
-    resendPassword
+    passwordReset,
 }
