@@ -279,14 +279,14 @@ module.exports.set = app => {
      * 
      * Get a list of cancelled products.
      */
-    app.get('/products/cancel', authMiddleware.checkAuth, productController.cancel);
+    app.post('/products/cancellations/:action', authMiddleware.checkAuth, productController.cancellationsAction);
 
     /**
      * List Cancelled Products
      * 
      * Get a list of cancelled products.
      */
-     app.put('/products/cancel', authMiddleware.checkAuth, productController.cancelStatus);
+    app.get('/products/cancellations', authMiddleware.checkAuth, productController.cancellations);
 
 
     /**

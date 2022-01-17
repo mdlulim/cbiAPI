@@ -11,6 +11,7 @@ const productService  = require('../services/Product');
 const settingService = require('../services/Setting');
 const transactionService  = require('../services/Transaction');
 const userService = require('../services/User');
+const wealthCreatorService = require('../services/WealthCreator');
 const {
     cbiX7SellConfirmation,
     tokenPurchaseConfirmation,
@@ -50,6 +51,8 @@ async function index(req, res){
 
 async function subscribe(req, res){
     try {
+        const { frequency } = req.body;
+
         // get product details
         const product = await productService.findByCode(req.body.product_code);
         const { product_subcategory } = product;
@@ -129,6 +132,18 @@ async function subscribe(req, res){
                 group_id: 'c85ef2f9-d1dc-451d-b36d-9f0b111c1882',
                 expiry: moment().add(1, 'month').format('YYYY-MM-DD'),
                 autorenew: true,
+            });
+
+            // wealth creator insert
+            await wealthCreatorService.create({
+                user_id: user.id,
+                product_id: product.id,
+                frequency: frequency || 'MONTHLY',
+                fee_amount: price,
+                last_payment_date: new Date().toISOString(),
+                last_paid_amount: price,
+                currency_code: product.currency.code,
+                user_product_id: userProduct.id,
             });
 
             // insert transaction
@@ -339,6 +354,7 @@ async function cancelProduct(data, res) {
         await productService.update({
             user_id: user.id,
             status: 'Pending Cancellation',
+            cancellation_status: 'Pending',
         }, product.id, false);
 
         // log activity
@@ -602,7 +618,7 @@ async function invest(req, res){
                 balance: parseFloat(balance) - totalAmount,
                 available_balance: parseFloat(available_balance) - totalAmount,
                 updated: sequelize.fn('NOW'),
-            }, wallet.id)
+            }, wallet.id);
     
             // log activities
             await activityService.addActivity({
