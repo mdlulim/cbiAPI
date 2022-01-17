@@ -321,12 +321,26 @@ async function cancellationsAction(req, res) {
 
         // retrieve settings config
         const settings = await settingService.findByKey('product_cancellation_penalty_fee');
+
+        // retrieve product by id
+        const product = await productService.show(product_id);
+        const { title, product_code, product_subcategory, fees } = product;
+        const { code, allow_cancellations } = product_subcategory;
+
+        if (!allow_cancellations) {
+            return res.status(403).send({
+                success: false,
+                message: 'Cancellations on this product not allowed'
+            });
+        }
         
         // apply cancellation penalties if any, and
         // top-up member wallet balance accordingly
         let isPercentage = false;
         let cancellationFees = 0;
-        if (settings & settings.value) {
+        if (fees && fees.cancellation_penalty_fee) {
+            cancellationFees = parseFloat(fees.cancellation_penalty_fee);
+        } else if (settings & settings.value) {
             if (settings.value.includes('%')) {
                 // this is a percentage value
                 isPercentage = true;
@@ -346,11 +360,6 @@ async function cancellationsAction(req, res) {
         });
 
         if (updated) {
-
-            // retrieve product by id
-            const product = await productService.show(product_id);
-            const { title, product_code, product_subcategory } = product;
-            const { code } = product_subcategory;
 
             // retrieve member by id
             const member = await userService.show(member_id, false);
@@ -376,7 +385,7 @@ async function cancellationsAction(req, res) {
 
                             // calculations (invested amount minus cancellation penalty fees)
                             const investedAmount = parseFloat(invested_amount);
-                            const feeAmount = (isPercentage) ? (investedAmount * cancellationFees / 100) : feeAmount;
+                            const feeAmount = (isPercentage) ? (investedAmount * cancellationFees / 100) : cancellationFees;
                             creditAmount = investedAmount - feeAmount;
                         }
                         break;
