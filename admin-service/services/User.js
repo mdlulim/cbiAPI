@@ -131,7 +131,7 @@ async function index(query) {
  * @param {string} id 
  * @returns 
  */
-async function show(id) {
+async function show(id, return_object = true) {
     try {
         const user = await User.findOne({
             attributes: [
@@ -175,10 +175,13 @@ async function show(id) {
             where: { id },
             include: [{ model: Group }],
         });
-        return {
-            success: true,
-            data: user,
-        };
+        if (return_object) {
+            return {
+                success: true,
+                data: user,
+            };
+        }
+        return user;
     } catch (error) {
         console.error(error.message || null);
         throw new Error('Could not process your request');

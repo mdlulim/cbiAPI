@@ -1,13 +1,14 @@
 const sequelize = require('../config/db');
 const { Currency }  = require('../models/Currency');
-const { Investment }  = require('../models/Investment');
+const { WealthCreator }  = require('../models/WealthCreator');
 const { Product }  = require('../models/Product');
 const { User }  = require('../models/User');
 const { UserProduct }  = require('../models/UserProduct');
 
-Investment.belongsTo(Currency, { foreignKey: 'currency_code', targetKey: 'code' });
-Investment.belongsTo(Product, { foreignKey: 'product_id', targetKey: 'id' });
-Investment.belongsTo(User, { foreignKey: 'user_id', targetKey: 'id' });
+WealthCreator.belongsTo(Currency, { foreignKey: 'currency_code', targetKey: 'code' });
+WealthCreator.belongsTo(Product, { foreignKey: 'product_id', targetKey: 'id' });
+WealthCreator.belongsTo(User, { foreignKey: 'user_id', targetKey: 'id' });
+WealthCreator.belongsTo(UserProduct, { foreignKey: 'user_product_id', targetKey: 'id' });
 
 async function create(data) {
     try {
@@ -18,7 +19,7 @@ async function create(data) {
         data.user_product_id = userProduct.id;
 
         // investment insert
-        return Investment.create(data);
+        return WealthCreator.create(data);
     } catch (error) {
         console.error(error.message || null);
         throw new Error('Could not process your request');
