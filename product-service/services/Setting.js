@@ -19,6 +19,19 @@ async function config(query = {}) {
     }
 }
 
+async function findByKey(key) {
+    try {
+        //console.log(key)
+        return  await Setting.findOne({
+            where: { key: key }
+        });
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
 module.exports = {
     config,
+    findByKey,
 }
