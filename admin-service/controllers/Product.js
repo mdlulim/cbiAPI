@@ -105,7 +105,6 @@ async function history(req, res) {
     try {
         const products = await productService.history(req.query);
         const { count, rows } = products[0];
-        console.log(products[0])
         return res.send({
             success: true,
             data: {
@@ -168,7 +167,6 @@ async function cancelStatus(req, res) {
 async function getMembersByProductId(req, res) {
     try {
         const members = await productService.getMembersByProductId(req.params.id);
-        console.log(members[0]);
         const { count, rows } = members[0];
         return res.send({
             success: true,
@@ -191,7 +189,6 @@ async function getMembersByProductId(req, res) {
 async function show(req, res) {
     try {
         const product = await productService.show(req.params.id);
-        console.log(product)
         return res.send({
             success: true,
             data: product
@@ -364,7 +361,7 @@ async function getSubcategories(req, res) {
         });
     } catch (error) {
         console.log(error.message)
-        return res.send({success: false,
+        return res.send({ success: false,
             message: 'Could not process request'
         });
     }
@@ -539,7 +536,7 @@ module.exports = {
     getSubcategories,
     showSubcategory,
     updateSubcategory,
-    cancel,
+    cancelStatus,
     cancelStatus,
     cancellations,
     cancellationsAction,
