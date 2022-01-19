@@ -16,6 +16,10 @@ const UserProduct = sequelize.define('user_product', {
     created: Sequelize.DATE,
     updated: Sequelize.DATE,
 	status: Sequelize.STRING,
+    invested_amount: Sequelize.FLOAT,
+    cancellation_date: Sequelize.DATE,
+    cancellation_approved_by: Sequelize.UUID,
+    cancellation_status: Sequelize.STRING,
 }, {
     timestamps: false
 });

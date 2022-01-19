@@ -17,6 +17,7 @@ const companyController = require('./controllers/Company');
 const bankAccountController = require('./controllers/BankAccount');
 const CompanyBankAccount = require('./controllers/CompanyBankAccount');
 const KYCLimitController = require('./controllers/KYCLimit');
+const reportController = require('./controllers/Report');
 
 
 module.exports.set = app => {
@@ -287,14 +288,14 @@ module.exports.set = app => {
      * 
      * Get a list of cancelled products.
      */
-    app.get('/products/cancel', authMiddleware.checkAuth, productController.cancel);
+    app.post('/products/cancellations/:action', authMiddleware.checkAuth, productController.cancellationsAction);
 
     /**
      * List Cancelled Products
      * 
      * Get a list of cancelled products.
      */
-     app.put('/products/cancel', authMiddleware.checkAuth, productController.cancelStatus);
+    app.get('/products/cancellations', authMiddleware.checkAuth, productController.cancellations);
 
 
     /**
@@ -570,5 +571,9 @@ module.exports.set = app => {
     // Main Account Balance Story ID 2401
     app.post("/transactions-type", authMiddleware.checkAuth, transactionController.transactions);
     app.post("/transactions-total", authMiddleware.checkAuth, transactionController.transactionstotal);
+
+    // Reports Routes
+    app.get("/reports", authMiddleware.checkAuth, reportController.index);
+    app.get("/reports/:id", authMiddleware.checkAuth, reportController.show);
 
 };

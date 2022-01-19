@@ -1,5 +1,6 @@
 const sequelize = require('../config/db');
 const { Currency } = require('../models/Currency');
+const { Group } = require('../models/Group');
 const { Product } = require('../models/Product');
 const { ProductCategory } = require('../models/ProductCategory');
 const { ProductSubCategory } = require('../models/ProductSubCategory');
@@ -12,6 +13,17 @@ Product.belongsTo(ProductCategory, { foreignKey: 'category_id', targetKey: 'id' 
 Product.belongsTo(UserProduct, { foreignKey: 'id', targetKey: 'product_id' });
 UserProduct.belongsTo(User, { foreignKey: 'user_id', targetKey: 'id' });
 UserProduct.belongsTo(Product, { foreignKey: 'product_id', targetKey: 'id' });
+
+Product.belongsTo(ProductSubCategory, { foreignKey: 'subcategory_id', targetKey: 'id' });
+ProductSubCategory.hasMany(Product, { foreignKey: 'subcategory_id', targetKey: 'id' });
+
+ProductSubCategory.belongsTo(ProductCategory, { foreignKey: 'category_id', targetKey: 'id' });
+ProductCategory.hasMany(ProductSubCategory, { foreignKey: 'category_id', targetKey: 'id' });
+
+UserProduct.belongsTo(User, { foreignKey: 'cancellation_approved_by', targetKey: 'id', as: 'cancellation_approver' });
+User.hasMany(UserProduct, { foreignKey: 'cancellation_approved_by', targetKey: 'id', as: 'cancellation_approver' });
+
+User.belongsTo(Group, { foreignKey: 'group_id', targetKey: 'id' });
 
 async function createCategory(data) {
     try {
@@ -41,7 +53,12 @@ async function index(query) {
 
         return Product.findAndCountAll({
             where,
-            include: [{ model: Currency }, { model: ProductCategory }],
+            include: [{
+                model: Currency,
+            }, {
+                model: ProductSubCategory,
+                include: [{ model: ProductCategory }],
+            }],
             order: [['created', 'DESC']],
             offset: offset || 0,
             limit: limit || 100,
@@ -95,17 +112,41 @@ async function history(query) {
     // }
 }
 
-async function cancel(query) {
+async function cancellations(query) {
     try {
         const { offset, limit } = query;
-        const where = { status: ['Pending Cancellation', 'Cancellation Complete', 'Cancellation Rejected']};
+        const where = {
+            cancellation_status: [
+                'Pending',
+                'Complete',
+                'Rejected',
+            ]
+        };
 
         delete where.offset;
         delete where.limit;
 
         return UserProduct.findAndCountAll({
             where,
-            include: [{ model: User }, { model: Product }],
+            include: [{
+                model: User
+            }, {
+                model: Product,
+                include: [{
+                    model: Currency,
+                    model: ProductSubCategory,
+                    include: [{ model: ProductCategory }],
+                }]
+            }, {
+                attributes: [
+                    'id',
+                    'first_name',
+                    'last_name',
+                ],
+                model: User,
+                as: 'cancellation_approver',
+                include: [{ model: Group }]
+            }],
             offset: offset || 0,
             limit: limit || 100,
         });
@@ -117,6 +158,7 @@ async function cancel(query) {
 
 async function cancelStatus(id, data) {
     try {
+        data.updated = sequelize.fn('NOW');
         return UserProduct.update(data, { where: { id } });
     } catch (error) {
         console.error(error.message || null);
@@ -180,7 +222,23 @@ async function show(id) {
     try {
         return Product.findOne({
             where: { id },
-            include: [{ model: ProductCategory }],
+            include: [{
+                model: Currency,
+            }, {
+                model: ProductSubCategory,
+                include: [{ model: ProductCategory }],
+            }],
+        });
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request in service');
+    }
+}
+
+async function showUserProduct(id) {
+    try {
+        return UserProduct.findOne({
+            where: { id },
         });
     } catch (error) {
         console.error(error.message || null);
@@ -306,5 +364,7 @@ module.exports = {
     showSubcategory,
     updateSubcategory,
     cancel,
+    cancellations,
     cancelStatus,
+    showUserProduct,
 }

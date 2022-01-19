@@ -84,6 +84,16 @@ async function memberCommissionFee(data) {
     return sendMail(from, email, 'CBI - Membership Commission Fee', template);
 };
 
+async function cancellationConfirmation(data) {
+    const { email, action, product } = data;
+    const template = emailTemplates.cancellationConfirmation(data);
+    const from = {
+        name: 'CBI',
+        email: smtp.auth.user,
+    };
+    return sendMail(from, email, `CBI - Cancellation request for ${product.title} has been ${action}`, template);
+};
+
 module.exports = {
     newUser,
     kycNotification,
@@ -92,4 +102,5 @@ module.exports = {
     transactionNotification,
     memberCommissionFee,
     resetPassword,
+    cancellationConfirmation,
 };

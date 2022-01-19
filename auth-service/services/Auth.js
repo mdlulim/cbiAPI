@@ -93,13 +93,13 @@ async function authenticate(data) {
          * Validate user's device and/or location
          */
         var newDeviceLogin = true;
-        if (device && device.browser) {
+        if (device && device.browser && geoinfo && geoinfo.IPv4) {
             // Check device
             const { browser, is_mobile } = device;
             const userDevice = await UserDevice.findOne({
                 where: {
                     user_id: record.id,
-                    ipv4: geoinfo.IPv4,
+                    ipv4: geoinfo.IPv4 || null,
                     is_mobile,
                     browser,
                 }
