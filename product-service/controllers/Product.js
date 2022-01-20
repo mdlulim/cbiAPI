@@ -92,6 +92,11 @@ async function subscribe(req, res){
             data.end_date = moment().add(1, 'month').format('YYYY-MM-DD');
         }
 
+        // fraxion product
+        if (isFX) {
+            data.end_date = moment().add(1000, 'days').format('YYYY-MM-DD');
+        }
+
         let description = `${user.first_name} bought a product (${product.title})`;
         if (isWC) {
             description = `${user.first_name} became a Wealth Creator`;

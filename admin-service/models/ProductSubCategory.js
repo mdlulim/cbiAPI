@@ -17,6 +17,10 @@ const ProductSubCategory = sequelize.define('product_subcategory', {
     sort_order: Sequelize.INTEGER,
 	category_id: Sequelize.UUID,
     allow_cancellations: Sequelize.BOOLEAN,
+	payout_settings: Sequelize.JSONB,
+	calculation_settings: Sequelize.JSONB,
+	has_payouts: Sequelize.BOOLEAN,
+	indicators: Sequelize.JSONB,
 }, {
     timestamps: false
 });
