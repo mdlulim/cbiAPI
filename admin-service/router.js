@@ -234,6 +234,14 @@ module.exports.set = app => {
      */
     app.get('/products/categories', authMiddleware.checkAuth, productController.categories);
 
+     /**
+     * List Product Sub Categories
+     * 
+     * Get a list of products belonging to CBI.
+     */
+    app.get('/products/subcategories', authMiddleware.checkAuth, productController.getSubcategories);
+    app.get('/products/subcategories/:id', authMiddleware.checkAuth, productController.showSubcategory);
+    app.put('/products/subcategories/:id', authMiddleware.checkAuth, productController.updateSubcategory);
     /**
      * Get Product Category
      * 
