@@ -105,7 +105,6 @@ async function history(req, res) {
     try {
         const products = await productService.history(req.query);
         const { count, rows } = products[0];
-        console.log(products[0])
         return res.send({
             success: true,
             data: {
@@ -168,7 +167,6 @@ async function cancelStatus(req, res) {
 async function getMembersByProductId(req, res) {
     try {
         const members = await productService.getMembersByProductId(req.params.id);
-        console.log(members[0]);
         const { count, rows } = members[0];
         return res.send({
             success: true,
@@ -191,7 +189,6 @@ async function getMembersByProductId(req, res) {
 async function show(req, res) {
     try {
         const product = await productService.show(req.params.id);
-        console.log(product)
         return res.send({
             success: true,
             data: product
@@ -208,6 +205,22 @@ async function show(req, res) {
 async function showCategory(req, res) {
     try {
         const category = await productService.showCategory(req.params.id);
+        return res.send({
+            success: true,
+            data: category
+        });
+    } catch (error) {
+        console.log(error)
+        return res.send({
+            success: false,
+            message: 'Could not process request'
+        });
+    }
+}
+
+async function showSubcategory(req, res) {
+    try {
+        const category = await productService.showSubcategory(req.params.id);
         return res.send({
             success: true,
             data: category
@@ -260,6 +273,42 @@ async function updateCategory(req, res) {
         });
 }
 
+// async function updateSubcategory(req, res) {
+//     return productService.updateSubcategory(req.params.id, req.body)
+//     .then(data => res.send(data))
+//     .catch(err => {
+//         console.log(err.message)
+//         res.send({
+//             success: false,
+//             message: err.message,
+//         });
+//     });
+// }
+
+async function updateSubcategory(req, res) {
+    try {
+        await productService.updateSubcategory(req.params.id, req.body);
+        await activityService.addActivity({
+            user_id: req.user.id,
+            action: `${req.user.group_name}.products.subcategory.update`,
+            description: `${req.user.group_name} updated a product subcategory (${req.body.title})`,
+            subsection: 'Update Sub-Category',
+            section: 'Products',
+            data: req.body,
+            ip: null,
+        });
+        return res.send({
+            success: true,
+            message: 'successfully updated',
+        });
+    } catch (error) {
+        return {
+            success: false,
+            message: 'Could not process request'
+        };
+    }
+}
+
 async function destroy(req, res) {
     try {
         const data = await productService.show(req.params.id);
@@ -301,6 +350,27 @@ async function categories(req, res) {
         console.log(error.message)
         return res.send({
             success: false,
+            message: 'Could not process request'
+        });
+    }
+}
+
+async function getSubcategories(req, res) {
+    try {
+        const categories = await productService.getSubcategories(req.query);
+        const { count, rows } = categories;
+        return res.send({
+            success: true,
+            data: {
+                count,
+                next: null,
+                previous: null,
+                results: rows,
+            }
+        });
+    } catch (error) {
+        console.log(error.message)
+        return res.send({ success: false,
             message: 'Could not process request'
         });
     }
@@ -472,6 +542,10 @@ module.exports = {
     categories,
     updateCategory,
     showCategory,
+    getSubcategories,
+    showSubcategory,
+    updateSubcategory,
+    cancelStatus,
     cancelStatus,
     cancellations,
     cancellationsAction,
