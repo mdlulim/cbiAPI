@@ -288,9 +288,18 @@ async function updateCategory(req, res) {
 async function updateSubcategory(req, res) {
     try {
         await productService.updateSubcategory(req.params.id, req.body);
-
+        await activityService.addActivity({
+            user_id: req.user.id,
+            action: `${req.user.group_name}.products.subcategory.update`,
+            description: `${req.user.group_name} updated a product subcategory (${req.body.title})`,
+            subsection: 'Update Sub-Category',
+            section: 'Products',
+            data: req.body,
+            ip: null,
+        });
         return res.send({
-            success: true, message: 'successfully updated'
+            success: true,
+            message: 'successfully updated',
         });
     } catch (error) {
         return {

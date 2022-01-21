@@ -9,6 +9,7 @@ const settingService = require('../services/Setting');
 const transactionService = require('../services/Transaction');
 const userService = require('../services/User');
 const emailHandler = require('../helpers/emailHandler');
+const sequelize = require('../config/db');
 const { products } = require('../config');
 const { FP, FX } = products;
 
@@ -28,13 +29,19 @@ async function autorenew(req, res) {
          * Retrieve all wealth-creators whose membership is due to expire today
          * and has auto-renewal flag turned ON under their profile
          */
+        const { Op } = sequelize;
         const wealthCreators = await userService.wcDueForAutoRenew(req.query);
-        const [autoRenewalSetting] = await settingService.config({
-            key: 'wc_renewal_monthly_fee',
+        const [wcRenewalMonthlyFee] = await settingService.config({
+            key: {
+                [Op.or]: [
+                    'wc_renewal_monthly_fee',
+                    'wc_renewal_annual_fee',
+                ]
+            },
             category: 'system',
             subcategory: 'config',
         });
-        const autoRenewalFee = parseFloat(autoRenewalSetting.value);
+        const autoRenewalFee = parseFloat(wcRenewalMonthlyFee.value);
         
         if (wealthCreators && wealthCreators.length > 0) {
             return async.map(wealthCreators, async (item, callback) => {

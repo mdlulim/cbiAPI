@@ -13,6 +13,8 @@ Product.belongsTo(UserProduct, { foreignKey: 'id', targetKey: 'product_id' });
 UserProduct.belongsTo(User, { foreignKey: 'user_id', targetKey: 'id' });
 UserProduct.belongsTo(Product, { foreignKey: 'product_id', targetKey: 'id' });
 
+ProductSubCategory.belongsTo(ProductCategory, { foreignKey: 'category_id', targetKey: 'id' });
+
 async function createCategory(data) {
     try {
         return ProductCategory.create(data);
@@ -154,6 +156,7 @@ async function getSubcategories(query) {
 
         return ProductSubCategory.findAndCountAll({
             where,
+            include: [{ model: ProductCategory }],
             order: [['title', 'ASC']],
             offset: offset || 0,
             limit: limit || 100,
@@ -273,6 +276,7 @@ async function updateCategory(id, data) {
  */
 async function updateSubcategory(id, data) {
     try {
+        data.updated = sequelize.fn('NOW');
         return ProductSubCategory.update(data, { where: { id } });
     } catch (error) {
         console.error(error.message || null);
