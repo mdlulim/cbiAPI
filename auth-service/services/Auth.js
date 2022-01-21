@@ -52,19 +52,19 @@ async function authenticate(data) {
             throw new Error('Authentication failed. User not found.');
         if (!bcrypt.compareSync(password, record.password)) {
             const loginAttemps = record.login_attempts + 1;
-            const blocked = (loginAttemps > 3);
+            const locked = (loginAttemps > 3);
             await User.update({
-                blocked,
+                locked,
                 login_attempts: loginAttemps,
                 updated: sequelize.fn('NOW'),
             }, { where: { id: record.id } });
-            if (blocked) {
-                throw new Error('Authentication failed. Account blocked, please contact support.');
+            if (locked) {
+                throw new Error('Authentication failed. Account locked, please contact support.');
             }
             throw new Error(`Authentication failed. Wrong username and/or password. You have ${3 - loginAttemps} login attemp(s) remaining.`);
         }
-        if (record.blocked)
-            throw new Error('Authentication failed. Account blocked, please contact support.');
+        if (record.locked)
+            throw new Error('Authentication failed. Account locked, please contact support.');
         if (!record.verified)
             throw new Error('Authentication failed. User pending verification.');
 
@@ -82,7 +82,7 @@ async function authenticate(data) {
                     timeLeft = duration.asSeconds();
                     retryIn = `${parseInt(timeLeft)} second(s)`;
                 }
-                throw new Error(`Authentication failed. Account temporarily blocked, try again after ${retryIn}`);
+                throw new Error(`Authentication failed. Account temporarily locked, try again after ${retryIn}`);
             }
         }
 

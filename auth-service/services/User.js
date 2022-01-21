@@ -26,15 +26,16 @@ async function show(id) {
     }
 }
 
-async function findByEmail(email) {
+async function findByEmail(email, params = null) {
     try {
+        const where = params || {
+            archived: false,
+            blocked: false,
+            verified: true,
+        };
+        where.email = email;
         return User.findOne({
-            where: {
-                email,
-                archived: false,
-                blocked: false,
-                verified: true,
-            },
+            where,
             include: [{ model: Group }],
         });
     } catch (error) {
