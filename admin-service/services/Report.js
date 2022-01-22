@@ -84,7 +84,23 @@ async function show(id) {
     }
 }
 
+async function generate(id) {
+    try {
+        const options = {
+            nest: true,
+            replacements: {},
+            type: sequelize.QueryTypes.SELECT,
+        };
+        const report = await Report.findOne({ where: { id } });
+        return sequelize.query(report.sql, options);
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
 module.exports = {
     index,
     show,
+    generate,
 }

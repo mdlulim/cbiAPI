@@ -34,7 +34,25 @@ async function show(req, res) {
     }
 }
 
+async function generate(req, res) {
+    try {
+        const results = await reportService.generate(req.params.id);
+        return res.send({
+            success: true,
+            data: {
+                results,
+            }
+        });
+    } catch (error) {
+        return res.status(500).send({
+            success: false,
+            message: 'Could not process request'
+        });
+    }
+}
+
 module.exports = {
     index,
     show,
+    generate,
 };

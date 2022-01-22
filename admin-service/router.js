@@ -575,5 +575,6 @@ module.exports.set = app => {
     // Reports Routes
     app.get("/reports", authMiddleware.checkAuth, reportController.index);
     app.get("/reports/:id", authMiddleware.checkAuth, reportController.show);
+    app.get("/reports/:id/generate", authMiddleware.checkAuth, reportController.generate);
 
 };
