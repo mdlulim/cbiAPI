@@ -1,4 +1,5 @@
 // const sequelize = require('../config/db');
+const { Group } = require('../models/Group');
 const { PagePermission } = require('../models/PagePermission');
 
 /**
@@ -26,8 +27,9 @@ async function create(data) {
  */
 async function index(query) {
     try {
+        console.log(query, " %%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
         const where = query || {};
-        const pagePermissions = await PagePermission.findAll({
+        const pagePermissions = await Group.findAll({
             where,
             order: [['created', 'DESC']],
         });
