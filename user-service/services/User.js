@@ -132,6 +132,7 @@ async function referrals(id) {
                     status,
                     nationality,
                     email,
+                    mobile,
                     visibility,
                     0 AS level
             FROM users
@@ -147,6 +148,7 @@ async function referrals(id) {
                     ft.status,
                     ft.nationality,
                     ft.email,
+                    ft.mobile,
                     ft.visibility,
                     level + 1
             FROM users ft
@@ -161,6 +163,7 @@ async function referrals(id) {
                 d.status,
                 d.nationality,
                 d.email,
+                d.mobile,
                 d.visibility,
                 a.id AS "referral.id",
                 a.first_name AS "referral.first_name",
