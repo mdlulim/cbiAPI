@@ -76,6 +76,7 @@ module.exports.set = app => {
     app.put('/notifications/:id', authMiddleware.checkAuth, notificationController.update);
     app.delete('/notifications/:id', authMiddleware.checkAuth, notificationController.destroy);
 
+
     app.get('/wallet', authMiddleware.checkAuth, accountController.wallet);
 
     app.get('/kyc', authMiddleware.checkAuth, userController.kyc);

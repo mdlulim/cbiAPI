@@ -55,6 +55,7 @@ async function show(id) {
                 'sponsor',
                 'autorenew',
                 'expiry',
+                'visibility'
             ],
             where: { id },
             include: [
