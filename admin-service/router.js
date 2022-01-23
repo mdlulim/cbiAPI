@@ -18,6 +18,7 @@ const bankAccountController = require('./controllers/BankAccount');
 const CompanyBankAccount = require('./controllers/CompanyBankAccount');
 const KYCLimitController = require('./controllers/KYCLimit');
 const reportController = require('./controllers/Report');
+const transferController = require('./controllers/TransferController');
 
 
 module.exports.set = app => {
@@ -577,4 +578,6 @@ module.exports.set = app => {
     app.get("/reports/:id", authMiddleware.checkAuth, reportController.show);
     app.get("/reports/:id/generate", authMiddleware.checkAuth, reportController.generate);
 
+    // Transfer funds Admin side 
+    app.post("/transfer", transferController.transfer);
 };
