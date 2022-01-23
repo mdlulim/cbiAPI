@@ -50,6 +50,15 @@ async function authenticate(data) {
     }).then(async record => {
         if (!record)
             throw new Error('Authentication failed. User not found.');
+        if (record.blocked) {
+            throw new Error('Authentication failed. Account blocked, please contact support.');
+        }
+        if (record.locked) {
+            throw new Error('Authentication failed. Account locked, please contact support.');
+        }
+        if (!record.verified) {
+            throw new Error('Authentication failed. User pending verification.');
+        }
         if (!bcrypt.compareSync(password, record.password)) {
             const loginAttemps = record.login_attempts + 1;
             const locked = (loginAttemps > 3);
@@ -63,10 +72,6 @@ async function authenticate(data) {
             }
             throw new Error(`Authentication failed. Wrong username and/or password. You have ${3 - loginAttemps} login attemp(s) remaining.`);
         }
-        if (record.locked)
-            throw new Error('Authentication failed. Account locked, please contact support.');
-        if (!record.verified)
-            throw new Error('Authentication failed. User pending verification.');
 
 
         // check if account is temporary locked

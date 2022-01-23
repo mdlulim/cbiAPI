@@ -1575,6 +1575,11 @@
   "resolved" "https://registry.npmjs.org/quick-format-unescaped/-/quick-format-unescaped-4.0.4.tgz"
   "version" "4.0.4"
 
+"random-number@0.0.9":
+  "integrity" "sha512-ipG3kRCREi/YQpi2A5QGcvDz1KemohovWmH6qGfboVyyGdR2t/7zQz0vFxrfxpbHQgPPdtVlUDaks3aikD1Ljw=="
+  "resolved" "https://registry.npmjs.org/random-number/-/random-number-0.0.9.tgz"
+  "version" "0.0.9"
+
 "random-poly-fill@^1.0.1":
   "integrity" "sha512-bMOL0hLfrNs52+EHtIPIXxn2PxYwXb0qjnKruTjXiM/sKfYqj506aB2plFwWW1HN+ri724bAVVGparh4AtlJKw=="
   "resolved" "https://registry.npmjs.org/random-poly-fill/-/random-poly-fill-1.0.1.tgz"

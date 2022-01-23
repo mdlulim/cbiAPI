@@ -132,6 +132,7 @@ async function referrals(id) {
                     status,
                     nationality,
                     email,
+                    visibility,
                     0 AS level
             FROM users
             WHERE id = '${id}'
@@ -146,6 +147,7 @@ async function referrals(id) {
                     ft.status,
                     ft.nationality,
                     ft.email,
+                    ft.visibility,
                     level + 1
             FROM users ft
         JOIN descendant d
@@ -159,6 +161,7 @@ async function referrals(id) {
                 d.status,
                 d.nationality,
                 d.email,
+                d.visibility,
                 a.id AS "referral.id",
                 a.first_name AS "referral.first_name",
                 a.last_name AS "referral.last_name",
