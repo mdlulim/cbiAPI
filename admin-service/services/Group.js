@@ -16,7 +16,7 @@ User.hasMany(Group, { foreignKey: 'updated_by', targetKey: 'id', as: 'updator' }
  */
 async function create(data, user) {
     try {
-        data['created_by']=user.id
+        data['created_by'] = user.id
         const group = await Group.create(data);
         return {
             success: true,
@@ -79,27 +79,11 @@ async function index(query) {
  * @param {*} query 
  * @returns 
  */
- async function get(id) {
+async function get(id) {
     try {
-        const group = await Group.findOne({
+        const group = await User.findOne({
             where: { id },
-            include: [{
-                attributes: [
-                    'id',
-                    'first_name',
-                    'last_name',
-                ],
-                model: User,
-                as: 'creator',
-            }, {
-                attributes: [
-                    'id',
-                    'first_name',
-                    'last_name',
-                ],
-                model: User,
-                as: 'updator',
-            }],
+            attributes: ['permissions'],
             order: [['created', 'DESC']],
         });
 
@@ -157,7 +141,7 @@ async function show(id) {
  * @returns 
  */
 async function update(id, data) {
-    
+
     try {
         return Group.update(data, {
             where: { id },
@@ -209,7 +193,7 @@ async function destroy(id) {
  * @param {string} id
  * @returns 
  */
- async function archive(id) {
+async function archive(id) {
     try {
         return Group.update({
             archived: true,
