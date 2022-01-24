@@ -23,7 +23,7 @@ function index(req, res){
 };
 
 function get(req, res){
-    return groupService.get(req.user.group_id)
+    return groupService.get(req.user.id)
     .then(data => res.send(data))
     .catch(err => {
         res.send({
