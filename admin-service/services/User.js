@@ -102,7 +102,7 @@ async function index(query) {
                 'permission_level',
             ],
             where,
-            include: [{ model: Group, where: groupWhere }],
+            include: [{ model: Group, where: groupWhere, required: true }],
             order: [['created', 'DESC']],
             offset: offset || 0,
             limit: limit || 100,
@@ -122,6 +122,7 @@ async function index(query) {
         throw new Error('Could not process your request');
     }
 }
+
 
 /**
  * Retrieve User

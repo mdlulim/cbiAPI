@@ -284,6 +284,20 @@ async function transactionstotal(req, res){
     }
 };
 
+async function roles(req, res){
+    try {
+        const response = await transactionService.transactionstotal(req.body)
+        return res.send({
+            success: true,
+            data: response.data
+        });
+    } catch (err) {
+        return res.status(500).send({
+            success: false,
+            message: 'Could not process your request'
+        });
+    }
+};
 
 module.exports = {
     index,

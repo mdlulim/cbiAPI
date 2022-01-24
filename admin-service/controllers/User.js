@@ -60,7 +60,7 @@ async function create(req, res) {
                 message: 'Validation error. Last name is required.'
             });
         }
-        
+
         // validate last name
         if (!group_id) {
             return res.send({
@@ -90,10 +90,10 @@ async function create(req, res) {
         }
 
         // generate password
-        const string   = generator.generate({ length: 4 });
-        const numbers  = generator.generate({ length: 4, numbers: true });
+        const string = generator.generate({ length: 4 });
+        const numbers = generator.generate({ length: 4, numbers: true });
         const password = string.toLowerCase() + numbers.toString();
-        const salt     = bcrypt.genSaltSync();
+        const salt = bcrypt.genSaltSync();
         const securePassword = bcrypt.hashSync(password, salt);
 
         // create user record
@@ -149,13 +149,13 @@ async function create(req, res) {
 async function index(req, res) {
     try {
         return userService.index(req.query)
-        .then(data => res.send(data))
-        .catch(err => {
-            res.send({
-                success: false,
-                message: err.message,
+            .then(data => res.send(data))
+            .catch(err => {
+                res.send({
+                    success: false,
+                    message: err.message,
+                });
             });
-        });
     } catch (error) {
         return res.send({
             success: false,
@@ -167,13 +167,13 @@ async function index(req, res) {
 async function show(req, res) {
     try {
         return userService.show(req.params.id)
-        .then(data => res.send(data))
-        .catch(err => {
-            res.send({
-                success: false,
-                message: err.message,
+            .then(data => res.send(data))
+            .catch(err => {
+                res.send({
+                    success: false,
+                    message: err.message,
+                });
             });
-        });
     } catch (error) {
         return res.send({
             success: false,
@@ -185,13 +185,25 @@ async function show(req, res) {
 async function update(req, res) {
     try {
         return userService.update(req.params.id, req.body)
-        .then(() => res.send({ success: true }))
-        .catch(err => {
-            res.send({
-                success: false,
-                message: err.message,
+            .then(async () => {
+                // log activity
+                await activityService.addActivity({
+                    user_id: req.user.id,
+                    action: `${req.user.group_name}.users.update`,
+                    section: 'Users',
+                    subsection: 'Update',
+                    description: `${user.first_name} updated admin user record`,
+                    ip: null,
+                    data: req.body,
+                });
+                return res.send({ success: true })
+            })
+            .catch(err => {
+                res.send({
+                    success: false,
+                    message: err.message,
+                });
             });
-        });
     } catch (error) {
         return res.send({
             success: false,
@@ -202,27 +214,27 @@ async function update(req, res) {
 
 async function archive(req, res) {
     try {
-        await userService.update(req.params.id, {archive:true,status:"Archived"})
-        .then((data) => {
-            console.log(data)
-            if(data.success){
-                const user = data.user;
-                // send email to recipient
-                 emailHandler.updatingUserStatus({
-                    first_name: user.first_name,
-                    email: user.email,
-                    status: user.status,
-                    sender: `${req.user.first_name} ${req.user.last_name} (${req.user.referral_id})`,
+        await userService.update(req.params.id, { archive: true, status: "Archived" })
+            .then((data) => {
+                console.log(data)
+                if (data.success) {
+                    const user = data.user;
+                    // send email to recipient
+                    emailHandler.updatingUserStatus({
+                        first_name: user.first_name,
+                        email: user.email,
+                        status: user.status,
+                        sender: `${req.user.first_name} ${req.user.last_name} (${req.user.referral_id})`,
+                    });
+                }
+                return res.send({ success: data.success, message: data.message })
+            })
+            .catch(err => {
+                res.send({
+                    success: false,
+                    message: err.message,
                 });
-            }
-           return res.send({ success: data.success, message: data.message})
-        })
-        .catch(err => {
-            res.send({
-                success: false,
-                message: err.message,
             });
-        });
     } catch (error) {
         return res.send({
             success: false,
@@ -234,26 +246,26 @@ async function archive(req, res) {
 async function block(req, res) {
     try {
         await userService.block(req.params.id)
-        .then((data) => {
-            console.log(data)
-            if(data.success){
-                const user = data.user;
-                // send email to recipient
-                 emailHandler.updatingUserStatus({
-                    first_name: user.first_name,
-                    email: user.email,
-                    status: user.status,
-                    sender: `${req.user.first_name} ${req.user.last_name} (${req.user.referral_id})`,
+            .then((data) => {
+                console.log(data)
+                if (data.success) {
+                    const user = data.user;
+                    // send email to recipient
+                    emailHandler.updatingUserStatus({
+                        first_name: user.first_name,
+                        email: user.email,
+                        status: user.status,
+                        sender: `${req.user.first_name} ${req.user.last_name} (${req.user.referral_id})`,
+                    });
+                }
+                return res.send({ success: data.success, message: data.message })
+            })
+            .catch(err => {
+                res.send({
+                    success: false,
+                    message: err.message,
                 });
-            }
-           return res.send({ success: data.success, message: data.message})
-        })
-        .catch(err => {
-            res.send({
-                success: false,
-                message: err.message,
             });
-        });
     } catch (error) {
         return res.send({
             success: false,
@@ -265,23 +277,23 @@ async function block(req, res) {
 async function unarchive(req, res) {
     try {
         await userService.unarchive(req.params.id)
-        .then((data) => {
-            console.log(data)
-            if(data.success){
-                const user = data.user;
-                // send email to recipient
-                 emailHandler.updatingUserStatus({
-                    first_name: user.first_name,
-                    email: user.email,
-                    status: user.status,
-                    sender: `${req.user.first_name} ${req.user.last_name} (${req.user.referral_id})`,
-                });
-            }
-           return res.send({ success: data.success, message: data.message})
-        })
-        .catch(err => { 
-            res.send({ success: false,message: err.message,  });
-        });
+            .then((data) => {
+                console.log(data)
+                if (data.success) {
+                    const user = data.user;
+                    // send email to recipient
+                    emailHandler.updatingUserStatus({
+                        first_name: user.first_name,
+                        email: user.email,
+                        status: user.status,
+                        sender: `${req.user.first_name} ${req.user.last_name} (${req.user.referral_id})`,
+                    });
+                }
+                return res.send({ success: data.success, message: data.message })
+            })
+            .catch(err => {
+                res.send({ success: false, message: err.message, });
+            });
     } catch (error) {
         return res.send({
             success: false,
@@ -293,25 +305,25 @@ async function unarchive(req, res) {
 async function unblock(req, res) {
     try {
         await userService.unblock(req.params.id)
-        .then((data) => {
-            if(data.success){
-                const user = data.user;
-                // send email to recipient
-                 emailHandler.updatingUserStatus({
-                    first_name: user.first_name,
-                    email: user.email,
-                    status: user.status,
-                    sender: `${req.user.first_name} ${req.user.last_name} (${req.user.referral_id})`,
+            .then((data) => {
+                if (data.success) {
+                    const user = data.user;
+                    // send email to recipient
+                    emailHandler.updatingUserStatus({
+                        first_name: user.first_name,
+                        email: user.email,
+                        status: user.status,
+                        sender: `${req.user.first_name} ${req.user.last_name} (${req.user.referral_id})`,
+                    });
+                }
+                return res.send({ success: data.success, message: data.message })
+            })
+            .catch(err => {
+                res.send({
+                    success: false,
+                    message: err.message,
                 });
-            }
-           return res.send({ success: data.success, message: data.message})
-        })
-        .catch(err => {
-            res.send({
-                success: false,
-                message: err.message,
             });
-        });
     } catch (error) {
         return res.send({
             success: false,
@@ -323,13 +335,13 @@ async function unblock(req, res) {
 async function products(req, res) {
     try {
         return userService.products(req.params.id)
-        .then(data => res.send(data))
-        .catch(err => {
-            res.send({
-                success: false,
-                message: err.message,
+            .then(data => res.send(data))
+            .catch(err => {
+                res.send({
+                    success: false,
+                    message: err.message,
+                });
             });
-        });
     } catch (error) {
         return res.send({
             success: false,
@@ -357,10 +369,10 @@ async function referrals(req, res) {
     }
 }
 
-async function transactions(req, res){
+async function transactions(req, res) {
     try {
         return userService.transactions(req.params.id)
-        .then(data => res.send(data));
+            .then(data => res.send(data));
     } catch (err) {
         return res.status(500).send({
             success: false,
@@ -369,36 +381,36 @@ async function transactions(req, res){
     }
 }
 
-async function updateTransaction(req, res){
+async function updateTransaction(req, res) {
     try {
         const transact = req.body.transaction;
         return userService.updateTransaction(req.params.id, req.body).then(async (data) => {
-           // console.log(data)
-           let subtype = transact.subtype;
+            // console.log(data)
+            let subtype = transact.subtype;
 
-           if(transact.subtype.toLowerCase() === "deposit"){
-            subtype = 'credited';
-           }else{
-            subtype= 'debited';
-           }
+            if (transact.subtype.toLowerCase() === "deposit") {
+                subtype = 'credited';
+            } else {
+                subtype = 'debited';
+            }
 
-            if(data.success){
+            if (data.success) {
                 console.log(data)
                 // send email to recipient
                 await emailHandler.transactionNotification({
-                    first_name  : data.data.first_name,
-                    email       : data.data.email,
-                    status      : data.data.status,
-                    amount      : data.data.amount,
-                    subtype     : subtype,
-                    reference   : data.data.reference,
-                    currency_code       : data.data.currency_code,
+                    first_name: data.data.first_name,
+                    email: data.data.email,
+                    status: data.data.status,
+                    amount: data.data.amount,
+                    subtype: subtype,
+                    reference: data.data.reference,
+                    currency_code: data.data.currency_code,
                     sender: `${req.user.first_name} ${req.user.last_name} (${req.user.referral_id})`,
-                }).then((response) =>{
+                }).then((response) => {
                     console.log(response)
                 });
 
-               await activityService.addActivity({
+                await activityService.addActivity({
                     user_id: req.user.id,
                     action: `${req.user.group_name}.transactions.${data.data.tx_type}.${data.data.subtype}`,
                     section: 'Transactions',
@@ -408,7 +420,7 @@ async function updateTransaction(req, res){
                     data,
                 })
             }
-           return res.send({ success: data.success, message: data.message})
+            return res.send({ success: data.success, message: data.message })
         })
     } catch (err) {
         return res.status(500).send({
@@ -418,10 +430,10 @@ async function updateTransaction(req, res){
     }
 }
 
-async function addresses(req, res){
+async function addresses(req, res) {
     try {
         return userService.addresses(req.params.id)
-        .then(data => res.send(data));
+            .then(data => res.send(data));
     } catch (err) {
         return res.status(500).send({
             success: false,
@@ -430,10 +442,10 @@ async function addresses(req, res){
     }
 }
 
-async function emails(req, res){
+async function emails(req, res) {
     try {
         return userService.emails(req.params.id)
-        .then(data => res.send(data));
+            .then(data => res.send(data));
     } catch (err) {
         return res.status(500).send({
             success: false,
@@ -442,10 +454,10 @@ async function emails(req, res){
     }
 }
 
-async function email(req, res){
+async function email(req, res) {
     try {
         return userService.email(req.params.email)
-        .then(data => res.send(data));
+            .then(data => res.send(data));
     } catch (err) {
         return res.status(500).send({
             success: false,
@@ -454,10 +466,10 @@ async function email(req, res){
     }
 }
 
-async function mobiles(req, res){
+async function mobiles(req, res) {
     try {
         return userService.mobiles(req.params.id)
-        .then(data => res.send(data));
+            .then(data => res.send(data));
     } catch (err) {
         return res.status(500).send({
             success: false,
@@ -466,10 +478,10 @@ async function mobiles(req, res){
     }
 }
 
-async function bankAccounts(req, res){
+async function bankAccounts(req, res) {
     try {
         return userService.bankAccounts(req.params.id)
-        .then(data => res.send(data));
+            .then(data => res.send(data));
     } catch (err) {
         return res.status(500).send({
             success: false,
@@ -479,10 +491,10 @@ async function bankAccounts(req, res){
 }
 
 
-async function updateBankAccounts(req, res){
+async function updateBankAccounts(req, res) {
     try {
         return userService.updateBankAccounts(req.params.id, req.body)
-        .then(data => res.send({ success: true }));
+            .then(data => res.send({ success: true }));
     } catch (err) {
         return res.status(500).send({
             success: false,
@@ -518,7 +530,7 @@ async function updateBankAccounts(req, res){
 //     }
 // }
 
-async function approveDeposit(req, res){
+async function approveDeposit(req, res) {
     try {
 
         return userService.approveDeposit(req.params.id, req.body).then(async (data) => {
@@ -556,26 +568,26 @@ async function approveDeposit(req, res){
                 transaction.txid = txid;
                 //send email to recipient
                 await emailHandler.approveMembership({
-                    first_name  : data.data.user.first_name,
-                    email       : data.data.user.email,
-                    status      : data.data.user.status,
-                    amount      : data.data.user.amount,
-                    reference   : data.data.user.reference,
-                    currency_code       : data.data.user.currency_code,
+                    first_name: data.data.user.first_name,
+                    email: data.data.user.email,
+                    status: data.data.user.status,
+                    amount: data.data.user.amount,
+                    reference: data.data.user.reference,
+                    currency_code: data.data.user.currency_code,
                     sender: `${req.user.first_name} ${req.user.last_name} (${req.user.referral_id})`,
                 })
 
                 await emailHandler.memberCommissionFee({
-                    first_name  : data.data.sponsor.first_name,
-                    email       : data.data.sponsor.email,
-                    status      : data.data.sponsor.status,
-                    amount      : data.data.sponsor.amount,
-                    reference   : data.data.user.first_name,
-                    currency_code       : data.data.sponsor.currency_code,
+                    first_name: data.data.sponsor.first_name,
+                    email: data.data.sponsor.email,
+                    status: data.data.sponsor.status,
+                    amount: data.data.sponsor.amount,
+                    reference: data.data.user.first_name,
+                    currency_code: data.data.sponsor.currency_code,
                     sender: `${req.user.first_name} ${req.user.last_name} (${req.user.referral_id})`,
                 })
 
-               await activityService.addActivity({
+                await activityService.addActivity({
                     user_id: req.user.id,
                     action: `${req.user.group_name}.transactions.${data.data.user.tx_type}.${data.data.user.subtype}`,
                     section: 'Transactions',
@@ -599,10 +611,10 @@ async function approveDeposit(req, res){
     }
 }
 
-async function cryptoAccounts(req, res){
+async function cryptoAccounts(req, res) {
     try {
         return userService.cryptoAccounts(req.params.id)
-        .then(data => res.send(data));
+            .then(data => res.send(data));
     } catch (err) {
         return res.status(500).send({
             success: false,

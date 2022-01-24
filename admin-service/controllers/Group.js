@@ -1,7 +1,7 @@
 const groupService = require('../services/Group');
 
 function create(req, res){
-    return groupService.create(req.body)
+    return groupService.create(req.body, req.user)
     .then(data => res.send(data))
     .catch(err => {
         res.send({
@@ -13,6 +13,17 @@ function create(req, res){
 
 function index(req, res){
     return groupService.index(req.query)
+    .then(data => res.send(data))
+    .catch(err => {
+        res.send({
+            success: false,
+            message: err.message,
+        });
+    });
+};
+
+function get(req, res){
+    return groupService.get(req.user.group_id)
     .then(data => res.send(data))
     .catch(err => {
         res.send({
@@ -83,4 +94,5 @@ module.exports = {
     update,
     destroy,
     archive,
+    get,
 };
