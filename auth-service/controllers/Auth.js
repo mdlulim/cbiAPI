@@ -1104,8 +1104,6 @@ async function passwordResetConfirm(req, res) {
     try {
         const { password1, password2, device, geoinfo } = req.body;
 
-        console.log(req.user)
-
         const user = await userService.findByEmail(req.user.email);
 
         if (!user) {
@@ -1128,6 +1126,8 @@ async function passwordResetConfirm(req, res) {
         await userService.update(user.id, {
             salt,
             password,
+            locked: false,
+            login_attempts: 0,
             updated: sequelize.fn('NOW'),
         });
 

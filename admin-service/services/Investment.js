@@ -3,22 +3,24 @@ const { Currency }  = require('../models/Currency');
 const { Investment }  = require('../models/Investment');
 const { Product }  = require('../models/Product');
 const { User }  = require('../models/User');
-const { UserProduct }  = require('../models/UserProduct');
 
 Investment.belongsTo(Currency, { foreignKey: 'currency_code', targetKey: 'code' });
 Investment.belongsTo(Product, { foreignKey: 'product_id', targetKey: 'id' });
 Investment.belongsTo(User, { foreignKey: 'user_id', targetKey: 'id' });
 
-async function create(data) {
+async function show(where) {
     try {
-        data.start_date = sequelize.fn('NOW');
-        
-        // user product insert
-        const userProduct = await UserProduct.create(data);
-        data.user_product_id = userProduct.id;
+        return Investment.findOne({ where });
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
 
-        // investment insert
-        return Investment.create(data);
+async function update(id, data) {
+    try {
+        data.last_updated = sequelize.fn('NOW');
+        return Investment.findOne(data, { where: { id } });
     } catch (error) {
         console.error(error.message || null);
         throw new Error('Could not process your request');
@@ -26,5 +28,6 @@ async function create(data) {
 }
 
 module.exports = {
-    create,
+    show,
+    update,
 }

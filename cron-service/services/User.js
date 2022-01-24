@@ -108,7 +108,7 @@ async function wcEligibleForAutoRenewNotify(query) {
 
 async function wcDueForAutoRenew(query) {
     try {
-        const expiry = moment().add(5, 'days').format('YYYY-MM-DD');
+        const today   = moment().format('YYYY-MM-DD');
         const options = {
             nest: true,
             type: sequelize.QueryTypes.SELECT
@@ -124,7 +124,7 @@ async function wcDueForAutoRenew(query) {
         INNER JOIN "accounts" AS "account" ON "user"."id" = "account"."user_id" AND "account"."is_primary" = true
         WHERE (
                 "user"."expiry" IS NOT NULL AND
-                "user"."expiry" = to_date('${expiry}', 'YYYY-MM-DD')
+                "user"."expiry" = to_date('${today}', 'YYYY-MM-DD')
             ) AND
             "user"."status" ILIKE 'Active' AND
             "user"."autorenew" = true AND

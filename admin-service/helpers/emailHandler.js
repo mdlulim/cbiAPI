@@ -53,6 +53,17 @@ async function transactionNotification(data) {
     return sendMail(from, email, 'CBI - Transaction Notification', template);
 };
 
+async function resetPassword(data) {
+    const { email, token } = data;
+    data.link = `${baseurl.frontend}/reset-password/${token}`;
+    const template = emailTemplates.resetPassword(data);
+    const from = {
+        name: 'CBI',
+        email: smtp.auth.user,
+    };
+    return sendMail(from, email, 'Reset password', template);
+};
+
 async function approveMembership(data) {
     const { email } = data;
     const template = emailTemplates.approveMembership(data);
@@ -73,11 +84,23 @@ async function memberCommissionFee(data) {
     return sendMail(from, email, 'CBI - Membership Commission Fee', template);
 };
 
+async function cancellationConfirmation(data) {
+    const { email, action, product } = data;
+    const template = emailTemplates.cancellationConfirmation(data);
+    const from = {
+        name: 'CBI',
+        email: smtp.auth.user,
+    };
+    return sendMail(from, email, `CBI - Cancellation request for ${product.title} has been ${action}`, template);
+};
+
 module.exports = {
     newUser,
     kycNotification,
     updatingUserStatus,
     approveMembership,
     transactionNotification,
-    memberCommissionFee
+    memberCommissionFee,
+    resetPassword,
+    cancellationConfirmation,
 };

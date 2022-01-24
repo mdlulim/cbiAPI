@@ -11,6 +11,7 @@ const productService  = require('../services/Product');
 const settingService = require('../services/Setting');
 const transactionService  = require('../services/Transaction');
 const userService = require('../services/User');
+const wealthCreatorService = require('../services/WealthCreator');
 const {
     cbiX7SellConfirmation,
     tokenPurchaseConfirmation,
@@ -50,6 +51,8 @@ async function index(req, res){
 
 async function subscribe(req, res){
     try {
+        const { frequency } = req.body;
+
         // get product details
         const product = await productService.findByCode(req.body.product_code);
         const { product_subcategory } = product;
@@ -60,7 +63,6 @@ async function subscribe(req, res){
 
         // product check
         const isWC    = config.products.WC === code;
-        const isFP    = config.products.FP === code;
         const isFX    = config.products.FX === code;
         const isCBIx7 = config.products.CBIx7 === code;
 
@@ -90,8 +92,10 @@ async function subscribe(req, res){
             data.end_date = moment().add(1, 'month').format('YYYY-MM-DD');
         }
 
-        // subscribe
-        const userProduct = await productService.subscribe(data);
+        // fraxion product
+        if (isFX) {
+            data.end_date = moment().add(1000, 'days').format('YYYY-MM-DD');
+        }
 
         let description = `${user.first_name} bought a product (${product.title})`;
         if (isWC) {
@@ -114,9 +118,27 @@ async function subscribe(req, res){
 
         // update user group (if wealth-creator subscription)
         if (isWC) {
+
+            /// price/value calculations
             var adminFee = parseFloat(product.registration_fee);
             var price = parseFloat(product.price);
+            var period = 1;
+
+            // check frequency
+            if (frequency && frequency === 'ANNUALLY') {
+                // retrieve settings/configurations
+                const settings = await settingService.findByKey('wc_renewal_annual_fee');
+                if (settings & settings.value) {
+                    period = 12;
+                    adminFee = adminFee * period;
+                    price = parseFloat(settings.value);
+                }
+            }
             var amount = adminFee + price;
+
+            // subscribe (add/update in user product table)
+            data.invested_amount = price;
+            var userProduct = await productService.subscribe(data);
 
             // update wallet balance
             await accountService.update({
@@ -127,8 +149,20 @@ async function subscribe(req, res){
             // update profile
             await userService.update(user.id, {
                 group_id: 'c85ef2f9-d1dc-451d-b36d-9f0b111c1882',
-                expiry: moment().add(1, 'month').format('YYYY-MM-DD'),
+                expiry: moment().add(period, 'month').format('YYYY-MM-DD'),
                 autorenew: true,
+            });
+
+            // wealth creator insert
+            await wealthCreatorService.create({
+                user_id: user.id,
+                product_id: product.id,
+                frequency: frequency || 'MONTHLY',
+                fee_amount: price,
+                last_payment_date: new Date().toISOString(),
+                last_paid_amount: price,
+                currency_code: product.currency.code,
+                user_product_id: userProduct.id,
             });
 
             // insert transaction
@@ -169,6 +203,10 @@ async function subscribe(req, res){
                 balance: parseFloat(wallet.balance) - totalAmount,
                 available_balance: parseFloat(wallet.available_balance) - totalAmount,
             }, wallet.id);
+
+            // subscribe (add/update in user product table)
+            data.invested_amount = totalAmount;
+            var userProduct = await productService.subscribe(data);
 
             // insert transaction
             var transaction = await transactionService.create({
@@ -211,6 +249,10 @@ async function subscribe(req, res){
                 });
             }
             var totalAmount = parseFloat(product.price) + feeAmount;
+
+            // subscribe (add/update in user product table)
+            data.invested_amount = product.price;
+            var userProduct = await productService.subscribe(data);
 
             // balance check
             if (wallet.available_balance && parseFloat(wallet.available_balance) >= totalAmount) {
@@ -339,6 +381,7 @@ async function cancelProduct(data, res) {
         await productService.update({
             user_id: user.id,
             status: 'Pending Cancellation',
+            cancellation_status: 'Pending',
         }, product.id, false);
 
         // log activity
@@ -539,13 +582,21 @@ async function invest(req, res){
             daily_interest,
             product_code,
         } = product;
+        
+        // log user product record
+        const userProduct = await productService.subscribe({
+            end_date: moment().add(investment_period, 'months').format('YYYY-MM-DD'),
+            invested_amount: amount,
+            user_id: user.id,
+            product_id: id,
+        });
 
+        // create investment and log product
         const metadata = {
             investment_period,
             minimum_investment,
             daily_interest,
         };
-
         const investment = {
             fees,
             metadata,
@@ -556,93 +607,79 @@ async function invest(req, res){
             currency_code,
             end_date: moment().add(investment_period, 'weeks').format('YYYY-MM-DD'),
             accumulated_amount: amount,
+            user_product_id: userProduct.id,
         };
+        await investmentService.create(investment);
 
-        // create investment and log product
-        const response = await investmentService.create(investment);
+        // retrive user wallet
+        const wallet = await transactionService.wallet(user.id);
+        const {
+            balance,
+            available_balance,
+        } = wallet;
 
-        if (response) {
-            // log user product record
-            await productService.subscribe({
-                end_date: moment().add(investment_period, 'months').format('YYYY-MM-DD'),
-                user_id: user.id,
-                product_id: id,
-            });
+        // log transaction
+        const currency = await currencyService.show(currency_code); // get currency
+        const transData = {
+            currency,
+            fee: null,
+            amount: amount,
+            total_amount: totalAmount,
+            user_id: user.id,
+            tx_type: 'debit',
+            subtype: 'product',
+            status: 'Completed',
+            note: `Bought ${title}`,
+            reference: `Buy-${product_code}`,
+            source_transaction: user.referral_id,
+            metadata: fees,
+        };
+        const transaction = await transactionService.create(transData);
+        const txid = getTxid(product_code, transaction.auto_id);
+        await transactionService.update({ txid }, transaction.id);
+        transaction.txid = txid;
+        
+        // deduct funds from user wallet
+        await transactionService.debit({
+            balance: parseFloat(balance) - totalAmount,
+            available_balance: parseFloat(available_balance) - totalAmount,
+            updated: sequelize.fn('NOW'),
+        }, wallet.id);
 
-            // retrive user wallet
-            const wallet = await transactionService.wallet(user.id);
-            const {
-                balance,
-                available_balance,
-            } = wallet;
+        // log activities
+        await activityService.addActivity({
+            user_id: user.id,
+            action: `${req.user.group_name}.account.debit`,
+            section: 'Account',
+            subsection: 'Debit',
+            description: `${totalAmount} ${currency_code} debited from wallet for ${title}`,
+            ip: null,
+            data: investment,
+        });
 
-            // log transaction
-            const currency = await currencyService.show(currency_code); // get currency
-            const transData = {
-                currency,
-                fee: null,
-                amount: amount,
-                total_amount: totalAmount,
-                user_id: user.id,
-                tx_type: 'debit',
-                subtype: 'product',
-                status: 'Completed',
-                note: `Bought ${title}`,
-                reference: `Buy-${product_code}`,
-                source_transaction: user.referral_id,
-                metadata: fees,
-            };
-            const transaction = await transactionService.create(transData);
-            const txid = getTxid(product_code, transaction.auto_id);
-            await transactionService.update({ txid }, transaction.id);
-            transaction.txid = txid;
-            
-            // deduct funds from user wallet
-            await transactionService.debit({
-                balance: parseFloat(balance) - totalAmount,
-                available_balance: parseFloat(available_balance) - totalAmount,
-                updated: sequelize.fn('NOW'),
-            }, wallet.id)
-    
-            // log activities
-            await activityService.addActivity({
-                user_id: user.id,
-                action: `${req.user.group_name}.account.debit`,
-                section: 'Account',
-                subsection: 'Debit',
-                description: `${totalAmount} ${currency_code} debited from wallet for ${title}`,
-                ip: null,
-                data: investment,
-            });
+        let description = `${user.first_name} invested in a product (${title})`;
 
-            let description = `${user.first_name} invested in a product (${title})`;
+        await activityService.addActivity({
+            user_id: user.id,
+            action: `${req.user.group_name}.products.invest`,
+            section: 'Products',
+            subsection: 'Invest',
+            description,
+            ip: null,
+            data: investment,
+        });
+        
+        // send product purchase confirmation email
+        await productPurchaseConfirmation({
+            product,
+            amount: totalAmount,
+            email: user.email,
+            first_name: user.first_name,
+        });
 
-            await activityService.addActivity({
-                user_id: user.id,
-                action: `${req.user.group_name}.products.invest`,
-                section: 'Products',
-                subsection: 'Invest',
-                description,
-                ip: null,
-                data: investment,
-            });
-            
-            // send product purchase confirmation email
-            await productPurchaseConfirmation({
-                product,
-                amount: totalAmount,
-                email: user.email,
-                first_name: user.first_name,
-            });
-    
-            // send response
-            return res.send({
-                success: true,
-            });
-        }
-        return res.status(500).send({
-            success: false,
-            message: 'Could not process your request'
+        // send response
+        return res.send({
+            success: true,
         });
     } catch (err) {
         console.log(err.message)

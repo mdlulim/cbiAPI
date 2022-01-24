@@ -50,23 +50,28 @@ async function authenticate(data) {
     }).then(async record => {
         if (!record)
             throw new Error('Authentication failed. User not found.');
+        if (record.blocked) {
+            throw new Error('Authentication failed. Account blocked, please contact support.');
+        }
+        if (record.locked) {
+            throw new Error('Authentication failed. Account locked, please contact support.');
+        }
+        if (!record.verified) {
+            throw new Error('Authentication failed. User pending verification.');
+        }
         if (!bcrypt.compareSync(password, record.password)) {
             const loginAttemps = record.login_attempts + 1;
-            const blocked = (loginAttemps > 3);
+            const locked = (loginAttemps > 3);
             await User.update({
-                blocked,
+                locked,
                 login_attempts: loginAttemps,
                 updated: sequelize.fn('NOW'),
             }, { where: { id: record.id } });
-            if (blocked) {
-                throw new Error('Authentication failed. Account blocked, please contact support.');
+            if (locked) {
+                throw new Error('Authentication failed. Account locked, please contact support.');
             }
             throw new Error(`Authentication failed. Wrong username and/or password. You have ${3 - loginAttemps} login attemp(s) remaining.`);
         }
-        if (record.blocked)
-            throw new Error('Authentication failed. Account blocked, please contact support.');
-        if (!record.verified)
-            throw new Error('Authentication failed. User pending verification.');
 
 
         // check if account is temporary locked
@@ -82,7 +87,7 @@ async function authenticate(data) {
                     timeLeft = duration.asSeconds();
                     retryIn = `${parseInt(timeLeft)} second(s)`;
                 }
-                throw new Error(`Authentication failed. Account temporarily blocked, try again after ${retryIn}`);
+                throw new Error(`Authentication failed. Account temporarily locked, try again after ${retryIn}`);
             }
         }
 
@@ -93,13 +98,13 @@ async function authenticate(data) {
          * Validate user's device and/or location
          */
         var newDeviceLogin = true;
-        if (device && device.browser) {
+        if (device && device.browser && geoinfo && geoinfo.IPv4) {
             // Check device
             const { browser, is_mobile } = device;
             const userDevice = await UserDevice.findOne({
                 where: {
                     user_id: record.id,
-                    ipv4: geoinfo.IPv4,
+                    ipv4: geoinfo.IPv4 || null,
                     is_mobile,
                     browser,
                 }
