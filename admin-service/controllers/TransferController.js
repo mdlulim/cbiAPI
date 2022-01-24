@@ -2,6 +2,7 @@ const transferService = require('../services/Transfer');
 
 async function transfer(req, res){
     try {
+        console.log("Test mdu================================================")
         const response = await transferService.transfer(req.body);
         return res.send({
             success: true,

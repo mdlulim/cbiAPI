@@ -3,7 +3,7 @@ const { Account } = require('../models/Account');
 
 async function transfer(data) {
     try {
-        const account =  await Account.findOne({where : {id: data.user_id}});
+        const account =  await Account.findOne({where : {id: data.id}});
         const mainAccount =  await Account.findOne({where : {id: '3cf7d2c0-80e1-4264-9f2f-6487fd1680c2'}});
         if (data.type === "credit") {
             let newmainAvaliable = parseFloat(mainAccount.available_balance) - parseFloat(data.amount);
