@@ -192,7 +192,7 @@ async function update(req, res) {
                     action: `${req.user.group_name}.users.update`,
                     section: 'Users',
                     subsection: 'Update',
-                    description: `${user.first_name} updated admin user record`,
+                    description: `${req.user.first_name} updated admin user record`,
                     ip: null,
                     data: req.body,
                 });
