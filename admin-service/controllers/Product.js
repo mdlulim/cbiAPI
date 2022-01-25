@@ -234,6 +234,36 @@ async function showSubcategory(req, res) {
     }
 }
 
+async function subcategoryCalculations(req, res) {
+    try {
+        const subcategory = await productService.showSubcategory(req.params.id);
+        if (subcategory && subcategory.code === 'FX') {
+            const { indicators } = subcategory;
+            const { ref_id } = indicators;
+            const params = { ...req.query, ref_id };
+            const data = await productService.fraxionCalculations(params);
+            const { count, rows } = data;
+            return res.send({
+                success: true,
+                data: {
+                    count,
+                    results: rows,
+                }
+            });
+        }
+        return res.send({
+            success: true,
+            data: null
+        });
+    } catch (error) {
+        console.log(error)
+        return res.send({
+            success: false,
+            message: 'Could not process request'
+        });
+    }
+}
+
 async function update(req, res) {
     try {
         const data = req.body;
@@ -544,6 +574,7 @@ module.exports = {
     showCategory,
     getSubcategories,
     showSubcategory,
+    subcategoryCalculations,
     updateSubcategory,
     cancelStatus,
     cancelStatus,

@@ -1,5 +1,6 @@
 const sequelize = require('../config/db');
 const { Currency } = require('../models/Currency');
+const { FraxionCalculation } = require('../models/FraxionCalculation');
 const { Product } = require('../models/Product');
 const { ProductCategory } = require('../models/ProductCategory');
 const { ProductSubCategory } = require('../models/ProductSubCategory');
@@ -213,6 +214,17 @@ async function showSubcategory(id) {
     }
 }
 
+async function fraxionCalculations(condition) {
+    try {
+        return FraxionCalculation.findAndCountAll({
+            where: condition,
+        });
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request in service');
+    }
+}
+
 async function findByPermakey(permakey) {
     try {
         return Product.findOne({
@@ -306,6 +318,7 @@ module.exports = {
     getMembersByProductId,
     updateCategory,
     showCategory,
+    fraxionCalculations,
     getSubcategories,
     showSubcategory,
     updateSubcategory,
