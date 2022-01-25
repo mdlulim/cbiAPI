@@ -1,6 +1,7 @@
 // const sequelize = require('../config/db');
 const { Group } = require('../models/Group');
 const { User } = require('../models/User');
+const sequelize = require('sequelize')
 
 Group.belongsTo(User, { foreignKey: 'created_by', targetKey: 'id', as: 'creator' });
 User.hasMany(Group, { foreignKey: 'created_by', targetKey: 'id', as: 'creator' });
@@ -13,8 +14,9 @@ User.hasMany(Group, { foreignKey: 'updated_by', targetKey: 'id', as: 'updator' }
  * @param {*} query 
  * @returns 
  */
-async function create(data) {
+async function create(data, user) {
     try {
+        data['created_by'] = user.id
         const group = await Group.create(data);
         return {
             success: true,
@@ -34,6 +36,7 @@ async function create(data) {
 async function index(query) {
     try {
         const where = query || {};
+        where['archived'] = false
         const groups = await Group.findAndCountAll({
             where,
             include: [{
@@ -64,6 +67,29 @@ async function index(query) {
                 previous: null,
                 results: rows,
             }
+        };
+    } catch (err) {
+        console.log(err);
+        res.send(err);
+    }
+};
+
+/**
+ * Get a list of groups that have been created.
+ * @param {*} query 
+ * @returns 
+ */
+async function get(id) {
+    try {
+        const group = await User.findOne({
+            where: { id },
+            attributes: ['permissions'],
+            order: [['created', 'DESC']],
+        });
+
+        return {
+            success: true,
+            data: group
         };
     } catch (err) {
         console.log(err);
@@ -115,7 +141,7 @@ async function show(id) {
  * @returns 
  */
 async function update(id, data) {
-    
+
     try {
         return Group.update(data, {
             where: { id },
@@ -167,7 +193,7 @@ async function destroy(id) {
  * @param {string} id
  * @returns 
  */
- async function archive(id) {
+async function archive(id) {
     try {
         return Group.update({
             archived: true,
@@ -186,4 +212,5 @@ module.exports = {
     update,
     destroy,
     archive,
+    get,
 }

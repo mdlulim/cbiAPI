@@ -20,6 +20,7 @@ const Group = sequelize.define('group', {
     archived: Sequelize.BOOLEAN,
     created: Sequelize.DATE,
     updated: Sequelize.DATE,
+    permissions: Sequelize.JSONB,
 }, {
     timestamps: false
 });

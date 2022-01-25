@@ -36,7 +36,9 @@ async function show(req, res) {
 
 async function generate(req, res) {
     try {
+        console.log('====================================Test=====')
         const results = await reportService.generate(req.params.id);
+        console.log(results)
         return res.send({
             success: true,
             data: {

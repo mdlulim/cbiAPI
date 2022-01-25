@@ -91,8 +91,15 @@ async function generate(id) {
             replacements: {},
             type: sequelize.QueryTypes.SELECT,
         };
-        const report = await Report.findOne({ where: { id } });
-        return sequelize.query(report.sql, options);
+        //const report = await Report.findOne({ where: { id } });
+        const sql = "SELECT users.id, users.first_name, users.last_name, users.username, wealth_creators.frequency, wealth_creators.status, wealth_creators.last_payment_date, wealth_creators.updated, wealth_creators.last_paid_amount, groups.label"+
+        " FROM users"+
+        " LEFT JOIN wealth_creators ON wealth_creators.user_id = users.id"+
+        " LEFT JOIN groups ON groups.id = users.group_id"+
+        " WHERE groups.label = 'Wealth Creator'"+
+        " ORDER BY wealth_creators.last_paid_amount ASC";
+        const rslt = sequelize.query(sql, options);
+        return rslt;
     } catch (error) {
         console.error(error.message || null);
         throw new Error('Could not process your request');

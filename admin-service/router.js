@@ -18,6 +18,7 @@ const bankAccountController = require('./controllers/BankAccount');
 const CompanyBankAccount = require('./controllers/CompanyBankAccount');
 const KYCLimitController = require('./controllers/KYCLimit');
 const reportController = require('./controllers/Report');
+const transferController = require('./controllers/TransferController');
 
 
 module.exports.set = app => {
@@ -213,6 +214,7 @@ module.exports.set = app => {
      * view, add, edit or delete data from the system
      * via admin endpoints.
      */
+    app.get('/group', authMiddleware.checkAuth, groupController.get);
     app.post('/groups', authMiddleware.checkAuth, groupController.create);
     app.get('/groups', authMiddleware.checkAuth, groupController.index);
     app.get('/groups/:id', authMiddleware.checkAuth, groupController.show);
@@ -559,9 +561,9 @@ module.exports.set = app => {
 
 
     // Page Permissions Routes
-    app.get("/page_permissions", authMiddleware.checkAuth, pagePermissionController.index);
-    app.get("/page_permissions/page_name/:page", authMiddleware.checkAuth, pagePermissionController.show);
-    app.post("/page_permission", authMiddleware.checkAuth, pagePermissionController.create);
+    app.get("/page_permissions", pagePermissionController.index);
+    app.get("/page_permissions/page_name/:page", pagePermissionController.show);
+    app.post("/page_permission", pagePermissionController.create);
     // app.get("/level/:levelId", authMiddleware.checkAuth, permissionLevelController.show);
     app.put("/page_permissions/:id", authMiddleware.checkAuth, pagePermissionController.update);
     // app.delete("/level/:levelId", authMiddleware.checkAuth, permissionLevelController.destroy);
@@ -579,4 +581,6 @@ module.exports.set = app => {
     app.get("/reports/:id", authMiddleware.checkAuth, reportController.show);
     app.get("/reports/:id/generate", authMiddleware.checkAuth, reportController.generate);
 
+    // Transfer funds Admin side 
+    app.post("/transfer", authMiddleware.checkAuth, transferController.transfer);
 };
