@@ -186,16 +186,16 @@ async function update(req, res) {
     try {
         return userService.update(req.params.id, req.body)
             .then(async () => {
-                console.log(req.user)
-                    await activityService.addActivity({
-                        user_id: req.user.id,
-                        action: `${req.user.group_name}.users.update`,
-                        section: 'Users',
-                        subsection: 'Update',
-                        description: `updated admin user record`,
-                        ip: null,
-                        data: req.body,
-                    });
+                // log activity
+                await activityService.addActivity({
+                    user_id: req.user.id,
+                    action: `${req.user.group_name}.users.update`,
+                    section: 'Users',
+                    subsection: 'Update',
+                    description: `${req.user.first_name} updated admin user record`,
+                    ip: null,
+                    data: req.body,
+                });
                 return res.send({ success: true })
             })
             .catch(err => {
