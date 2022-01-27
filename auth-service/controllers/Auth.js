@@ -832,7 +832,7 @@ async function socialRegister(req, res) {
         const newUser = await userService.create(user);
 
         if (newUser && newUser.id) {
-
+          console.log("========================Test Change Password=======================")
             // notify upline once referral has registered
             if (sponsor && sponsor.id) {
                 await emailHandler.notifyReferrer({
@@ -948,21 +948,21 @@ async function passwordChange(req, res) {
         const user = await userService.show(req.user.id);
 
         if (old_password === new_password1) {
-            return res.status(403).send({
+            return res.send({
                 success: false,
                 message: 'Validation error. Old and new password cannot be the same.'
             });
         }
 
         if (!bcrypt.compareSync(old_password, user.password)) {
-            return res.status(403).send({
+            return res.send({
                 success: false,
                 message: 'Validation error. Incorrect old password.'
             });
         }
 
         if (new_password1 !== new_password2) {
-            return res.status(403).send({
+            return res.send({
                 success: false,
                 message: 'Validation error. Passwords do not match.'
             });
@@ -977,7 +977,7 @@ async function passwordChange(req, res) {
             password: new_password1,
         });
         if (samePassword && samePassword.id) {
-            return res.status(403).send({
+            return res.send({
                 success: false,
                 message: 'You have already used that password, try another'
             });
@@ -988,7 +988,6 @@ async function passwordChange(req, res) {
             password,
             updated: sequelize.fn('NOW'),
         });
-
         // audit trail / activity logging
         await activityService.addActivity({
             user_id: user.id,
@@ -1026,10 +1025,10 @@ async function passwordChange(req, res) {
             success: true,
         });
     } catch (error) {
-        console.log(error.message)
+        console.log(error)
         return res.status(500).send({
             success: false,
-            message: 'Could not process request'
+            message: 'Could not process request2'
         });
     }
 }
@@ -1046,7 +1045,7 @@ async function passwordReset(req, res) {
         const user = await userService.findByEmail(email);
 
         if (!user) {
-            return res.status(405).send({
+            return res.send({
                 success: false,
                 message: 'Email address not registered.'
             });
@@ -1082,7 +1081,7 @@ async function passwordReset(req, res) {
         });
     } catch (error) {
         console.log('error', error.message)
-        return res.status(500).send({
+        return res.send({
             success: false,
             message: 'Could not process request'
         });
@@ -1107,14 +1106,14 @@ async function passwordResetConfirm(req, res) {
         const user = await userService.findByEmail(req.user.email);
 
         if (!user) {
-            return res.status(403).send({
+            return res.send({
                 success: false,
                 message: 'Access denied.'
             });
         }
 
         if (password1 !== password2) {
-            return res.status(403).send({
+            return res.send({
                 success: false,
                 message: 'Validation error. Passwords do not match.'
             });
