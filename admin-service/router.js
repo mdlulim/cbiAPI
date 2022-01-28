@@ -19,6 +19,7 @@ const CompanyBankAccount = require('./controllers/CompanyBankAccount');
 const KYCLimitController = require('./controllers/KYCLimit');
 const reportController = require('./controllers/Report');
 const transferController = require('./controllers/TransferController');
+const broadcastController = require('./controllers/BroadcastController');
 
 
 module.exports.set = app => {
@@ -581,4 +582,12 @@ module.exports.set = app => {
 
     // Transfer funds Admin side 
     app.post("/transfer", authMiddleware.checkAuth, transferController.transfer);
+
+    //Broadcast messages
+    app.get('/broadcast', authMiddleware.checkAuth, broadcastController.index);
+    app.put('/broadcast/:id', authMiddleware.checkAuth, broadcastController.update);
+    app.post('/broadcast', authMiddleware.checkAuth, broadcastController.create);
+
+    //Get list of groups excluding user table data
+    app.get('/audience', authMiddleware.checkAuth, broadcastController.audience)
 };
