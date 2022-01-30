@@ -82,6 +82,7 @@ async function create(req, res) {
 async function index(req, res) {
     try {
         const products = await productService.index(req.query);
+        console.log(products)
         const { count, rows } = products;
         return res.send({
             success: true,

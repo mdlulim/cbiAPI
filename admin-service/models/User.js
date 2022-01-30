@@ -45,6 +45,7 @@ const User = sequelize.define('user', {
 	expiry: Sequelize.DATE,
 	deactivation_date: Sequelize.DATE,
 	permission_level:Sequelize.INTEGER,
+	profile_path: Sequelize.STRING,
 	autorenew: {
         type: Sequelize.BOOLEAN,
         defaultValue: false,
