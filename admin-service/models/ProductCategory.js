@@ -12,7 +12,7 @@ const ProductCategory = sequelize.define('product_category', {
 	summary: Sequelize.STRING,
 	body: Sequelize.STRING,
     code: Sequelize.STRING,
-    ProductCategory: Sequelize.JSONB,
+    inputFields: Sequelize.JSONB,
 	permakey: Sequelize.STRING,
     archived: Sequelize.BOOLEAN,
     sort_order: Sequelize.INTEGER,
