@@ -19,6 +19,7 @@ const CompanyBankAccount = require('./controllers/CompanyBankAccount');
 const KYCLimitController = require('./controllers/KYCLimit');
 const reportController = require('./controllers/Report');
 const transferController = require('./controllers/TransferController');
+const broadcastController = require('./controllers/BroadcastController');
 const activityController = require('./controllers/Activity');
 
 
@@ -245,6 +246,9 @@ module.exports.set = app => {
     app.get('/products/subcategories', authMiddleware.checkAuth, productController.getSubcategories);
     app.get('/products/subcategories/:id', authMiddleware.checkAuth, productController.showSubcategory);
     app.put('/products/subcategories/:id', authMiddleware.checkAuth, productController.updateSubcategory);
+    app.get('/products/subcategories/:id/calculations', authMiddleware.checkAuth, productController.subcategoryCalculations);
+    app.post('/products/subcategories/:id/calculations', authMiddleware.checkAuth, productController.captureCalculations);
+
     /**
      * Get Product Category
      * 
@@ -583,6 +587,13 @@ module.exports.set = app => {
     // Transfer funds Admin side 
     app.post("/transfer", authMiddleware.checkAuth, transferController.transfer);
 
+    //Broadcast messages
+    app.get('/broadcast', authMiddleware.checkAuth, broadcastController.index);
+    app.put('/broadcast/:id', authMiddleware.checkAuth, broadcastController.update);
+    app.post('/broadcast', authMiddleware.checkAuth, broadcastController.create);
+
+    //Get list of groups excluding user table data
+    app.get('/audience', authMiddleware.checkAuth, broadcastController.audience)
    // Activies Admin side
    app.get("/activities", authMiddleware.checkAuth, activityController.index);
    app.get("/activities/:id", authMiddleware.checkAuth, activityController.getActivitiesByUser);

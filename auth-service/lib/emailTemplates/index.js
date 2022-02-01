@@ -420,7 +420,7 @@ const confirmEmail = data => {
                     <p>
                         Thanks for registering with CBI Global, we are very excited to have you onboard.
                         Please verify your email to proceed: <br/><br/>
-                        <a href="${link}" target="_blank" rel="noopener noreferrer"><button style="background-image: linear-gradient(310deg,#c89623,#c89623); color: white; padding: 15px; border: none; cursor: pointer;">Verify Email</button></a>
+                        <a href="${link}" target="_blank" rel="noopener noreferrer"><button style="background-image: linear-gradient(310deg,#c89623,#c89623); color: white; padding: 15px; border: none; cursor: pointer;">Click Here to Verify Email</button></a>
                     </p>
                     <p style="padding-top:50px"><strong>Cheers</strong>,<br />CBI Support</p>
                 </div>

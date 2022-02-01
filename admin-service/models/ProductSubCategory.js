@@ -26,6 +26,7 @@ const ProductSubCategory = sequelize.define('product_subcategory', {
 	calculation_settings: Sequelize.JSONB,
 	has_payouts: Sequelize.BOOLEAN,
 	indicators: Sequelize.JSONB,
+	fees: Sequelize.JSONB,
 }, {
     timestamps: false
 });
