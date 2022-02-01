@@ -1,3 +1,4 @@
+const Joi = require('joi');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const moment = require('moment');
@@ -20,6 +21,10 @@ const activityService = require('../services/Activity');
 const sessionService = require('../services/Session');
 const emailHandler = require('../helpers/emailHandler');
 const { sendOTPAuth } = require('../helpers/smsHandler');
+const {
+    loginSchema,
+    registerSchema,
+} = require('../schema');
 
 const {
     jwtSecret,
@@ -33,8 +38,8 @@ async function validate(req, res) {
         const user = await userService.findByPropertyValue(prop, value);
         const data = {};
         if (user) {
-            data.first_name  = user.first_name;
-            data.last_name   = user.last_name;
+            data.first_name = user.first_name;
+            data.last_name = user.last_name;
             data.referral_id = user.referral_id;
         }
         return res.send({
@@ -100,7 +105,7 @@ async function tokensVerify(req, res) {
 
 async function tokensValidate(req, res) {
     try {
-        const { device, type } = req.body;
+        const { device, type, resend } = req.body;
         const { email } = req.user;
         const user = await authService.findUser({
             email,
@@ -117,20 +122,34 @@ async function tokensValidate(req, res) {
 
         switch (type) {
             case 'activation':
-                // send otp for mobile verification
-                // destroy all old OTP records
-                await otpService.destroyAll({
-                    user_id: user.id,
-                });
+                var otp  = {};
+                if (!resend) {
+                    const { Op } = sequelize;
+                    otp = await otpService.find({
+                        transaction: 'member.register.verify',
+                        status: { [Op.iLike]: 'Pending' },
+                        expiry: {
+                            [Op.gte]: sequelize.literal("NOW() - INTERVAL '1 MINUTE'"),
+                        }
+                    });
+                }
 
-                // create/log OTP record
-                const otpRecord = {
-                    device,
-                    transaction: 'member.register.verify',
-                    description: 'New member account activation/verification',
-                    user_id: user.id,
-                };
-                const otp = await otpService.create(otpRecord);
+                if (!otp || !otp.id) {
+                    // send otp for mobile verification
+                    // destroy all old OTP records
+                    await otpService.destroyAll({
+                        user_id: user.id,
+                    });
+
+                    // create/log OTP record
+                    const otpRecord = {
+                        device,
+                        transaction: 'member.register.verify',
+                        description: 'New member account activation/verification',
+                        user_id: user.id,
+                    };
+                    otp = await otpService.create(otpRecord);
+                }
 
                 // send OTP auth
                 if (otp.code) {
@@ -144,7 +163,7 @@ async function tokensValidate(req, res) {
                     data: { mobile: user.mobile }
                 });
 
-            default: 
+            default:
                 return res.send({
                     auth: true
                 });
@@ -160,9 +179,55 @@ async function tokensValidate(req, res) {
         if (inerror) {
             message = error.message;
         }
+        console.log(error.message)
         return res.status(500).send({
             success: false,
             message,
+        });
+    }
+}
+
+async function resendActivationEmail(req, res) {
+    try {
+        const { Op } = sequelize;
+        const { email } = req.body;
+        const user = await userService.findByEmail(email, {
+            archived: false,
+            blocked: false,
+            verified: false,
+            status: {
+                [Op.iLike]: 'Pending',
+            }
+        });
+
+        if (!user) {
+            return res.status(403).send({
+                success: false,
+                message: 'Access denied'
+            });
+        }
+
+        const code = generator.generate({ length: 4, numbers: true }).toUpperCase();
+        const token = jwt.sign({
+            code,
+            email: user.email,
+        }, jwtSecret, {
+            expiresIn: '30m'
+        });
+
+        await emailHandler.confirmEmail({
+            first_name: user.first_name,
+            email: user.email,
+            token,
+        });
+
+        return res.send({
+            success: true
+        });
+    } catch (error) {
+        return res.status(500).send({
+            success: false,
+            message: 'Could not process request'
         });
     }
 }
@@ -180,11 +245,11 @@ async function tokensVerifyResend(req, res) {
         if (type === 'login') {
 
             const user = await userService.show(id);
-    
+
             if (!user) {
                 throw new Error('Access denied.');
             }
-    
+
             // auth (jwt) token
             const { email, group, first_name } = user;
             const payload = {
@@ -196,7 +261,7 @@ async function tokensVerifyResend(req, res) {
             const verifyToken = jwt.sign(payload, jwtSecret, {
                 expiresIn: '15m',
             });
-    
+
             // generate otp code
             const code = rn({
                 min: 100000,
@@ -216,26 +281,26 @@ async function tokensVerifyResend(req, res) {
                 transaction,
                 code,
             };
-    
+
             // delete previous otp login attemps/records
             // and insert a new record
             await authService.deleteOtp(user.id);
             await authService.createOtp(authRecord);
-    
+
             // update user's last login status
             await userService.update(user.id, {
                 last_login: sequelize.fn('NOW'),
                 blocked: false,
                 login_attempts: 0,
             });
-    
+
             // send verify login email
             await emailHandler.verifyLogin({
                 first_name,
                 email,
                 code,
             });
-    
+
             return res.send({
                 success: true,
                 data: {
@@ -244,7 +309,7 @@ async function tokensVerifyResend(req, res) {
                 },
             });
         }
-    
+
         return res.send({
             success: true,
         });
@@ -268,7 +333,19 @@ async function tokensVerifyResend(req, res) {
  */
 async function login(req, res) {
     try {
-        const data = await authService.authenticate(req.body);
+        // Schema validation
+        // validate incoming post data
+        const valid = Joi.validate(req.body, loginSchema);
+        if (valid.error !== null) {
+            return res.status(405)
+                .send({
+                    success: false,
+                    error: 'VALIDATION_ERROR',
+                    message: valid.error.details[0].message,
+                });
+        }
+
+        const data = await authService.authenticate(valid.value);
         const { device, geoinfo } = req.body;
         const { token, user, newDeviceLogin } = data;
         const { group, email, first_name } = user;
@@ -484,7 +561,7 @@ async function socialLogin(req, res) {
             email,
             code,
         });
-        
+
         return res.send({
             success: true,
             data: {
@@ -527,6 +604,18 @@ function cleanEmail(email) {
  */
 async function register(req, res) {
     try {
+        // Schema validation
+        // validate incoming post data
+        // const valid = Joi.validate(req.body, registerSchema);
+        // if (valid.error !== null) {
+        //     return res.status(405)
+        //         .send({
+        //             success: false,
+        //             error: 'VALIDATION_ERROR',
+        //             message: valid.error.details[0].message,
+        //         });
+        // }
+
         const {
             username,
             last_name,
@@ -626,7 +715,7 @@ async function register(req, res) {
             groupId = role.id;
         }
 
-        const code  = generator.generate({ length: 4, numbers: true }).toUpperCase();
+        const code = generator.generate({ length: 4, numbers: true }).toUpperCase();
         const token = jwt.sign({
             code,
             email,
@@ -662,7 +751,7 @@ async function register(req, res) {
         const newUser = await userService.create(user);
 
         if (newUser && newUser.id) {
-            
+
             // create user cbi wallet
             await accountService.create({
                 name: 'cbi-wallet',
@@ -766,7 +855,7 @@ async function socialRegister(req, res) {
                 message: 'Registration failed. Email address is required.'
             });
         }
-        
+
         const email = cleanEmail(req.body.email);
 
         let isLead = true;
@@ -800,8 +889,8 @@ async function socialRegister(req, res) {
         }
 
         const userPwd = generator.generate({ length: 8 }).toUpperCase();
-        const code    = generator.generate({ length: 4, numbers: true }).toUpperCase();
-        const token   = jwt.sign({
+        const code = generator.generate({ length: 4, numbers: true }).toUpperCase();
+        const token = jwt.sign({
             code,
             email,
         }, jwtSecret, {
@@ -840,7 +929,7 @@ async function socialRegister(req, res) {
         const newUser = await userService.create(user);
 
         if (newUser && newUser.id) {
-          console.log("========================Test Change Password=======================")
+            console.log("========================Test Change Password=======================")
             // notify upline once referral has registered
             if (sponsor && sponsor.id) {
                 await emailHandler.notifyReferrer({
@@ -860,7 +949,7 @@ async function socialRegister(req, res) {
                     token,
                 });
             }
-            
+
             // create user cbi wallet
             await accountService.create({
                 is_primary: true,
@@ -978,7 +1067,7 @@ async function passwordChange(req, res) {
 
         const salt = bcrypt.genSaltSync();
         const password = bcrypt.hashSync(new_password1, salt);
-        
+
         // Validation: enforce a Password History to 24
         const samePassword = await passwordService.show({
             user_id: user.id,
@@ -1548,7 +1637,7 @@ async function otpVerify(req, res) {
             otpFilters.type = transaction;
             otpFilters.transaction = 'member.register.verify';
         }
-        
+
         const otp = await otpService.show(otpFilters);
 
         if (otp && otp.id) {
@@ -1582,6 +1671,7 @@ module.exports = {
     tokensVerify,
     tokensValidate,
     tokensVerifyResend,
+    resendActivationEmail,
     login,
     socialLogin,
     register,

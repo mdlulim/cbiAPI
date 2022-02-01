@@ -44,6 +44,11 @@ module.exports.set = app => {
     app.post('/tokens/validate', authMiddleware.checkAuth, authController.tokensValidate);
 
     /**
+     * Validate Token
+     */
+    app.post('/activate/resend/email', authController.resendActivationEmail);
+
+    /**
      * Login
      * 
      * Login a user with the credentials provided.
