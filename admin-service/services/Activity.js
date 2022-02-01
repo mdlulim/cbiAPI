@@ -14,18 +14,19 @@ async function addActivity(data) {
 }
 
 // get user activities
-async function getActivitiesByUser(userId) {
+async function index() {
     try {
         const activities = await Activity.findAndCountAll({
             attributes: [
                 'id',
-                'name',
+                'action',
                 'description',
                 'data',
                 'ip',
                 'created',
             ],
-            where: { user_id: userId },
+            where,
+            limit: 2,
             order: [['created', 'DESC']],
         });
         const { count, rows } = activities;
@@ -44,7 +45,50 @@ async function getActivitiesByUser(userId) {
     }
 }
 
+// get user activities
+async function getActivitiesByUser(userId) {
+    try {
+        const activities = await Activity.findAndCountAll({
+            attributes: [
+                'id',
+                'action',
+                'description',
+                'data',
+                'ip',
+                'created',
+            ],
+            where: { user_id: userId },
+            limit: 10,
+            order: [['created', 'DESC']],
+            include : [{
+                attributes: [
+                    'first_name',
+                    'last_name',
+                    'email',
+                ],
+                model: User,
+                where: {
+                    id: userId
+                },}]
+        });
+        const { count, rows } = activities;
+        return {
+            status: "success",
+            data: {
+                count,
+                next: null,
+                previous: null,
+                results: rows,
+            },
+        }
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
 module.exports = {
+    index,
     addActivity,
     getActivitiesByUser,
 };

@@ -20,6 +20,7 @@ const KYCLimitController = require('./controllers/KYCLimit');
 const reportController = require('./controllers/Report');
 const transferController = require('./controllers/TransferController');
 const broadcastController = require('./controllers/BroadcastController');
+const activityController = require('./controllers/Activity');
 
 
 module.exports.set = app => {
@@ -590,4 +591,7 @@ module.exports.set = app => {
 
     //Get list of groups excluding user table data
     app.get('/audience', authMiddleware.checkAuth, broadcastController.audience)
+   // Activies Admin side
+   app.get("/activities", authMiddleware.checkAuth, activityController.index);
+   app.get("/activities/:id", authMiddleware.checkAuth, activityController.getActivitiesByUser);
 };
