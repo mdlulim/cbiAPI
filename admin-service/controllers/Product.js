@@ -1,3 +1,4 @@
+const sequelize = require('../config/db');
 const accountService = require('../services/Account');
 const activityService = require('../services/Activity');
 const investmentService = require('../services/Investment');
@@ -257,7 +258,97 @@ async function subcategoryCalculations(req, res) {
         });
     } catch (error) {
         console.log(error)
+        return res.status(500).send({
+            success: false,
+            message: 'Could not process request'
+        });
+    }
+}
+
+async function captureCalculations(req, res) {
+    try {
+        const subcategory = await productService.showSubcategory(req.params.id);
+        if (!subcategory) {
+            return res.status(403).send({
+                success: false,
+                message: 'Specified subcategory not found'
+            });
+        }
+        const { code, has_payouts } = subcategory;
+        if (!has_payouts) {
+            return res.status(403).send({
+                success: false,
+                message: 'Specified subcategory calculations does not support calculations/payouts'
+            });
+        }
+
+        var data = null;
+        const isFX = code.toUpperCase() === 'FX';
+        
+        // update subcategory
+        // for now only Fraxion (Staking) calculations are supported
+        if (isFX) {
+            const { fn } = sequelize;
+            const { id, indicators, title } = subcategory;
+            const {
+                ref_id,
+                compound_pool,
+                main_pool,
+                reserve_pool,
+                start_date,
+                end_date,
+            } = indicators;
+            const subcategoryUpdate = {
+                indicators: {
+                    ...indicators,
+                    last_updated: fn('NOW'),
+                    last_calculation: fn('NOW'),
+                    compound_pool: {
+                        balance_current: parseFloat(req.body.p3crv_compounding),
+                        balance_previous: compound_pool.balance_current,
+                    },
+                    main_pool: {
+                        balance_current: parseFloat(req.body.pool),
+                        balance_previous: main_pool.balance_current,
+                    },
+                    reserve_pool: {
+                        balance_current: parseFloat(req.body.reserve_pool),
+                        balance_previous: reserve_pool.balance_current,
+                    },
+                }
+            };
+            await productService.updateSubcategory(id, subcategoryUpdate);
+
+            // capture calculations
+            const calculations = {
+                ...req.body,
+                captured_by: req.user.id,
+                start_date,
+                end_date,
+                ref_id,
+            }
+            data = await productService.captureFraxionCalculations(calculations);
+
+            // activity log
+            await activityService.addActivity({
+                user_id: req.user.id,
+                action: `${req.user.group_name}.products.process-calculations`,
+                description: `${req.user.group_name} processed calculations for product sub-category (${title})`,
+                subsection: 'Products',
+                section: `${title} Calculations`,
+                data: req.body,
+                ip: null,
+            });
+        }
+
+        // return response object
         return res.send({
+            success: true,
+            data,
+        });
+    } catch (error) {
+        console.log(error)
+        return res.status(500).send({
             success: false,
             message: 'Could not process request'
         });
@@ -284,7 +375,7 @@ async function update(req, res) {
             success: true,
         });
     } catch (error) {
-        return res.send({
+        return res.status(500).send({
             success: false,
             message: 'Could not process request'
         });
@@ -575,6 +666,7 @@ module.exports = {
     getSubcategories,
     showSubcategory,
     subcategoryCalculations,
+    captureCalculations,
     updateSubcategory,
     cancelStatus,
     cancelStatus,

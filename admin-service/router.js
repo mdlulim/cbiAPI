@@ -245,6 +245,7 @@ module.exports.set = app => {
     app.get('/products/subcategories/:id', authMiddleware.checkAuth, productController.showSubcategory);
     app.put('/products/subcategories/:id', authMiddleware.checkAuth, productController.updateSubcategory);
     app.get('/products/subcategories/:id/calculations', authMiddleware.checkAuth, productController.subcategoryCalculations);
+    app.post('/products/subcategories/:id/calculations', authMiddleware.checkAuth, productController.captureCalculations);
 
     /**
      * Get Product Category
