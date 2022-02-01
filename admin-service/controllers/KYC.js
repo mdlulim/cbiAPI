@@ -1,5 +1,6 @@
 const kycService = require('../services/KYC');
 const { kycNotification } = require('../helpers/emailHandler');
+const activityService = require('../services/Activity');
 
 async function create(req, res) {
     try {
@@ -63,8 +64,19 @@ async function update(req, res) {
     try {
         const data = req.body
         const updated = await kycService.update(data.levels)
-        const kyc_applications = await kycService.show(data.user_id);
 
+        // log activity log
+        await activityService.addActivity({
+            user_id: req.user.id,
+            action: `${req.user.group_name}.kyc.update`,
+            description: `${req.user.first_name} updated user kyc application`,
+            section: 'KYC',
+            ip: null,
+            data,
+        });
+
+
+        const kyc_applications = await kycService.show(data.user_id);
         let rem = '<ul>';
         data.rejected_docs.forEach( item => {
             rem += `
