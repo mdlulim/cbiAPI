@@ -84,7 +84,11 @@ async function tokensVerify(req, res) {
     } catch (error) {
         const messages = ['Access denied', 'Invalid code specified', 'Account temporarily blocked'];
         var message = 'Could not process request';
-        if (messages.map(item => error.message.includes(item))) {
+        var inerror = false;
+        messages.map(item => {
+            if (error.message.includes(item)) inerror = true;
+        });
+        if (inerror) {
             message = error.message;
         }
         return res.status(500).send({
@@ -149,7 +153,11 @@ async function tokensValidate(req, res) {
     } catch (error) {
         const messages = ['Access denied', 'Invalid code specified'];
         var message = 'Could not process request';
-        if (messages.map(item => error.message.includes(item))) {
+        var inerror = false;
+        messages.map(item => {
+            if (error.message.includes(item)) inerror = true;
+        });
+        if (inerror) {
             message = error.message;
         }
         return res.status(500).send({
