@@ -170,6 +170,7 @@ async function show(id, return_object = true) {
                 'referral_id',
                 'autorenew',
                 'expiry',
+                'profile_path',
                 'deactivation_date',
                 'permission_level',
             ],
