@@ -51,6 +51,15 @@ async function show({ code, transaction }) {
     }
 }
 
+async function find(condition) {
+    try {
+        return OTPAuth.findOne({ where: condition });
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
 async function destroyAll(condition) {
     try {
         return OTPAuth.destroy({ where: condition });
@@ -63,5 +72,6 @@ async function destroyAll(condition) {
 module.exports = {
     create,
     show,
+    find,
     destroyAll,
 }
