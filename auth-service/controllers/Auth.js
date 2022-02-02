@@ -122,6 +122,7 @@ async function tokensValidate(req, res) {
 
         switch (type) {
             case 'activation':
+                var sent = false;
                 var otp  = {};
                 if (!resend) {
                     const { Op } = sequelize;
@@ -132,9 +133,12 @@ async function tokensValidate(req, res) {
                             [Op.gte]: sequelize.literal("NOW() - INTERVAL '1 MINUTE'"),
                         }
                     });
+                    if (otp && otp.code) {
+                        sent = true;
+                    }
                 }
 
-                if (!otp || !otp.id) {
+                if (!otp || !otp.code) {
                     // send otp for mobile verification
                     // destroy all old OTP records
                     await otpService.destroyAll({
@@ -152,7 +156,7 @@ async function tokensValidate(req, res) {
                 }
 
                 // send OTP auth
-                if (otp.code) {
+                if (otp.code && !sent) {
                     const mobile = user.mobile.replace('+', '');
                     await sendOTPAuth(mobile, otp.code);
                 }
