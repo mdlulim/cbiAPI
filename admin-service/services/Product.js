@@ -343,6 +343,43 @@ async function updateSubcategory(id, data) {
     }
 }
 
+async function getProductProfits(query) {
+    try {
+        return sequelize.query("SELECT p.id, p.title ,COUNT(up.product_id) AS cnt ,SUM(up.income) income ,SUM(up.invested_amount) invested_amount"
+                +" FROM products p"
+                +" LEFT JOIN user_products up ON (up.product_id = p.id)"
+                +" WHERE up.status = 'Active'"
+                +" GROUP BY p.id, up.product_id, p.title"
+                +" HAVING COUNT(up.product_id) > 0"
+                +" ORDER BY p.title"
+        );
+      
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
+async function getProfitsPerProduct(product_id) {
+    try {
+        return sequelize.query("SELECT u.id, up.id AS user_product_id, up.product_id, u.first_name, u.last_name, u.referral_id, p.title AS product_title, pc.title AS category, up.income, up.invested_amount, up.created"
+            +" FROM users u"
+            +" LEFT JOIN user_products up ON (up.user_id = u.id)"
+            +" LEFT JOIN products p ON (p.id =up.product_id)"
+            +" LEFT JOIN product_categories pc ON (pc.id = p.category_id)"
+            +" WHERE up.status = 'Active' AND up.product_id = '" + product_id + "'"
+            +" ORDER BY up.created DESC"
+        );
+      
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+//GROUP BY u.id, user_product_id, up.product_id, up.income, up.invested_amount, up.created
+
+
+
 async function destroy(id) {
     try {
         return Product.destroy(id);
@@ -372,4 +409,6 @@ module.exports = {
     updateSubcategory,
     cancellations,
     cancelStatus,
+    getProductProfits,
+    getProfitsPerProduct,
 }

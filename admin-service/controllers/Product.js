@@ -651,6 +651,38 @@ async function cancellationsAction(req, res) {
     }
 }
 
+async function getProductProfits(req, res) {
+    try {
+        const categories = await productService.getProductProfits(req.query);
+        const { count, rows } = categories;
+        return res.send({
+            success: true,
+            data: categories[0]
+        });
+    } catch (error) {
+        console.log(error.message)
+        return res.send({ success: false,
+            message: 'Could not process request'
+        });
+    }
+}
+
+async function getProfitsPerProduct(req, res) {
+    try {
+        const categories = await productService.getProfitsPerProduct(req.params.id);
+        const { count, rows } = categories;
+        return res.send({
+            success: true,
+            data: categories[0]
+        });
+    } catch (error) {
+        console.log(error.message)
+        return res.send({ success: false,
+            message: 'Could not process request'
+        });
+    }
+}
+
 module.exports = {
     createCategory,
     create,
@@ -673,4 +705,6 @@ module.exports = {
     cancelStatus,
     cancellations,
     cancellationsAction,
+    getProductProfits,
+    getProfitsPerProduct,
 };
