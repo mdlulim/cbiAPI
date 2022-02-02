@@ -10,7 +10,7 @@ async function cryptoDepositRequestNotification(data) {
         name: 'CBI',
         email: smtp.auth.user,
     };
-    return sendMail(from, email, 'CBI - Pending Deposit Request Notification', template);
+    return sendMail(from, email, 'CBI - Pending Buy Request Notification', template);
 };
 
 async function depositRequestNotification(data) {
@@ -20,7 +20,7 @@ async function depositRequestNotification(data) {
         name: 'CBI',
         email: smtp.auth.user,
     };
-    return sendMail(from, email, 'CBI - Deposit Request Notification', template);
+    return sendMail(from, email, 'CBI - Buy Request Notification', template);
 };
 
 async function transferSendNotification(data) {

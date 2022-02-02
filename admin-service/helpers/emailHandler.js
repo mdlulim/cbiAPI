@@ -30,7 +30,7 @@ async function depositRequestNotification(data) {
         name: 'CBI',
         email: smtp.auth.user,
     };
-    return sendMail(from, email, 'CBI - Deposit Request Notification', template);
+    return sendMail(from, email, 'CBI - Buy Request Notification', template);
 };
 
 async function updatingUserStatus(data) {
