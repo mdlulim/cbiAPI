@@ -226,11 +226,11 @@ async function findByCode(product_code) {
 
 async function subscribe(data) {
     try {
-        const { entity, user_id, code, value, product_id, transaction_id } = data;
+        const { entity, user_id, code, value, product_id, transaction_id, end_date } = data;
         const where = { code, entity, user_id };
         let memberProduct = await MemberProduct.findOne({ where });
         if (memberProduct && memberProduct.id) {
-            return MemberProduct.update({
+            await MemberProduct.update({
                 status: 'Active',
                 updated: sequelize.fn('NOW'),
                 value: parseFloat(memberProduct.value) + value
@@ -249,6 +249,7 @@ async function subscribe(data) {
             product_id,
             unit: code,
             transaction_id,
+            end_date: end_date || null,
             member_product_id: memberProduct.id,
         });
     } catch (error) {
