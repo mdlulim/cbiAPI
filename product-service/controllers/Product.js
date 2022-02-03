@@ -30,6 +30,7 @@ async function overview(req, res){
         return productService.overview(req.query)
         .then(data => res.send(data));
     } catch (err) {
+        console.error(err.message || null);
         return res.status(500).send({
             success: false,
             message: 'Could not process your request'
@@ -39,9 +40,22 @@ async function overview(req, res){
 
 async function index(req, res){
     try {
-        return productService.index(req.user.id)
-        .then(data => res.send(data));
+        const products = await productService.memberProducts(req.user.id);
+        const { count, rows } = products;
+        return res.status(200)
+        .send({
+            success: true,
+            data: {
+                count,
+                next: null,
+                previous: null,
+                results: rows,
+            }
+        });
+        // return productService.index(req.user.id)
+        // .then(data => res.send(data));
     } catch (err) {
+        console.error(err.message || null);
         return res.status(500).send({
             success: false,
             message: 'Could not process your request'
@@ -76,30 +90,33 @@ async function subscribe(req, res){
         }
 
         const data = {
+            code,
             user_id: user.id,
             product_id: product.id,
         };
 
+        // activity desciption
+        let description = `${user.first_name} bought a product (${product.title})`;
+
         if (isCBIx7) {
             // tokens
             if (req.body.tokens) {
-                data.tokens = req.body.tokens;
+                data.value = parseFloat(req.body.tokens);
+                data.entity = 'CBIx7';
             }
         }
 
         // wealth creator
         if (isWC) {
+            description = `${user.first_name} became a Wealth Creator`;
             data.end_date = moment().add(1, 'month').format('YYYY-MM-DD');
+            data.entity = 'Wealth Creator';
         }
 
         // fraxion product
         if (isFX) {
             data.end_date = moment().add(1000, 'days').format('YYYY-MM-DD');
-        }
-
-        let description = `${user.first_name} bought a product (${product.title})`;
-        if (isWC) {
-            description = `${user.first_name} became a Wealth Creator`;
+            data.entity = 'Fraxions';
         }
 
         // log activity
@@ -204,10 +221,6 @@ async function subscribe(req, res){
                 available_balance: parseFloat(wallet.available_balance) - totalAmount,
             }, wallet.id);
 
-            // subscribe (add/update in user product table)
-            data.invested_amount = totalAmount;
-            var userProduct = await productService.subscribe(data);
-
             // insert transaction
             var transaction = await transactionService.create({
                 tx_type: 'debit',
@@ -219,23 +232,31 @@ async function subscribe(req, res){
                 total_amount: totalAmount,
                 currency: product.currency,
                 status: 'Completed',
-                metadata: {
-                    entity: 'user_products',
-                    refid: userProduct.id,
-                    tokens: data.tokens,
-                }
             });
+
+            // subscribe (add/update in user product table)
+            data.transaction_id = transaction.id;
+            var userProduct = await productService.subscribe(data);
 
             // update transaction
             var txid = product.product_code + transaction.auto_id;
-            await transactionService.update({ txid }, transaction.id);
+            var metadata = {
+                fees: product.fees,
+                entity: 'member_products_lines',
+                refid: userProduct.id,
+                tokens: data.value,
+                type: 'crypto',
+                currency: 'CBI',
+                currency_code: 'CBI',
+            };
+            await transactionService.update({ txid, metadata }, transaction.id);
             
             // send token purchase confirmation email
             await tokenPurchaseConfirmation({
                 product,
                 email: user.email,
                 tokens: req.body.tokens,
-                amount: req.body.amount,
+                amount: totalAmount,
                 first_name: user.first_name,
             });
         }
@@ -251,8 +272,8 @@ async function subscribe(req, res){
             var totalAmount = parseFloat(product.price) + feeAmount;
 
             // subscribe (add/update in user product table)
-            data.invested_amount = product.price;
-            var userProduct = await productService.subscribe(data);
+            // data.invested_amount = product.price;
+            // var userProduct = await productService.subscribe(data);
 
             // balance check
             if (wallet.available_balance && parseFloat(wallet.available_balance) >= totalAmount) {
@@ -275,15 +296,24 @@ async function subscribe(req, res){
                     total_amount: totalAmount,
                     currency: product.currency,
                     status: 'Completed',
-                    metadata: {
-                        entity: 'user_products',
-                        refid: userProduct.id,
-                    }
                 });
+
+                // subscribe (add/update in user product table)
+                data.value = product.price;
+                data.transaction_id = transaction.id;
+                var userProduct = await productService.subscribe(data);
     
                 // update transaction
                 var txid = product.product_code + transaction.auto_id;
-                await transactionService.update({ txid }, transaction.id);
+                var metadata = {
+                    fees: product.fees,
+                    entity: 'member_products_lines',
+                    refid: userProduct.id,
+                    type: 'crypto',
+                    currency: 'CBI',
+                    currency_code: 'CBI',
+                };
+                await transactionService.update({ txid, metadata }, transaction.id);
             
                 // send product purchase confirmation email
                 await productPurchaseConfirmation({
@@ -439,10 +469,12 @@ async function sellCBIx7Tokens(data, res) {
         });
 
         // get user product
-        const userProduct = await productService.userProduct(user.id, product.id);
+        const { product_subcategory } = product;
+        const { code } = product_subcategory;
+        const userProduct = await productService.userProduct(user.id, code);
 
         // validate token balance
-        if (parseFloat(userProduct.tokens) < parseFloat(tokens)) {
+        if (parseFloat(userProduct.value) < parseFloat(tokens)) {
             return res.status(403).send({
                 success: false,
                 message: 'Insufficient token balance available',
@@ -484,7 +516,7 @@ async function sellCBIx7Tokens(data, res) {
 
         // update user product
         await productService.update({
-            tokens: parseFloat(userProduct.tokens) - parseFloat(tokens),
+            value: parseFloat(userProduct.value) - parseFloat(tokens),
             status: 'Active',
         }, userProduct.id);
 
@@ -495,7 +527,7 @@ async function sellCBIx7Tokens(data, res) {
             user_id: user.id,
             fee: 0,
             amount: calculations.amount,
-            reference: `${product.product_code}-Sell`,
+            reference: `Sell-${product.product_code}`,
             note: `Sold to ${product.title} product`,
             total_amount: calculations.amount,
             source_transaction: userProduct.id,
@@ -506,8 +538,13 @@ async function sellCBIx7Tokens(data, res) {
                 tokens,
                 product,
                 calculations,
+                fees: product.fees,
                 refid: userProduct.id,
-                entity: 'user_products',
+                entity: 'member_products',
+                type: 'crypto',
+                currency: 'CBI',
+                currency_code: 'CBI',
+
             },
         });
 
@@ -568,6 +605,8 @@ async function invest(req, res){
 
         // retrieve product by id
         const product = await productService.find(req.body.id, false);
+        const { product_subcategory } = product;
+        const { code } = product_subcategory;
 
         // amount
         const amount = parseFloat(req.body.amount);
@@ -582,34 +621,6 @@ async function invest(req, res){
             daily_interest,
             product_code,
         } = product;
-        
-        // log user product record
-        const userProduct = await productService.subscribe({
-            end_date: moment().add(investment_period, 'months').format('YYYY-MM-DD'),
-            invested_amount: amount,
-            user_id: user.id,
-            product_id: id,
-        });
-
-        // create investment and log product
-        const metadata = {
-            investment_period,
-            minimum_investment,
-            daily_interest,
-        };
-        const investment = {
-            fees,
-            metadata,
-            user_id: user.id,
-            product_id: id,
-            daily_interest,
-            invested_amount: amount,
-            currency_code,
-            end_date: moment().add(investment_period, 'weeks').format('YYYY-MM-DD'),
-            accumulated_amount: amount,
-            user_product_id: userProduct.id,
-        };
-        await investmentService.create(investment);
 
         // retrive user wallet
         const wallet = await transactionService.wallet(user.id);
@@ -635,8 +646,46 @@ async function invest(req, res){
             metadata: fees,
         };
         const transaction = await transactionService.create(transData);
+        
+        // log user product record
+        const userProduct = await productService.subscribe({
+            code,
+            value: amount,
+            product_id: id,
+            user_id: user.id,
+            entity: 'Fixed Plans',
+            transaction_id: transaction.id,
+            end_date: moment().add(investment_period, 'months').format('YYYY-MM-DD'),
+        });
+
+        // create investment and log product
+        const metadata = {
+            fees,
+            investment_period,
+            minimum_investment,
+            daily_interest,
+            type: 'crypto',
+            currency: 'CBI',
+            currency_code: 'CBI',
+            refid: userProduct.id,
+            entity: 'member_products_lines',
+        };
+        const investment = {
+            fees,
+            metadata,
+            user_id: user.id,
+            product_id: id,
+            daily_interest,
+            invested_amount: amount,
+            currency_code,
+            end_date: moment().add(investment_period, 'weeks').format('YYYY-MM-DD'),
+            accumulated_amount: amount,
+            user_product_id: userProduct.id,
+        };
+        await investmentService.create(investment);
+
         const txid = getTxid(product_code, transaction.auto_id);
-        await transactionService.update({ txid }, transaction.id);
+        await transactionService.update({ txid, metadata }, transaction.id);
         transaction.txid = txid;
         
         // deduct funds from user wallet
@@ -707,7 +756,10 @@ async function earnings(req, res) {
         const { id } = req.user;
         const { permakey } = req.params;
         const { data } = await productService.show(permakey);
-        const earnings = await commissionService.index(id, data.id);
+        let earnings = [];
+        if (data && data.id) {
+            earnings = await commissionService.index(id, data.id);
+        }
         return res.send({
             success: true,
             data: {
@@ -828,13 +880,14 @@ async function transactions(req, res){
     try {
         const { permakey } = req.params;
         const transactions = await productService.transactions(permakey, req.user.id);
+        const { count, rows } = transactions;
         return res.status(200).send({
             success: true,
             data: {
-                count: null,
+                count,
                 next: null,
                 previous: null,
-                results: transactions,
+                results: rows,
             }
         });
     } catch (err) {
