@@ -347,9 +347,12 @@ async function transactions(code, user_id) {
             attributes: [
                 'fee',
                 'txid',
+                'note',
+                'status',
                 'created',
                 'tx_type',
                 'currency',
+                'reference',
                 'total_amount',
                 [sequelize.json('metadata.tokens'), 'tokens']
             ],
