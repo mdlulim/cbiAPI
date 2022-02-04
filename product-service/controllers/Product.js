@@ -1,3 +1,4 @@
+const async = require('async');
 const axios = require('axios');
 const moment = require('moment');
 const sequelize = require('../config/db');
@@ -69,7 +70,8 @@ async function subscribe(req, res){
 
         // get product details
         const product = await productService.findByCode(req.body.product_code);
-        const { product_subcategory } = product;
+        const { product_subcategory, indicators } = product;
+        const { commission_structure, educator_percentage } = indicators;
         const { code } = product_subcategory;
 
         // get user
@@ -254,6 +256,7 @@ async function subscribe(req, res){
                 type: 'crypto',
                 currency: 'CBI',
                 currency_code: 'CBI',
+                indicators: product.indicators,
             };
             await transactionService.update({ txid, metadata }, transaction.id);
             
@@ -265,6 +268,79 @@ async function subscribe(req, res){
                 amount: totalAmount,
                 first_name: user.first_name,
             });
+        
+            /**
+             * 
+             * CBIx7 MLM Commission Structure Payout
+             * 
+             * Educators Fees:
+             * 1. Are only payable to Paid up Wealth Creators
+             * 2. Payable in accordance with the conditions set out below 
+             * 3. Are only payable 10 levels up to his upline and where  there is no paid
+             *    up upline that part is then going to the product income of the company
+             * 4. It is payable in accordance with the 10 level structure indicated below
+             * 
+             * - Educators fees are payable to Wealth Creators ONLY who qualifies in
+             *   accordance to 10 Level Structure.
+             * - This is payable at time of initial buying 3% of investment amount
+             */
+            if (commission_structure && educator_percentage) {
+                const upline = await userService.upline(user.id);
+                if (upline.length > 0) {
+                    const payoutAmount = totalAmount * parseFloat(educator_percentage) / 100;
+                    var level = 1;
+                    return async.map(upline, async (item) => {
+                        const { account } = item;
+                        const commission = payoutAmount * parseFloat(commission_structure[`level${level}`]) / 100;
+
+                        // update account balance
+                        await accountService.update({
+                            balance: parseFloat(account.balance) + commission,
+                            available_balance: parseFloat(account.available_balance) + commission,
+                        }, account.id);
+
+                        // log transaction
+                        const transact = await transactionService.create({
+                            tx_type: 'credit',
+                            subtype: 'educator-fees',
+                            user_id: item.id,
+                            amount: commission,
+                            reference: `EduComm-${product.product_code}`,
+                            note: `Received ${commission} ${product.currency.code} from ${user.first_name} (${user.username}) on ${product.type} ${product.title}`,
+                            currency: product.currency,
+                            total_amount: commission,
+                            status: 'Completed',
+                        });
+
+                        // update transaction
+                        var txid = product.product_code + transact.auto_id;
+                        var metadata = {
+                            entity: 'transactions',
+                            refid: transaction.id,
+                            type: 'crypto',
+                            currency: 'CBI',
+                            currency_code: 'CBI',
+                            level,
+                            level_percentage: commission_structure[`level${level}`],
+                        };
+                        await transactionService.update({ txid, metadata }, transact.id);
+
+                        level++;
+
+                        return { commission, item, txid };
+
+                    }, (err, results) => {
+                        if (err) {
+                            return res.status(500)
+                                .send({
+                                    success: false,
+                                    message: 'Could not process your request'
+                                });
+                        }
+                        return res.send({ success: true, results });
+                    });
+                }
+            }
         }
         
         // Fraxions
@@ -479,7 +555,8 @@ async function sellCBIx7Tokens(data, res) {
         });
 
         // get user product
-        const { product_subcategory } = product;
+        const { product_subcategory, indicators } = product;
+        const { commission_structure, educator_percentage } = indicators;
         const { code } = product_subcategory;
         const userProduct = await productService.userProduct(user.id, code);
 
@@ -554,7 +631,7 @@ async function sellCBIx7Tokens(data, res) {
                 type: 'crypto',
                 currency: 'CBI',
                 currency_code: 'CBI',
-
+                indicators: product.indicators,
             },
         });
 
@@ -586,6 +663,79 @@ async function sellCBIx7Tokens(data, res) {
             amount: calculations.amount,
             first_name: user.first_name,
         });
+        
+        /**
+         * 
+         * CBIx7 MLM Commission Structure Payout
+         * 
+         * Educators Fees:
+         * 1. Are only payable to Paid up Wealth Creators
+         * 2. Payable in accordance with the conditions set out below 
+         * 3. Are only payable 10 levels up to his upline and where  there is no paid
+         *    up upline that part is then going to the product income of the company
+         * 4. It is payable in accordance with the 10 level structure indicated below
+         * 
+         * - Educators fees are payable to Wealth Creators ONLY who qualifies in
+         *   accordance to 10 Level Structure.
+         * - This is payable at time of selling 3% of the sales amount
+         */
+        if (commission_structure && educator_percentage) {
+            const upline = await userService.upline(user.id);
+            if (upline.length > 0) {
+                const payoutAmount = calculations.amount * educator_percentage / 100;
+                var level = 1;
+                return async.map(upline, async (item, index) => {
+                    const { account } = item;
+                    const commission = payoutAmount * parseFloat(commission_structure[`level${level}`]) / 100;
+
+                    // update account balance
+                    await accountService.update({
+                        balance: parseFloat(account.balance) + commission,
+                        available_balance: parseFloat(account.available_balance) + commission,
+                    }, account.id);
+
+                    // log transaction
+                    const transact = await transactionService.create({
+                        tx_type: 'credit',
+                        subtype: 'educator-fees',
+                        user_id: item.id,
+                        amount: commission,
+                        reference: `EduComm-${product.product_code}`,
+                        note: `Received ${commission} ${product.currency.code.toFixed(product.currency.divisibility)} from ${user.first_name} (${user.username}) on ${product.type} ${product.title}`,
+                        currency: product.currency,
+                        total_amount: commission,
+                        status: 'Completed',
+                    });
+
+                    // update transaction
+                    var txid = product.product_code + transact.auto_id;
+                    var metadata = {
+                        entity: 'transactions',
+                        refid: transaction.id,
+                        type: 'crypto',
+                        currency: 'CBI',
+                        currency_code: 'CBI',
+                        level,
+                        level_percentage: commission_structure[`level${level}`],
+                    };
+                    await transactionService.update({ txid, metadata }, transact.id);
+
+                    level++;
+
+                    return { commission, item, txid };
+
+                }, (err, results) => {
+                    if (err) {
+                        return res.status(500)
+                            .send({
+                                success: false,
+                                message: 'Could not process your request'
+                            });
+                    }
+                    return res.send({ success: true, results });
+                });
+            }
+        }
 
         // response
         return res.send({ success: true });
