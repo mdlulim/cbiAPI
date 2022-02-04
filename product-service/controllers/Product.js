@@ -701,7 +701,7 @@ async function sellCBIx7Tokens(data, res) {
                         user_id: item.id,
                         amount: commission,
                         reference: `EduComm-${product.product_code}`,
-                        note: `Received ${commission} ${product.currency.code.toFixed(product.currency.divisibility)} from ${user.first_name} (${user.username}) on ${product.type} ${product.title}`,
+                        note: `Received ${commission.toFixed(product.currency.divisibility)} ${product.currency.code} from ${user.first_name} (${user.username}) on ${product.type} ${product.title}`,
                         currency: product.currency,
                         total_amount: commission,
                         status: 'Completed',
