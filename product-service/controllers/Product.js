@@ -109,7 +109,6 @@ async function subscribe(req, res){
         // wealth creator
         if (isWC) {
             description = `${user.first_name} became a Wealth Creator`;
-            data.end_date = moment().add(1, 'month').format('YYYY-MM-DD');
             data.entity = 'Wealth Creator';
         }
 
@@ -142,7 +141,7 @@ async function subscribe(req, res){
             var period = 1;
 
             // check frequency
-            if (frequency && frequency === 'ANNUALLY') {
+            if (frequency && frequency.toUpperCase() === 'ANNUALLY') {
                 // retrieve settings/configurations
                 const settings = await settingService.findByKey('wc_renewal_annual_fee');
                 if (settings & settings.value) {
@@ -153,8 +152,24 @@ async function subscribe(req, res){
             }
             var amount = adminFee + price;
 
+            // insert transaction
+            var transaction = await transactionService.create({
+                tx_type: 'debit',
+                subtype: 'product',
+                user_id: user.id,
+                fee: adminFee,
+                amount: price,
+                reference: `${product.product_code}-Subscription`,
+                note: `Subscribed to ${product.title} product`,
+                total_amount: amount,
+                currency: product.currency,
+                status: 'Completed',
+            });
+
             // subscribe (add/update in user product table)
-            data.invested_amount = price;
+            data.value = price;
+            data.transaction_id = transaction.id;
+            data.end_date = moment().add(period, 'months').format('YYYY-MM-DD');
             var userProduct = await productService.subscribe(data);
 
             // update wallet balance
@@ -174,7 +189,7 @@ async function subscribe(req, res){
             await wealthCreatorService.create({
                 user_id: user.id,
                 product_id: product.id,
-                frequency: frequency || 'MONTHLY',
+                frequency: frequency ? frequency.toUpperCase() : 'MONTHLY',
                 fee_amount: price,
                 last_payment_date: new Date().toISOString(),
                 last_paid_amount: price,
@@ -182,27 +197,18 @@ async function subscribe(req, res){
                 user_product_id: userProduct.id,
             });
 
-            // insert transaction
-            var transaction = await transactionService.create({
-                tx_type: 'debit',
-                subtype: 'product',
-                user_id: user.id,
-                fee: adminFee,
-                amount: price,
-                reference: `${product.product_code}-Subscription`,
-                note: `Subscribed to ${product.title} product`,
-                total_amount: amount,
-                currency: product.currency,
-                status: 'Completed',
-                metadata: {
-                    entity: 'user_products',
-                    refid: userProduct.id,
-                }
-            });
-
             // update transaction
             var txid = product.product_code + transaction.auto_id;
-            await transactionService.update({ txid }, transaction.id);
+            var metadata = {
+                fees: product.fees,
+                entity: 'member_products_lines',
+                refid: userProduct.id,
+                tokens: data.value,
+                type: 'crypto',
+                currency: 'CBI',
+                currency_code: 'CBI',
+            };
+            await transactionService.update({ txid, metadata }, transaction.id);
 
             // send email
             await wealthCreatorConfirmation({
@@ -266,7 +272,11 @@ async function subscribe(req, res){
             var feeAmount = 0;
             if (Object.keys(product.fees).length > 0) {
                 Object.keys(product.fees).map(key => {
-                    feeAmount += parseFloat(product.fees[key]);
+                    if (key.includes('percentage')) {
+                        feeAmount += parseFloat(product.fees[key] * product.price / 100);
+                    } else {
+                        feeAmount += parseFloat(product.fees[key]);
+                    }
                 });
             }
             var totalAmount = parseFloat(product.price) + feeAmount;
