@@ -28,13 +28,13 @@ const tokenPurchaseConfirmation = data => {
                 max-width: 600px; 
                 margin: 0 auto;
                 line-height: 1.5;">
-            <div style="padding: 20px 0; margin-bottom: 20px; background-image: linear-gradient(310deg,#141727,#3a416f);color: white;">
+            <div style="padding: 20px 0; margin-bottom: 20px; background-color: #2D3357;  background-image: linear-gradient(310deg,#141727,#3a416f); color: white;">
                 <div style="text-align: center">
-                    <img src="https://cdn-cbigold.ams3.digitaloceanspaces.com/public/email/CDC3837FF1DF9ADC1FF459D0278FD.png" style="height: 50px;" alt="">
+                    <img src="https://cdn-cbigold.ams3.digitaloceanspaces.com/public/email/CDC3837FF1DF9ADC1FF459D0278FD.png" height: 50px alt="">
                 </div>
                 <!-- Email topic -->
                 <p style="line-height: 2; text-align: center;">
-                    Hi ${first_name}, </br />
+                    Hi ${first_name}, <br />
                 </p>
                 <h2 style="text-align: center;">Product purchase</h2>
             </div>
@@ -88,13 +88,13 @@ const wealthCreatorConfirmation = data => {
                 max-width: 600px; 
                 margin: 0 auto;
                 line-height: 1.5;">
-            <div style="padding: 20px 0; margin-bottom: 20px; background-image: linear-gradient(310deg,#141727,#3a416f);color: white;">
+            <div style="padding: 20px 0; margin-bottom: 20px; background-color: #2D3357;  background-image: linear-gradient(310deg,#141727,#3a416f); color: white;">
                 <div style="text-align: center">
-                    <img src="https://cdn-cbigold.ams3.digitaloceanspaces.com/public/email/CDC3837FF1DF9ADC1FF459D0278FD.png" style="height: 50px;" alt="">
+                    <img src="https://cdn-cbigold.ams3.digitaloceanspaces.com/public/email/CDC3837FF1DF9ADC1FF459D0278FD.png" height: 50px alt="">
                 </div>
                 <!-- Email topic -->
                 <p style="line-height: 2; text-align: center;">
-                    Hi ${first_name}, </br />
+                    Hi ${first_name}, <br />
                 </p>
                 <h2 style="text-align: center;">Product purchase</h2>
             </div>
@@ -149,13 +149,13 @@ const productPurchaseConfirmation = data => {
                 max-width: 600px; 
                 margin: 0 auto;
                 line-height: 1.5;">
-            <div style="padding: 20px 0; margin-bottom: 20px; background-image: linear-gradient(310deg,#141727,#3a416f);color: white;">
+            <div style="padding: 20px 0; margin-bottom: 20px; background-color: #2D3357;  background-image: linear-gradient(310deg,#141727,#3a416f); color: white;">
                 <div style="text-align: center">
-                    <img src="https://cdn-cbigold.ams3.digitaloceanspaces.com/public/email/CDC3837FF1DF9ADC1FF459D0278FD.png" style="height: 50px;" alt="">
+                    <img src="https://cdn-cbigold.ams3.digitaloceanspaces.com/public/email/CDC3837FF1DF9ADC1FF459D0278FD.png" height: 50px alt="">
                 </div>
                 <!-- Email topic -->
                 <p style="line-height: 2; text-align: center;">
-                    Hi ${first_name}, </br />
+                    Hi ${first_name}, <br />
                 </p>
                 <h2 style="text-align: center;">Product purchase</h2>
             </div>
@@ -212,13 +212,13 @@ const cbiX7SellConfirmation = data => {
                 max-width: 600px; 
                 margin: 0 auto;
                 line-height: 1.5;">
-            <div style="padding: 20px 0; margin-bottom: 20px; background-image: linear-gradient(310deg,#141727,#3a416f);color: white;">
+            <div style="padding: 20px 0; margin-bottom: 20px; background-color: #2D3357;  background-image: linear-gradient(310deg,#141727,#3a416f); color: white;">
                 <div style="text-align: center">
-                    <img src="https://cdn-cbigold.ams3.digitaloceanspaces.com/public/email/CDC3837FF1DF9ADC1FF459D0278FD.png" style="height: 50px;" alt="">
+                    <img src="https://cdn-cbigold.ams3.digitaloceanspaces.com/public/email/CDC3837FF1DF9ADC1FF459D0278FD.png" height: 50px alt="">
                 </div>
                 <!-- Email topic -->
                 <p style="line-height: 2; text-align: center;">
-                    Hi ${first_name}, </br />
+                    Hi ${first_name}, <br />
                 </p>
                 <h2 style="text-align: center;">CBIx7 Sell Confirmation</h2>
             </div>
@@ -275,13 +275,13 @@ const cancellationRequestConfirmation = data => {
                 max-width: 600px; 
                 margin: 0 auto;
                 line-height: 1.5;">
-            <div style="padding: 20px 0; margin-bottom: 20px; background-image: linear-gradient(310deg,#141727,#3a416f);color: white;">
+            <div style="padding: 20px 0; margin-bottom: 20px; background-color: #2D3357;  background-image: linear-gradient(310deg,#141727,#3a416f); color: white;">
                 <div style="text-align: center">
-                    <img src="https://cdn-cbigold.ams3.digitaloceanspaces.com/public/email/CDC3837FF1DF9ADC1FF459D0278FD.png" style="height: 50px;" alt="">
+                    <img src="https://cdn-cbigold.ams3.digitaloceanspaces.com/public/email/CDC3837FF1DF9ADC1FF459D0278FD.png" height: 50px alt="">
                 </div>
                 <!-- Email topic -->
                 <p style="line-height: 2; text-align: center;">
-                    Hi ${first_name}, </br />
+                    Hi ${first_name}, <br />
                 </p>
                 <h2 style="text-align: center;">Cancellation Request Confirmation</h2>
             </div>
