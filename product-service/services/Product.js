@@ -233,7 +233,7 @@ async function subscribe(data) {
             await MemberProduct.update({
                 status: 'Active',
                 updated: sequelize.fn('NOW'),
-                value: parseFloat(memberProduct.value) + value
+                value: parseFloat(memberProduct.value) + parseFloat(value),
             }, { where });
         } else {
             memberProduct = await MemberProduct.create({
