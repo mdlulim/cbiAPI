@@ -188,9 +188,9 @@ async function transactionstotal(data) {
                 created: { [Op.between]: [dateRange.start_date, dateRange.end_date] },
              }
         })
-        const  withdrawal = await Transaction.sum('fee', {
+        const  withdraw = await Transaction.sum('fee', {
             where: {
-                subtype: "withdrawal",
+                subtype: "withdraw",
                 status: "Completed",
                 created: { [Op.between]: [dateRange.start_date, dateRange.end_date] },
              }
@@ -220,11 +220,11 @@ async function transactionstotal(data) {
         })
         const data = {
             deposit     : deposit ? deposit : 0,
-            withdrawal  : withdrawal ? withdrawal: 0,
+            withdraw  : withdraw ? withdraw: 0,
             transfer    : transfer ? transfer : 0,
             product     : product ? product: 0,
             registration: registration ? registration: 0,
-            total       : (deposit ? deposit : 0) + (withdrawal ? withdrawal: 0) + (transfer ? transfer : 0) + (product ? product: 0)
+            total       : (deposit ? deposit : 0) + (withdraw ? withdraw: 0) + (transfer ? transfer : 0) + (product ? product: 0)
         }
         return { data: data }
     } catch (error) {

@@ -344,7 +344,12 @@
   "resolved" "https://registry.npmjs.org/cookie-signature/-/cookie-signature-1.0.6.tgz"
   "version" "1.0.6"
 
-"cookie@^0.4.0", "cookie@0.4.0":
+"cookie@^0.4.0":
+  "integrity" "sha512-ZwrFkGJxUR3EIoXtO+yVE69Eb7KlixbaeAWfBQB9vVsNn/o+Yw69gBWSSDK825hQNdN+wF8zELf3dFNl/kxkUA=="
+  "resolved" "https://registry.npmjs.org/cookie/-/cookie-0.4.1.tgz"
+  "version" "0.4.1"
+
+"cookie@0.4.0":
   "integrity" "sha512-+Hp8fLp57wnUSt0tY0tHEXh4voZRDnoIrZPqlo3DPiI4y9lwg/jqx+1Om94/W6ZaPDOUbnjOt/99w66zk+l1Xg=="
   "resolved" "https://registry.npmjs.org/cookie/-/cookie-0.4.0.tgz"
   "version" "0.4.0"
@@ -458,9 +463,9 @@
     "stream-chopper" "^3.0.1"
 
 "elastic-apm-node@^3.22.0":
-  "integrity" "sha512-yzdO/MwAcjT+TbcBQBKWbDb4beDVmmrIaFCu9VA+z6Ow9GKlQv7QaD9/cQjuN8/KI6ASiJfQI8cPgqy1SgSUuA=="
-  "resolved" "https://registry.npmjs.org/elastic-apm-node/-/elastic-apm-node-3.23.0.tgz"
-  "version" "3.23.0"
+  "integrity" "sha512-5+nlHAt69W6t+z2b8isJT3qvBFwwrZVZ4Gy6fX+K6RaDx73YwxUfTqdtcLx1y4/uLFg+p6xVD9UG2B9HVcq6Pw=="
+  "resolved" "https://registry.npmjs.org/elastic-apm-node/-/elastic-apm-node-3.22.0.tgz"
+  "version" "3.22.0"
   dependencies:
     "@elastic/ecs-pino-format" "^1.2.0"
     "after-all-results" "^2.0.0"
@@ -1369,6 +1374,11 @@
   dependencies:
     "wrappy" "1"
 
+"openapi-types@>=7":
+  "integrity" "sha512-Y8xOCT2eiKGYDzMW9R4x5cmfc3vGaaI4EL2pwhDmodWw1HlK18YcZ4uJxc7Rdp7/gGzAygzH9SXr6GKYIXbRcQ=="
+  "resolved" "https://registry.npmjs.org/openapi-types/-/openapi-types-10.0.0.tgz"
+  "version" "10.0.0"
+
 "optional-js@^2.0.0":
   "integrity" "sha512-B0LLi+Vg+eko++0z/b8zIv57kp7HKEzaPJo7LowJXMUKYdf+3XJGu/cw03h/JhIOsLnP+cG5QnTHAuicjA5fMw=="
   "resolved" "https://registry.npmjs.org/optional-js/-/optional-js-2.3.0.tgz"
@@ -1675,7 +1685,17 @@
   dependencies:
     "semver" "^5.0.3"
 
-"semver@^5.0.3", "semver@^5.5.0", "semver@^5.6.0", "semver@2 || 3 || 4 || 5":
+"semver@^5.0.3":
+  "integrity" "sha512-sauaDf/PZdVgrLTNYHRtpXa1iRiKcaebiKQ1BJdpQlWH2lCvexQdX55snPFyK7QzpudqbCI0qXFfOasHdyNDGQ=="
+  "resolved" "https://registry.npmjs.org/semver/-/semver-5.7.1.tgz"
+  "version" "5.7.1"
+
+"semver@^5.5.0":
+  "integrity" "sha512-sauaDf/PZdVgrLTNYHRtpXa1iRiKcaebiKQ1BJdpQlWH2lCvexQdX55snPFyK7QzpudqbCI0qXFfOasHdyNDGQ=="
+  "resolved" "https://registry.npmjs.org/semver/-/semver-5.7.1.tgz"
+  "version" "5.7.1"
+
+"semver@^5.6.0":
   "integrity" "sha512-sauaDf/PZdVgrLTNYHRtpXa1iRiKcaebiKQ1BJdpQlWH2lCvexQdX55snPFyK7QzpudqbCI0qXFfOasHdyNDGQ=="
   "resolved" "https://registry.npmjs.org/semver/-/semver-5.7.1.tgz"
   "version" "5.7.1"
@@ -1684,6 +1704,11 @@
   "integrity" "sha512-b39TBaTSfV6yBrapU89p5fKekE2m/NwnDocOVruQFS1/veMgdzuPcnOM34M6CwxW8jH/lxEa5rBoDeUwu5HHTw=="
   "resolved" "https://registry.npmjs.org/semver/-/semver-6.3.0.tgz"
   "version" "6.3.0"
+
+"semver@2 || 3 || 4 || 5":
+  "integrity" "sha512-sauaDf/PZdVgrLTNYHRtpXa1iRiKcaebiKQ1BJdpQlWH2lCvexQdX55snPFyK7QzpudqbCI0qXFfOasHdyNDGQ=="
+  "resolved" "https://registry.npmjs.org/semver/-/semver-5.7.1.tgz"
+  "version" "5.7.1"
 
 "semver@4.3.2":
   "integrity" "sha1-x6BxWKgL7dBSNVt3DYLWZA+AO+c="

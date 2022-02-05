@@ -2,7 +2,6 @@ const transferService = require('../services/Transfer');
 
 async function transfer(req, res){
     try {
-        console.log("Test mdu================================================")
         const response = await transferService.transfer(req.body);
         return res.send({
             success: true,
@@ -18,7 +17,7 @@ async function transfer(req, res){
 
 async function history(req, res){
     try {
-        const response = await transferService.history(req.user.id);
+        const response = await transferService.history(req.body.user_id);
         return res.send({
             success: true,
             response

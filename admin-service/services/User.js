@@ -462,8 +462,8 @@ async function updateTransaction(id, data, admin_user_id) {
                 let accountCondition = {id: userWallet.id}
                 await Account.update( creditUser,{where: accountCondition})
 
-            }else if(transaction.subtype.toLowerCase() === "withdrawal"){
-                //console.log("subtype: "+transaction.subtype)
+            }else if(transaction.subtype.toLowerCase() === "withdraw"){
+                console.log("subtype: "+transaction.subtype)
                 let credit = {
                     available_balance: parseFloat(mainAccount.available_balance)+parseFloat(fee.value),
                     balance: parseFloat(mainAccount.balance)+parseFloat(fee.value)
