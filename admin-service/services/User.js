@@ -523,13 +523,14 @@ async function updateTransaction(id, data, admin_user_id) {
 //     }
 // }
 
-async function approveDeposit(id, data) {
+async function approveDeposit(id, data, admin_user_id) {
 
     //console.log(commissionData)
     try {
         const setting =  await Setting.findOne({where : {key: 'membership_fee'}});
         let sponsorBalance = null;
         let userBalance = null;
+        let myData = {}
         if(parseFloat(data.transaction.amount) < parseFloat(setting.dataValues.value)){
             return { success: false, message: "Insufficient funds" };
         }
@@ -583,8 +584,12 @@ async function approveDeposit(id, data) {
             userBalance             = parseFloat(userAccount.dataValues.available_balance)+userTopUp;
 
             const user_id = user.dataValues.id;
-            let status = {status: data.status}
-            await Transaction.update(status, { where: { id } });
+            myData = {
+                status: data.status,
+                approval_reason: data.reason,
+                approved_by: admin_user_id
+            }
+            await Transaction.update(myData, { where: { id } });
 
             await Account.update(companyData,{ where : companyCondition });
 
@@ -668,11 +673,15 @@ async function approveDeposit(id, data) {
                 message: "Account was successfully updated", 
                 data: {user: dataUser, sponsor: dataSponsor, commission: sponsorCommissionData, main: mainCommission } };
     }else{
-        let status = {status: data.status}
-        await Transaction.update(status, { where: { id } });
+        //let status = {status: data.status}
+        myData = {
+            status: data.status,
+            approval_reason: data.reason,
+            approved_by: admin_user_id
+        }
+        await Transaction.update(myData, { where: { id } });
     }
 
-       
     } catch (error) {
         console.error(error || null);
         throw new Error('Could not process your request');
