@@ -384,7 +384,7 @@ async function updateTransaction(req, res) {
         const admin_user_id = req.user.id;
 
         if(req.body.transaction.status === 'Completed' || req.body.transaction.status === 'Rejected'){
-            return res.send({ success: false, message: 'This transaction has already been proccessed!' })
+            return res.send({ success: false, message: 'This transaction has already been processed!' })
         }
 
         return userService.updateTransaction(req.params.id, req.body, admin_user_id).then(async (data) => {
