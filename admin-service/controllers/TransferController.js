@@ -16,6 +16,22 @@ async function transfer(req, res){
     }
 }
 
+async function history(req, res){
+    try {
+        const response = await transferService.history(req.user.id);
+        return res.send({
+            success: true,
+            response
+        });
+    } catch (err) {
+        return res.status(500).send({
+            success: false,
+            message: 'Could not process your request'
+        });
+    }
+}
+
 module.exports = {
-    transfer
+    transfer,
+    history
 }
