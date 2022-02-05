@@ -1,5 +1,6 @@
 const moment = require('moment');
 const { Account } = require('../models/Account');
+const { Transfer } = require('../models/Transfer');
 
 async function transfer(data) {
     try {
@@ -27,6 +28,12 @@ async function transfer(data) {
                 where: {
                     id: '3cf7d2c0-80e1-4264-9f2f-6487fd1680c2'
                 }
+            })
+
+            await Transfer.create({
+                user_id: data.user_id,
+                note: `account ${data.user_id} has been credited with ${parseFloat(data.amount)} CBI on ${moment().format()}`,
+                amount: data.amount,
             })
 
             return {
