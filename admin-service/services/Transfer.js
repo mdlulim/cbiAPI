@@ -1,5 +1,6 @@
 const moment = require('moment');
 const { Account } = require('../models/Account');
+const { Transfer } = require('../models/Transfer');
 
 async function transfer(data) {
     try {
@@ -57,6 +58,10 @@ async function transfer(data) {
                 }
             });
 
+            Transfer.create({
+                
+            })
+
             return {
                 message: `account ${data.user_id} has been debited with ${parseFloat(data.amount)} CBI on ${moment().format()}`
             }
@@ -69,6 +74,29 @@ async function transfer(data) {
     }
 }
 
+async function history(data) {
+    try {
+        const response = await Transfer.findOne({
+            where: {
+                user_id: data
+            }
+        })
+        return {
+            code: 200,
+            status: 'OK',
+            data: {
+                response
+            }
+        }
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
+
+
 module.exports = {
-    transfer
+    transfer,
+    history
 }
