@@ -395,7 +395,6 @@ async function updateTransaction(req, res) {
             }
 
             if (data.success) {
-                console.log(data)
                 // send email to recipient
                 await emailHandler.transactionNotification({
                     first_name: data.data.first_name,
