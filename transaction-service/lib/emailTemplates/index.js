@@ -36,13 +36,13 @@ const depositRequestNotification = data => {
                 <p style="line-height: 2; text-align: center;">
                     Hi ${first_name}, <br />
                 </p>
-                <h2 style="text-align: center;">Deposit Confirmation</h2>
+                <h2 style="text-align: center;">Buy Confirmation</h2>
             </div>
             <div style="margin: 0 5%; border-bottom: 1px solid grey;">
                 <!-- Email body -->
                 <div >
                     <p>
-                        Your deposit is being processed as follows:<br/>
+                        Your buy request is being processed as follows:<br/>
                     </p>
                     <table>
                         <tbody>
