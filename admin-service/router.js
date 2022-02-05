@@ -250,6 +250,9 @@ module.exports.set = app => {
     app.post('/products/subcategories/:id/calculations', authMiddleware.checkAuth, productController.captureCalculations);
     app.post('/products/subcategories/:id/payouts', authMiddleware.checkAuth, productController.processPayouts);
 
+    app.get('/products/profits', authMiddleware.checkAuth, productController.getProductProfits);
+     app.get('/products/profits/:id', authMiddleware.checkAuth, productController.getProfitsPerProduct);
+    
     /**
      * Get Product Category
      * 
