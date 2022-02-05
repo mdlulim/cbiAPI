@@ -184,20 +184,22 @@ module.exports.set = app => {
      * 
      * Retrieve a company’s user kyc.
      */
-    app.get('/users/:id/kyc', kycController.show);
+    app.get('/users/:id/kyc', authMiddleware.checkAuth, kycController.show);
 
     /**
      * Update User's KYC
      * 
      * Update a company’s user kyc.
      */
-    app.put('/kyc', authMiddleware.checkAuth, kycController.update);
+    app.put('/kyc', authMiddleware.checkAuth, authMiddleware.checkAuth, kycController.update);
 
     app.get('/kyc-level/:id', authMiddleware.checkAuth, kycController.kyc_level);
 
-    //gets all kyc applications
-    app.get('/all-kyc/', authMiddleware.checkAuth, kycController.show_all);
+    //gets all pening kyc applications
+    app.get('/kyc-pending/', authMiddleware.checkAuth, kycController.pending);
 
+    //gets all kyc applications
+    app.get('/kyc-all/', authMiddleware.checkAuth, kycController.all);
 
 
     /**

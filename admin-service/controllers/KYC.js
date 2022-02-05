@@ -44,9 +44,25 @@ async function show(req, res) {
     }
 }
 
-async function show_all(req, res) {
+async function pending(req, res) {
     try {
-        const data = await kycService.show_all();
+        const data = await kycService.pending();
+        return res.send({
+            success: true,
+            data,
+        });
+    } catch (error) {
+        console.log(error);
+        return res.send({
+            success: false,
+            message: 'Could not process request'
+        });
+    }
+}
+
+async function all(req, res) {
+    try {
+        const data = await kycService.all();
         return res.send({
             success: true,
             data,
@@ -148,5 +164,6 @@ module.exports = {
     show,
     update,
     kyc_level,
-    show_all
+    pending,
+    all
 };
