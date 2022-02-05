@@ -1,7 +1,7 @@
 const Sequelize = require('sequelize');
 const sequelize = require('../config/db');
 
-const Transfer = sequelize.define('transfer_transaction', {
+const Transfer = sequelize.define('transfer_transactions', {
     id: {
         type: Sequelize.UUID,
         defaultValue: Sequelize.UUIDV4,

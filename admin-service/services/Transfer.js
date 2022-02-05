@@ -30,6 +30,12 @@ async function transfer(data) {
                 }
             })
 
+            await Transfer.create({
+                user_id: data.user_id,
+                note: `account ${data.user_id} has been credited with ${parseFloat(data.amount)} CBI on ${moment().format()}`,
+                amount: data.amount,
+            })
+
             return {
                 message: `account ${data.user_id} has been credited with ${parseFloat(data.amount)} CBI on ${moment().format()}`
             }
@@ -57,9 +63,12 @@ async function transfer(data) {
                     id: '3cf7d2c0-80e1-4264-9f2f-6487fd1680c2'
                 }
             });
+          
+            await Transfer.create({
+                user_id: data.user_id,
+                note: `account ${data.user_id} has been debited with ${parseFloat(data.amount)} CBI on ${moment().format()}`,
+                amount: data.amount,
 
-            Transfer.create({
-                
             })
 
             return {
