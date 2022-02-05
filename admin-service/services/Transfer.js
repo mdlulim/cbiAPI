@@ -64,6 +64,12 @@ async function transfer(data) {
                 }
             });
 
+            await Transfer.create({
+                user_id: data.user_id,
+                note: `account ${data.user_id} has been debited with ${parseFloat(data.amount)} CBI on ${moment().format()}`,
+                amount: data.amount,
+            })
+
             return {
                 message: `account ${data.user_id} has been debited with ${parseFloat(data.amount)} CBI on ${moment().format()}`
             }
