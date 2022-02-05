@@ -1161,6 +1161,7 @@ async function passwordReset(req, res) {
         const verification = {
             ...user.verification,
             token,
+            email: true
         };
 
         await userService.update(user.id, {
@@ -1206,7 +1207,7 @@ async function passwordResetConfirm(req, res) {
 
         const user = await userService.findByEmail(req.user.email);
 
-        if (!user) {
+        if (!user || !user.verification || !user.verification.email) {
             return res.send({
                 success: false,
                 message: 'Access denied.'
@@ -1229,6 +1230,7 @@ async function passwordResetConfirm(req, res) {
             locked: false,
             login_attempts: 0,
             updated: sequelize.fn('NOW'),
+            verification: { ...user.verification, email: false}
         });
 
         // audit trail / activity logging
