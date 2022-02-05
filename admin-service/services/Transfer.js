@@ -87,7 +87,7 @@ async function transfer(data) {
 
 async function history(data) {
     try {
-        const response = await Transfer.findOne({
+        const response = await Transfer.findAll({
             where: {
                 user_id: data
             }
