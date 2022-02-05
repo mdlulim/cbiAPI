@@ -384,7 +384,12 @@ async function transactions(req, res) {
 async function updateTransaction(req, res) {
     try {
         const transact = req.body.transaction;
-        return userService.updateTransaction(req.params.id, req.body).then(async (data) => {
+        const admin_user_id = req.user.id;
+        if(req.body.transaction.status === 'Completed' || req.body.transaction.status === 'Rejected'){
+            return res.send({ success: false, message: 'This transaction has already been proccessed!' })
+        }
+
+        return userService.updateTransaction(req.params.id, req.body, admin_user_id).then(async (data) => {
             // console.log(data)
             let subtype = transact.subtype;
 
@@ -422,7 +427,7 @@ async function updateTransaction(req, res) {
             return res.send({ success: data.success, message: data.message })
         })
     } catch (err) {
-        return res.status(500).send({
+        return res.send({
             success: false,
             message: 'Could not process your request'
         });

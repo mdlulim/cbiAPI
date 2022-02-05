@@ -412,9 +412,9 @@ async function transactions(user_id) {
     }
 }
 
-async function updateTransaction(id, data) {
+async function updateTransaction(id, data, admin_user_id) {
     try {
-        const myData = {status: data.status}
+        let myData = {}
         const transaction = data.transaction;
         const user_id = transaction.user_id;
         const user =  await User.findOne({where : {id: transaction.user_id}});
@@ -423,8 +423,13 @@ async function updateTransaction(id, data) {
        if(!fee.value){
            return {success: false, message: 'Transaction fee is not configured!'}
        }
-      
+
         if(data.status === 'Completed'){
+            myData = {
+                status: data.status,
+                approval_reason: data.reason,
+                approved_by: admin_user_id
+            }
             const mainAccount =  await Account.findOne({where : {id: '3cf7d2c0-80e1-4264-9f2f-6487fd1680c2'}});
             const userWallet =  await Account.findOne({
                 where: { user_id },
@@ -449,7 +454,6 @@ async function updateTransaction(id, data) {
                 let mainAccountCondition = {id: mainAccount.id}
                 await Account.update( credit, {where: mainAccountCondition})
 
-                
                 let creditUser = {
                     available_balance: parseFloat(available_balance)+parseFloat(transaction.amount)-parseFloat(fee.value),
                     balance: parseFloat(available_balance)+parseFloat(transaction.amount)-parseFloat(fee.value)
@@ -473,11 +477,19 @@ async function updateTransaction(id, data) {
                 let accountCondition = {id: userWallet.id}
                 await Account.update( creditUser,{where: accountCondition})
             }
-           
+            await Transaction.update(myData, {
+                where: { id }
+            });
+        }else{
+            myData = {
+                status: data.status,
+                rejection_reason: data.reason,
+                rejected_by: admin_user_id
+            }
+            await Transaction.update(myData, {
+                where: { id }
+            });
         }
-        await Transaction.update(myData, {
-            where: { id }
-        });
 
         return { success: true, 
             message: 'Transaction was updated successfully',

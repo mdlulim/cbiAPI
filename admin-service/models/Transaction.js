@@ -28,6 +28,10 @@ const Transaction = sequelize.define('transaction', {
     updated: Sequelize.DATE,
     collection_id: Sequelize.UUID,
     txid: Sequelize.STRING,
+    rejection_reason: Sequelize.STRING,
+    rejected_by: Sequelize.UUID,
+    approval_reason: Sequelize.STRING,
+    approved_by: Sequelize.UUID,
 }, {
     timestamps: false
 });
