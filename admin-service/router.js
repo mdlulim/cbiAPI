@@ -248,6 +248,7 @@ module.exports.set = app => {
     app.put('/products/subcategories/:id', authMiddleware.checkAuth, productController.updateSubcategory);
     app.get('/products/subcategories/:id/calculations', authMiddleware.checkAuth, productController.subcategoryCalculations);
     app.post('/products/subcategories/:id/calculations', authMiddleware.checkAuth, productController.captureCalculations);
+    app.post('/products/subcategories/:id/payouts', authMiddleware.checkAuth, productController.processPayouts);
 
     app.get('/products/profits', authMiddleware.checkAuth, productController.getProductProfits);
      app.get('/products/profits/:id', authMiddleware.checkAuth, productController.getProfitsPerProduct);

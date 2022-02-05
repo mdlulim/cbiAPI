@@ -9,8 +9,8 @@ async function transfer(data) {
             let newmainAvaliable = parseFloat(mainAccount.available_balance) - parseFloat(data.amount);
             let newmainBalance = parseFloat(mainAccount.balance) - parseFloat(data.amount);
 
-            let newaccountAvaliable = parseFloat(mainAccount.available_balance) + parseFloat(data.amount);
-            let newaccountBalance = parseFloat(mainAccount.balance) + parseFloat(data.amount);
+            let newaccountAvaliable = parseFloat(account.available_balance) + parseFloat(data.amount);
+            let newaccountBalance = parseFloat(account.balance) + parseFloat(data.amount);
 
             account.update({
                 balance: newaccountBalance,
@@ -37,8 +37,8 @@ async function transfer(data) {
             let newmainAvaliable = parseFloat(mainAccount.available_balance) + parseFloat(data.amount);
             let newmainBalance = parseFloat(mainAccount.balance) + parseFloat(data.amount);
 
-            let newaccountAvaliable = parseFloat(mainAccount.available_balance) - parseFloat(data.amount);
-            let newaccountBalance = parseFloat(mainAccount.balance) - parseFloat(data.amount);
+            let newaccountAvaliable = parseFloat(account.available_balance) - parseFloat(data.amount);
+            let newaccountBalance = parseFloat(account.balance) - parseFloat(data.amount);
 
             account.update({
                 balance: newaccountBalance,

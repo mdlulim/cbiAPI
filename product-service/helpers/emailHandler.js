@@ -10,7 +10,7 @@ async function tokenPurchaseConfirmation(data) {
         name: 'CBI',
         email: smtp.auth.user,
     };
-    return sendMail(from, email, `CBI - You have bought ${tokens} ${product.title}!`, template);
+    return sendMail(from, email, `CBI - You have bought ${tokens.toFixed(4)} ${product.title}!`, template);
 };
 
 async function wealthCreatorConfirmation(data) {

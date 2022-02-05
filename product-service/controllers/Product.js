@@ -1,3 +1,4 @@
+const async = require('async');
 const axios = require('axios');
 const moment = require('moment');
 const sequelize = require('../config/db');
@@ -30,6 +31,7 @@ async function overview(req, res){
         return productService.overview(req.query)
         .then(data => res.send(data));
     } catch (err) {
+        console.error(err.message || null);
         return res.status(500).send({
             success: false,
             message: 'Could not process your request'
@@ -39,9 +41,22 @@ async function overview(req, res){
 
 async function index(req, res){
     try {
-        return productService.index(req.user.id)
-        .then(data => res.send(data));
+        const products = await productService.memberProducts(req.user.id);
+        const { count, rows } = products;
+        return res.status(200)
+        .send({
+            success: true,
+            data: {
+                count,
+                next: null,
+                previous: null,
+                results: rows,
+            }
+        });
+        // return productService.index(req.user.id)
+        // .then(data => res.send(data));
     } catch (err) {
+        console.error(err.message || null);
         return res.status(500).send({
             success: false,
             message: 'Could not process your request'
@@ -55,7 +70,8 @@ async function subscribe(req, res){
 
         // get product details
         const product = await productService.findByCode(req.body.product_code);
-        const { product_subcategory } = product;
+        const { product_subcategory, indicators } = product;
+        const { commission_structure, educator_percentage } = indicators;
         const { code } = product_subcategory;
 
         // get user
@@ -76,30 +92,32 @@ async function subscribe(req, res){
         }
 
         const data = {
+            code,
             user_id: user.id,
             product_id: product.id,
         };
 
+        // activity desciption
+        let description = `${user.first_name} bought a product (${product.title})`;
+
         if (isCBIx7) {
             // tokens
             if (req.body.tokens) {
-                data.tokens = req.body.tokens;
+                data.value = parseFloat(req.body.tokens);
+                data.entity = 'CBIx7';
             }
         }
 
         // wealth creator
         if (isWC) {
-            data.end_date = moment().add(1, 'month').format('YYYY-MM-DD');
+            description = `${user.first_name} became a Wealth Creator`;
+            data.entity = 'Wealth Creator';
         }
 
         // fraxion product
         if (isFX) {
             data.end_date = moment().add(1000, 'days').format('YYYY-MM-DD');
-        }
-
-        let description = `${user.first_name} bought a product (${product.title})`;
-        if (isWC) {
-            description = `${user.first_name} became a Wealth Creator`;
+            data.entity = 'Fraxions';
         }
 
         // log activity
@@ -125,7 +143,7 @@ async function subscribe(req, res){
             var period = 1;
 
             // check frequency
-            if (frequency && frequency === 'ANNUALLY') {
+            if (frequency && frequency.toUpperCase() === 'ANNUALLY') {
                 // retrieve settings/configurations
                 const settings = await settingService.findByKey('wc_renewal_annual_fee');
                 if (settings & settings.value) {
@@ -136,8 +154,24 @@ async function subscribe(req, res){
             }
             var amount = adminFee + price;
 
+            // insert transaction
+            var transaction = await transactionService.create({
+                tx_type: 'debit',
+                subtype: 'product',
+                user_id: user.id,
+                fee: adminFee,
+                amount: price,
+                reference: `${product.product_code}-Subscription`,
+                note: `Subscribed to ${product.title} product`,
+                total_amount: amount,
+                currency: product.currency,
+                status: 'Completed',
+            });
+
             // subscribe (add/update in user product table)
-            data.invested_amount = price;
+            data.value = price;
+            data.transaction_id = transaction.id;
+            data.end_date = moment().add(period, 'months').format('YYYY-MM-DD');
             var userProduct = await productService.subscribe(data);
 
             // update wallet balance
@@ -157,7 +191,7 @@ async function subscribe(req, res){
             await wealthCreatorService.create({
                 user_id: user.id,
                 product_id: product.id,
-                frequency: frequency || 'MONTHLY',
+                frequency: frequency ? frequency.toUpperCase() : 'MONTHLY',
                 fee_amount: price,
                 last_payment_date: new Date().toISOString(),
                 last_paid_amount: price,
@@ -165,27 +199,18 @@ async function subscribe(req, res){
                 user_product_id: userProduct.id,
             });
 
-            // insert transaction
-            var transaction = await transactionService.create({
-                tx_type: 'debit',
-                subtype: 'product',
-                user_id: user.id,
-                fee: adminFee,
-                amount: price,
-                reference: `${product.product_code}-Subscription`,
-                note: `Subscribed to ${product.title} product`,
-                total_amount: amount,
-                currency: product.currency,
-                status: 'Completed',
-                metadata: {
-                    entity: 'user_products',
-                    refid: userProduct.id,
-                }
-            });
-
             // update transaction
             var txid = product.product_code + transaction.auto_id;
-            await transactionService.update({ txid }, transaction.id);
+            var metadata = {
+                fees: product.fees,
+                entity: 'member_products_lines',
+                refid: userProduct.id,
+                tokens: data.value,
+                type: 'crypto',
+                currency: 'CBI',
+                currency_code: 'CBI',
+            };
+            await transactionService.update({ txid, metadata }, transaction.id);
 
             // send email
             await wealthCreatorConfirmation({
@@ -204,10 +229,6 @@ async function subscribe(req, res){
                 available_balance: parseFloat(wallet.available_balance) - totalAmount,
             }, wallet.id);
 
-            // subscribe (add/update in user product table)
-            data.invested_amount = totalAmount;
-            var userProduct = await productService.subscribe(data);
-
             // insert transaction
             var transaction = await transactionService.create({
                 tx_type: 'debit',
@@ -219,25 +240,107 @@ async function subscribe(req, res){
                 total_amount: totalAmount,
                 currency: product.currency,
                 status: 'Completed',
-                metadata: {
-                    entity: 'user_products',
-                    refid: userProduct.id,
-                    tokens: data.tokens,
-                }
             });
+
+            // subscribe (add/update in user product table)
+            data.transaction_id = transaction.id;
+            var userProduct = await productService.subscribe(data);
 
             // update transaction
             var txid = product.product_code + transaction.auto_id;
-            await transactionService.update({ txid }, transaction.id);
+            var metadata = {
+                fees: product.fees,
+                entity: 'member_products_lines',
+                refid: userProduct.id,
+                tokens: data.value,
+                type: 'crypto',
+                currency: 'CBI',
+                currency_code: 'CBI',
+                indicators: product.indicators,
+            };
+            await transactionService.update({ txid, metadata }, transaction.id);
             
             // send token purchase confirmation email
             await tokenPurchaseConfirmation({
                 product,
                 email: user.email,
                 tokens: req.body.tokens,
-                amount: req.body.amount,
+                amount: totalAmount,
                 first_name: user.first_name,
             });
+        
+            /**
+             * 
+             * CBIx7 MLM Commission Structure Payout
+             * 
+             * Educators Fees:
+             * 1. Are only payable to Paid up Wealth Creators
+             * 2. Payable in accordance with the conditions set out below 
+             * 3. Are only payable 10 levels up to his upline and where  there is no paid
+             *    up upline that part is then going to the product income of the company
+             * 4. It is payable in accordance with the 10 level structure indicated below
+             * 
+             * - Educators fees are payable to Wealth Creators ONLY who qualifies in
+             *   accordance to 10 Level Structure.
+             * - This is payable at time of initial buying 3% of investment amount
+             */
+            if (commission_structure && educator_percentage) {
+                const upline = await userService.upline(user.id);
+                if (upline.length > 0) {
+                    const payoutAmount = totalAmount * parseFloat(educator_percentage) / 100;
+                    var level = 1;
+                    return async.map(upline, async (item) => {
+                        const { account } = item;
+                        const commission = payoutAmount * parseFloat(commission_structure[`level${level}`]) / 100;
+
+                        // update account balance
+                        await accountService.update({
+                            balance: parseFloat(account.balance) + commission,
+                            available_balance: parseFloat(account.available_balance) + commission,
+                        }, account.id);
+
+                        // log transaction
+                        const transact = await transactionService.create({
+                            tx_type: 'credit',
+                            subtype: 'educator-fees',
+                            user_id: item.id,
+                            amount: commission,
+                            reference: `EduComm-${product.product_code}`,
+                            note: `Received ${commission} ${product.currency.code} from ${user.first_name} (${user.username}) on ${product.type} ${product.title}`,
+                            currency: product.currency,
+                            total_amount: commission,
+                            status: 'Completed',
+                        });
+
+                        // update transaction
+                        var txid = product.product_code + transact.auto_id;
+                        var metadata = {
+                            entity: 'transactions',
+                            refid: transaction.id,
+                            type: 'crypto',
+                            currency: 'CBI',
+                            currency_code: 'CBI',
+                            level,
+                            level_percentage: commission_structure[`level${level}`],
+                        };
+                        await transactionService.update({ txid, metadata }, transact.id);
+
+                        level++;
+
+                        return { commission, item, txid };
+
+                    }, (err, results) => {
+                        if (err) {
+                            return res.status(500)
+                                .send({
+                                    success: false,
+                                    message: 'Could not process your request'
+                                });
+                        }
+                        return res.send({ success: true, results });
+                    });
+                }
+            }
         }
         
         // Fraxions
@@ -245,14 +348,18 @@ async function subscribe(req, res){
             var feeAmount = 0;
             if (Object.keys(product.fees).length > 0) {
                 Object.keys(product.fees).map(key => {
-                    feeAmount += parseFloat(product.fees[key]);
+                    if (key.includes('percentage')) {
+                        feeAmount += parseFloat(product.fees[key] * product.price / 100);
+                    } else {
+                        feeAmount += parseFloat(product.fees[key]);
+                    }
                 });
             }
             var totalAmount = parseFloat(product.price) + feeAmount;
 
             // subscribe (add/update in user product table)
-            data.invested_amount = product.price;
-            var userProduct = await productService.subscribe(data);
+            // data.invested_amount = product.price;
+            // var userProduct = await productService.subscribe(data);
 
             // balance check
             if (wallet.available_balance && parseFloat(wallet.available_balance) >= totalAmount) {
@@ -275,15 +382,24 @@ async function subscribe(req, res){
                     total_amount: totalAmount,
                     currency: product.currency,
                     status: 'Completed',
-                    metadata: {
-                        entity: 'user_products',
-                        refid: userProduct.id,
-                    }
                 });
+
+                // subscribe (add/update in user product table)
+                data.value = product.price;
+                data.transaction_id = transaction.id;
+                var userProduct = await productService.subscribe(data);
     
                 // update transaction
                 var txid = product.product_code + transaction.auto_id;
-                await transactionService.update({ txid }, transaction.id);
+                var metadata = {
+                    fees: product.fees,
+                    entity: 'member_products_lines',
+                    refid: userProduct.id,
+                    type: 'crypto',
+                    currency: 'CBI',
+                    currency_code: 'CBI',
+                };
+                await transactionService.update({ txid, metadata }, transaction.id);
             
                 // send product purchase confirmation email
                 await productPurchaseConfirmation({
@@ -439,10 +555,13 @@ async function sellCBIx7Tokens(data, res) {
         });
 
         // get user product
-        const userProduct = await productService.userProduct(user.id, product.id);
+        const { product_subcategory, indicators } = product;
+        const { commission_structure, educator_percentage } = indicators;
+        const { code } = product_subcategory;
+        const userProduct = await productService.userProduct(user.id, code);
 
         // validate token balance
-        if (parseFloat(userProduct.tokens) < parseFloat(tokens)) {
+        if (parseFloat(userProduct.value) < parseFloat(tokens)) {
             return res.status(403).send({
                 success: false,
                 message: 'Insufficient token balance available',
@@ -484,7 +603,7 @@ async function sellCBIx7Tokens(data, res) {
 
         // update user product
         await productService.update({
-            tokens: parseFloat(userProduct.tokens) - parseFloat(tokens),
+            value: parseFloat(userProduct.value) - parseFloat(tokens),
             status: 'Active',
         }, userProduct.id);
 
@@ -495,7 +614,7 @@ async function sellCBIx7Tokens(data, res) {
             user_id: user.id,
             fee: 0,
             amount: calculations.amount,
-            reference: `${product.product_code}-Sell`,
+            reference: `Sell-${product.product_code}`,
             note: `Sold to ${product.title} product`,
             total_amount: calculations.amount,
             source_transaction: userProduct.id,
@@ -506,8 +625,13 @@ async function sellCBIx7Tokens(data, res) {
                 tokens,
                 product,
                 calculations,
+                fees: product.fees,
                 refid: userProduct.id,
-                entity: 'user_products',
+                entity: 'member_products',
+                type: 'crypto',
+                currency: 'CBI',
+                currency_code: 'CBI',
+                indicators: product.indicators,
             },
         });
 
@@ -539,6 +663,79 @@ async function sellCBIx7Tokens(data, res) {
             amount: calculations.amount,
             first_name: user.first_name,
         });
+        
+        /**
+         * 
+         * CBIx7 MLM Commission Structure Payout
+         * 
+         * Educators Fees:
+         * 1. Are only payable to Paid up Wealth Creators
+         * 2. Payable in accordance with the conditions set out below 
+         * 3. Are only payable 10 levels up to his upline and where  there is no paid
+         *    up upline that part is then going to the product income of the company
+         * 4. It is payable in accordance with the 10 level structure indicated below
+         * 
+         * - Educators fees are payable to Wealth Creators ONLY who qualifies in
+         *   accordance to 10 Level Structure.
+         * - This is payable at time of selling 3% of the sales amount
+         */
+        if (commission_structure && educator_percentage) {
+            const upline = await userService.upline(user.id);
+            if (upline.length > 0) {
+                const payoutAmount = calculations.amount * educator_percentage / 100;
+                var level = 1;
+                return async.map(upline, async (item, index) => {
+                    const { account } = item;
+                    const commission = payoutAmount * parseFloat(commission_structure[`level${level}`]) / 100;
+
+                    // update account balance
+                    await accountService.update({
+                        balance: parseFloat(account.balance) + commission,
+                        available_balance: parseFloat(account.available_balance) + commission,
+                    }, account.id);
+
+                    // log transaction
+                    const transact = await transactionService.create({
+                        tx_type: 'credit',
+                        subtype: 'educator-fees',
+                        user_id: item.id,
+                        amount: commission,
+                        reference: `EduComm-${product.product_code}`,
+                        note: `Received ${commission.toFixed(product.currency.divisibility)} ${product.currency.code} from ${user.first_name} (${user.username}) on ${product.type} ${product.title}`,
+                        currency: product.currency,
+                        total_amount: commission,
+                        status: 'Completed',
+                    });
+
+                    // update transaction
+                    var txid = product.product_code + transact.auto_id;
+                    var metadata = {
+                        entity: 'transactions',
+                        refid: transaction.id,
+                        type: 'crypto',
+                        currency: 'CBI',
+                        currency_code: 'CBI',
+                        level,
+                        level_percentage: commission_structure[`level${level}`],
+                    };
+                    await transactionService.update({ txid, metadata }, transact.id);
+
+                    level++;
+
+                    return { commission, item, txid };
+
+                }, (err, results) => {
+                    if (err) {
+                        return res.status(500)
+                            .send({
+                                success: false,
+                                message: 'Could not process your request'
+                            });
+                    }
+                    return res.send({ success: true, results });
+                });
+            }
+        }
 
         // response
         return res.send({ success: true });
@@ -568,6 +765,8 @@ async function invest(req, res){
 
         // retrieve product by id
         const product = await productService.find(req.body.id, false);
+        const { product_subcategory } = product;
+        const { code } = product_subcategory;
 
         // amount
         const amount = parseFloat(req.body.amount);
@@ -582,34 +781,6 @@ async function invest(req, res){
             daily_interest,
             product_code,
         } = product;
-        
-        // log user product record
-        const userProduct = await productService.subscribe({
-            end_date: moment().add(investment_period, 'months').format('YYYY-MM-DD'),
-            invested_amount: amount,
-            user_id: user.id,
-            product_id: id,
-        });
-
-        // create investment and log product
-        const metadata = {
-            investment_period,
-            minimum_investment,
-            daily_interest,
-        };
-        const investment = {
-            fees,
-            metadata,
-            user_id: user.id,
-            product_id: id,
-            daily_interest,
-            invested_amount: amount,
-            currency_code,
-            end_date: moment().add(investment_period, 'weeks').format('YYYY-MM-DD'),
-            accumulated_amount: amount,
-            user_product_id: userProduct.id,
-        };
-        await investmentService.create(investment);
 
         // retrive user wallet
         const wallet = await transactionService.wallet(user.id);
@@ -635,8 +806,46 @@ async function invest(req, res){
             metadata: fees,
         };
         const transaction = await transactionService.create(transData);
+        
+        // log user product record
+        const userProduct = await productService.subscribe({
+            code,
+            value: amount,
+            product_id: id,
+            user_id: user.id,
+            entity: 'Fixed Plans',
+            transaction_id: transaction.id,
+            end_date: moment().add(investment_period, 'months').format('YYYY-MM-DD'),
+        });
+
+        // create investment and log product
+        const metadata = {
+            fees,
+            investment_period,
+            minimum_investment,
+            daily_interest,
+            type: 'crypto',
+            currency: 'CBI',
+            currency_code: 'CBI',
+            refid: userProduct.id,
+            entity: 'member_products_lines',
+        };
+        const investment = {
+            fees,
+            metadata,
+            user_id: user.id,
+            product_id: id,
+            daily_interest,
+            invested_amount: amount,
+            currency_code,
+            end_date: moment().add(investment_period, 'weeks').format('YYYY-MM-DD'),
+            accumulated_amount: amount,
+            user_product_id: userProduct.id,
+        };
+        await investmentService.create(investment);
+
         const txid = getTxid(product_code, transaction.auto_id);
-        await transactionService.update({ txid }, transaction.id);
+        await transactionService.update({ txid, metadata }, transaction.id);
         transaction.txid = txid;
         
         // deduct funds from user wallet
@@ -707,7 +916,10 @@ async function earnings(req, res) {
         const { id } = req.user;
         const { permakey } = req.params;
         const { data } = await productService.show(permakey);
-        const earnings = await commissionService.index(id, data.id);
+        let earnings = [];
+        if (data && data.id) {
+            earnings = await commissionService.index(id, data.id);
+        }
         return res.send({
             success: true,
             data: {
@@ -828,13 +1040,14 @@ async function transactions(req, res){
     try {
         const { permakey } = req.params;
         const transactions = await productService.transactions(permakey, req.user.id);
+        const { count, rows } = transactions;
         return res.status(200).send({
             success: true,
             data: {
-                count: null,
+                count,
                 next: null,
                 previous: null,
-                results: transactions,
+                results: rows,
             }
         });
     } catch (err) {

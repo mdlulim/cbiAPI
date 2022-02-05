@@ -72,9 +72,52 @@ async function update(id, data) {
     }
 }
 
+async function upline(user_id) {
+    try {
+        const options = {
+            nest: true,
+            replacements: {},
+            type: sequelize.QueryTypes.SELECT,
+        };
+        const data = [];
+        let found = false;
+        let id = user_id;
+        let level = 1; // payout MLM structure - 10 levels up
+        
+        do {
+            // retrieve uplines who are WC
+            const query = `
+            SELECT "upline"."id", "upline"."first_name", "upline"."last_name", "upline"."expiry",
+                "upline"."email", "upline"."mobile", "group"."name", "account"."id" AS "account.id",
+                "account"."balance" AS "account.balance", "account"."available_balance" AS "account.available_balance"
+            FROM users AS "user"
+            INNER JOIN users AS "upline" ON "user"."sponsor" = "upline"."id"
+            INNER JOIN groups AS "group" ON "upline"."group_id" = "group"."id" AND "group"."name" = 'wealth-creator'
+            INNER JOIN accounts AS "account" ON "upline"."id" = "account"."user_id"
+            WHERE "user"."id" = '${id}' AND "upline"."id" != "user"."id" AND "upline"."expiry" >= NOW()
+            LIMIT 1`;
+            const records = await sequelize.query(query, options);
+            if (level <= 10 && records && records.length > 0) {
+                const [record] = records;
+                if (record && record.id) {
+                    data.push(record);
+                    id = record.id;
+                    found = true;
+                    level++;
+                } else found = false;
+            } else found = false;
+        } while (found);
+        return data;
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
 module.exports = {
     create,
     index,
     show,
     update,
+    upline,
 }

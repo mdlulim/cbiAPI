@@ -266,6 +266,22 @@ async function subcategoryCalculations(req, res) {
     }
 }
 
+async function processPayouts(req, res) {
+    try {
+        
+        return res.send({
+            success: true,
+            data: null
+        });
+    } catch (error) {
+        console.log(error.message || '=====error=====');
+        return res.status(500).send({
+            success: false,
+            message: 'Could not process request'
+        });
+    }
+}
+
 async function captureCalculations(req, res) {
     try {
         const subcategory = await productService.showSubcategory(req.params.id);
@@ -699,6 +715,7 @@ module.exports = {
     getSubcategories,
     showSubcategory,
     subcategoryCalculations,
+    processPayouts,
     captureCalculations,
     updateSubcategory,
     cancelStatus,

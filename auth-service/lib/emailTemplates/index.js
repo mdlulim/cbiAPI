@@ -27,13 +27,13 @@ const welcome = data => {
                     margin: 0 auto;
                     line-height: 1.5;">
                 <div style="margin: 0 5%;">
-                    <div style="padding: 20px 0; margin-bottom: 20px; background-image: linear-gradient(310deg,#141727,#3a416f); color: white; ">
+                    <div style="padding: 20px 0; margin-bottom: 20px; background-color: #2D3357;  background-image: linear-gradient(310deg,#141727,#3a416f);  color: white; ">
                         <div style="text-align: center;">
-                            <img src="https://cdn-cbigold.ams3.digitaloceanspaces.com/public/email/CDC3837FF1DF9ADC1FF459D0278FD.png" style="height: 50px;" alt="">
+                            <img src="https://cdn-cbigold.ams3.digitaloceanspaces.com/public/email/CDC3837FF1DF9ADC1FF459D0278FD.png" height="50px" alt="">
                         </div>
                         <!-- Email topic -->
                         <p style="line-height: 2; text-align: center;">
-                            Hi ${first_name}, </br />
+                            Hi ${first_name}, <br />
                         </p>
                         <h2 style="text-align: center;">Welcome to the CBI Team!!</h2>
                     </div>
@@ -97,13 +97,13 @@ const resetPassword = data => {
                     margin: 0 auto;
                     line-height: 1.5;">
                 <div style="margin: 0 5%;">
-                    <div style="padding: 20px 0; margin-bottom: 20px; background-image: linear-gradient(310deg,#141727,#3a416f); color: white; ">
+                    <div style="padding: 20px 0; margin-bottom: 20px; background-color: #2D3357;  background-image: linear-gradient(310deg,#141727,#3a416f);  color: white; ">
                         <div style="text-align: center;">
-                            <img src="https://cdn-cbigold.ams3.digitaloceanspaces.com/public/email/CDC3837FF1DF9ADC1FF459D0278FD.png" style="height: 50px;" alt="">
+                            <img src="https://cdn-cbigold.ams3.digitaloceanspaces.com/public/email/CDC3837FF1DF9ADC1FF459D0278FD.png" height="50px" alt="">
                         </div>
                         <!-- Email topic -->
                         <p style="line-height: 2; text-align: center;">
-                            Hi ${first_name}, </br />
+                            Hi ${first_name}, <br />
                         </p>
                         <h2 style="text-align: center;">Forgot Password</h2>
                     </div>
@@ -170,13 +170,13 @@ const changePassword = data => {
             max-width: 600px; 
             margin: 0 auto;
             line-height: 1.5;">
-           <div style="padding: 20px 0; margin-bottom: 20px; background-image: linear-gradient(310deg,#141727,#3a416f);color: white;">
+           <div style="padding: 20px 0; margin-bottom: 20px; background-color: #2D3357;  background-image: linear-gradient(310deg,#141727,#3a416f); color: white;">
                     <div style="align-items: center;">
-                        <img src="https://cdn-cbigold.ams3.digitaloceanspaces.com/public/email/CDC3837FF1DF9ADC1FF459D0278FD.png" style="height: 50px;" alt="">
+                        <img src="https://cdn-cbigold.ams3.digitaloceanspaces.com/public/email/CDC3837FF1DF9ADC1FF459D0278FD.png" height="50px" alt="">
                     </div>
                     <!-- Email topic -->
                     <p style="line-height: 2; text-align: center;">
-                        Hi ${first_name}, </br />
+                        Hi ${first_name}, <br />
                     </p>
                     <h2 style="text-align: center;">Change Password</h2>
                 </div>
@@ -232,13 +232,13 @@ const verifyLogin = data => {
                     margin: 0 auto;
                     line-height: 1.5;">
                 <div
-                    style="padding: 20px 0; margin-bottom: 20px; background-image: linear-gradient(310deg,#141727,#3a416f);color: white;">
+                    style="padding: 20px 0; margin-bottom: 20px; background-color: #2D3357;  background-image: linear-gradient(310deg,#141727,#3a416f); color: white;">
                     <div style="text-align: center;">
-                        <img src="https://cdn-cbigold.ams3.digitaloceanspaces.com/public/email/CDC3837FF1DF9ADC1FF459D0278FD.png" style="height: 50px;" alt="" />
+                        <img src="https://cdn-cbigold.ams3.digitaloceanspaces.com/public/email/CDC3837FF1DF9ADC1FF459D0278FD.png" height="50px" alt="" />
                     </div>
                     <!-- Email topic -->
                     <p style="line-height: 2; text-align: center;">
-                        Hi ${first_name}, </br />
+                        Hi ${first_name}, <br />
                     </p>
                     <h2 style="text-align: center;">Verification Code</h2>
                 </div>
@@ -313,13 +313,13 @@ const loginNotify = data => {
                 max-width: 600px; 
                 margin: 0 auto;
                 line-height: 1.5;">
-            <div style="padding: 20px 0; margin-bottom: 20px; background-image: linear-gradient(310deg,#141727,#3a416f);color: white;">
+            <div style="padding: 20px 0; margin-bottom: 20px; background-color: #2D3357;  background-image: linear-gradient(310deg,#141727,#3a416f); color: white;">
                 <div style="text-align: center;">
-                    <img src="https://cdn-cbigold.ams3.digitaloceanspaces.com/public/email/CDC3837FF1DF9ADC1FF459D0278FD.png" style="height: 50px;" alt="" />
+                    <img src="https://cdn-cbigold.ams3.digitaloceanspaces.com/public/email/CDC3837FF1DF9ADC1FF459D0278FD.png" height="50px" alt="" />
                 </div>
                 <!-- Email topic -->
                 <p style="line-height: 2; text-align: center;">
-                    Hi ${first_name}, </br />
+                    Hi ${first_name}, <br />
                 </p>
                 <h2 style="text-align: center;">Login Attempt</h2>
             </div>
@@ -404,13 +404,13 @@ const confirmEmail = data => {
                 max-width: 600px; 
                 margin: 0 auto;
                 line-height: 1.5;">
-            <div style="padding: 20px 0; margin-bottom: 20px; background-image: linear-gradient(310deg,#141727,#3a416f); color: white; ">
+            <div style="padding: 20px 0; margin-bottom: 20px; background-color: #2D3357;  background-image: linear-gradient(310deg,#141727,#3a416f);  color: white; ">
                 <div style="text-align: center;">
-                    <img src="https://cdn-cbigold.ams3.digitaloceanspaces.com/public/email/CDC3837FF1DF9ADC1FF459D0278FD.png" style="height: 50px;" alt="" />
+                    <img src="https://cdn-cbigold.ams3.digitaloceanspaces.com/public/email/CDC3837FF1DF9ADC1FF459D0278FD.png" height="50px" alt="" />
                 </div>
                 <!-- Email topic -->
                 <p style="line-height: 2; text-align: center;">
-                    Hi ${first_name}, </br />
+                    Hi ${first_name}, <br />
                 </p>
                 <h2 style="text-align: center;">Account Verification</h2>
             </div>
@@ -475,13 +475,13 @@ const notifyReferrer = data => {
                 max-width: 600px; 
                 margin: 0 auto;
                 line-height: 1.5;">
-            <div style="padding: 20px 0; margin-bottom: 20px; background-image: linear-gradient(310deg,#141727,#3a416f);color: white;">
+            <div style="padding: 20px 0; margin-bottom: 20px; background-color: #2D3357;  background-image: linear-gradient(310deg,#141727,#3a416f); color: white;">
                 <div style="text-align: center;">
-                    <img src="https://cdn-cbigold.ams3.digitaloceanspaces.com/public/email/CDC3837FF1DF9ADC1FF459D0278FD.png" style="height: 50px;" alt="" />
+                    <img src="https://cdn-cbigold.ams3.digitaloceanspaces.com/public/email/CDC3837FF1DF9ADC1FF459D0278FD.png" height="50px" alt="" />
                 </div>
                 <!-- Email topic -->
                 <p style="line-height: 2; text-align: center;">
-                    Hi ${first_name}, </br />
+                    Hi ${first_name}, <br />
                 </p>
                 <h2 style="text-align: center;">New Referral</h2>
             </div>

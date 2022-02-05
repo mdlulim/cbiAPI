@@ -4,9 +4,13 @@ const { Country } = require('../models/Country');
 const { Group } = require('../models/Group');
 const { User }  = require('../models/User');
 const { UserDevice }  = require('../models/UserDevice');
+const { WealthCreator }  = require('../models/WealthCreator');
 
 User.belongsTo(Group, { foreignKey: 'group_id', targetKey: 'id' });
 User.belongsTo(Country, { foreignKey: 'nationality', targetKey: 'iso' });
+
+WealthCreator.belongsTo(User, { foreignKey: 'user_id', targetKey: 'id' });
+User.hasOne(WealthCreator, { foreignKey: 'user_id', targetKey: 'id' });
 
 async function create(data) {
     try {
@@ -60,7 +64,8 @@ async function show(id) {
             where: { id },
             include: [
                 { model: Group }, 
-                { model: Country }
+                { model: Country },
+                { model: WealthCreator },
             ],
         });
         return user;
