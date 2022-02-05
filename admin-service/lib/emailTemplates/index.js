@@ -80,10 +80,10 @@ const kycNotification = data => {
                 <!-- Email body -->
                 <div >
                     <p>
-                        ${(level+'' ==='-1')? 'You have not qualified for any KYC Level<br/>' : 'You have qualified for KYC level <strong>'+level+'<strong>.<br/>'}
-                        ${(level+'' !=='3')? 'Review the comments and re-upload:': ''}
+                        ${(level + '' === '-1') ? 'You have not qualified for any KYC Level<br/>' : 'You have qualified for KYC level <strong>' + level + '<strong>.<br/>'}
+                        ${(level + '' !== '3') ? 'Review the comments and re-upload:' : ''}
                     <p>
-                    ${(level+'' !=='3')? remaining: ''}
+                    ${(level + '' !== '3') ? remaining : ''}
                     <p style="padding-top:50px"><strong>Cheers</strong>,<br />CBI Support</p>
                 </div>
     
@@ -102,8 +102,8 @@ const kycNotification = data => {
     `;
     const text = `
         Hi ${first_name}, 
-        ${(level+'' ==='-1')? 'You have not qualified for any KYC Level' : 'You have qualified for KYC level <strong>'+level+'<strong>.<br/>'}
-        ${(level+'' !=='3')? 'Please re-upload the rejected documents': ''} 
+        ${(level + '' === '-1') ? 'You have not qualified for any KYC Level' : 'You have qualified for KYC level <strong>' + level + '<strong>.<br/>'}
+        ${(level + '' !== '3') ? 'Please re-upload the rejected documents' : ''} 
         Cheers, CBI Support
     `;
     return {
@@ -139,7 +139,7 @@ const updatingUserStatus = data => {
                 margin: 0 auto;
                 line-height: 1.5;">
             <div style="padding: 20px 0; margin-bottom: 20px; background-color: #2D3357;  background-image: linear-gradient(310deg,#141727,#3a416f); color: white; ">
-                <div style="display: flex; flex-direction: column; align-items: center;">
+                <div style="align-items: center; text-align: center;">
                     <img src="https://cdn-cbigold.ams3.digitaloceanspaces.com/public/email/CDC3837FF1DF9ADC1FF459D0278FD.png" height="50px" alt="">
                 </div>
                 <!-- Email topic -->
@@ -152,7 +152,7 @@ const updatingUserStatus = data => {
                 <!-- Email body -->
                 <div >
                     <p>
-                        Your CBI membership status has been ${status === 'Active'? '<b>Activated</b>': status === 'Blocked' ? '<b>Blocked</b>': 'Archived'}<br/>
+                        Your CBI membership status has been ${status === 'Active' ? '<b>Activated</b>' : status === 'Blocked' ? '<b>Blocked</b>' : 'Archived'}<br/>
                     </p>
                  
                     <p>If this request isn't authorized by you, <a href="mailto:support@cbiglobal.io" style="text-decoration: none;">contact support</a></p>
@@ -208,7 +208,7 @@ const approveMembership = data => {
                 margin: 0 auto;
                 line-height: 1.5;">
             <div style="padding: 20px 0; margin-bottom: 20px; background-color: #2D3357;  background-image: linear-gradient(310deg,#141727,#3a416f); color: white; ">
-                <div style="display: flex; flex-direction: column; align-items: center;">
+                <div style="align-items: center; text-align: center;">
                     <img src="https://cdn-cbigold.ams3.digitaloceanspaces.com/public/email/CDC3837FF1DF9ADC1FF459D0278FD.png" height="50px" alt="">
                 </div>
                 <!-- Email topic -->
@@ -282,7 +282,7 @@ const memberCommissionFee = data => {
                 margin: 0 auto;
                 line-height: 1.5;">
             <div style="padding: 20px 0; margin-bottom: 20px; background-color: #2D3357;  background-image: linear-gradient(310deg,#141727,#3a416f); color: white; ">
-                <div style="display: flex; flex-direction: column; align-items: center;">
+                <div style="align-items: center; text-align: center;">
                     <img src="https://cdn-cbigold.ams3.digitaloceanspaces.com/public/email/CDC3837FF1DF9ADC1FF459D0278FD.png" height="50px" alt="">
                 </div>
                 <!-- Email topic -->
@@ -335,6 +335,7 @@ const transactionNotification = data => {
         currency_code,
         subtype,
         reference,
+        status
     } = data;
 
     const html = `
@@ -359,7 +360,7 @@ const transactionNotification = data => {
                 margin: 0 auto;
                 line-height: 1.5;">
             <div style="padding: 20px 0; margin-bottom: 20px; background-color: #2D3357;  background-image: linear-gradient(310deg,#141727,#3a416f); color: white; ">
-                <div style="display: flex; flex-direction: column; align-items: center;">
+                <div style="align-items: center; text-align: center;">
                     <img src="https://cdn-cbigold.ams3.digitaloceanspaces.com/public/email/CDC3837FF1DF9ADC1FF459D0278FD.png" height="50px" alt="">
                 </div>
                 <!-- Email topic -->
@@ -371,6 +372,8 @@ const transactionNotification = data => {
             <div style="margin: 0 5%; border-bottom: 1px solid grey;">
                 <!-- Email body -->
                 <div >
+                ${status === 'Completed' ?
+            `
                     <p>
                         Your CBI wallet account has been ${subtype} with ${amount} ${currency_code} <br/>
                     </p>
@@ -382,6 +385,15 @@ const transactionNotification = data => {
                             </tr>
                         </tbody>
                     </table>
+                    `
+            : (status === 'Rejected') ?
+                `
+                    <p>
+                        Your CBI buy request of ${amount} ${currency_code} has been rejected <br/>
+                    </p>
+                    `: ''
+        }
+                    
                     <p>If this request isn't authorized by you, <a href="mailto:support@cbiglobal.io" style="text-decoration: none;">contact support</a></p>
                     <p style="padding-top:50px"><strong>Cheers</strong>,<br />CBI Support</p>
                 </div>
@@ -430,7 +442,7 @@ const resetPassword = data => {
                     line-height: 1.5;">
                 <div style="margin: 0 5%;">
                     <div style="padding: 20px 0; margin-bottom: 20px; background-color: #2D3357;  background-image: linear-gradient(310deg,#141727,#3a416f);  color: white; ">
-                        <div style="display: flex; flex-direction: column; align-items: center;">
+                        <div style="align-items: center; text-align: center;">
                             <img src="https://cdn-cbigold.ams3.digitaloceanspaces.com/public/email/CDC3837FF1DF9ADC1FF459D0278FD.png" height="50px" alt="">
                         </div>
                         <!-- Email topic -->
