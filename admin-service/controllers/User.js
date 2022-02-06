@@ -408,7 +408,7 @@ async function updateTransaction(req, res) {
                     currency_code: data.data.currency_code,
                     sender: `${req.user.first_name} ${req.user.last_name} (${req.user.referral_id})`,
                 }).then((response) => {
-                    console.log('')
+                    console.log(response)
                 });
 
                 await activityService.addActivity({
