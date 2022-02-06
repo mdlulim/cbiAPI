@@ -167,7 +167,7 @@ async function find(id, return_object = true) {
     }
 }
 
-async function show(permakey) {
+async function show(permakey, return_object = true) {
     try {
         const product = await Product.findOne({
             where: { permakey },
@@ -179,10 +179,13 @@ async function show(permakey) {
                 include: [{ model: ProductCategory }],
             }]
         });
-        return {
-            success: true,
-            data: product,
-        };
+        if (return_object) {
+            return {
+                success: true,
+                data: product,
+            };
+        }
+        return product;
     } catch (error) {
         console.error(error.message || null);
         throw new Error('Could not process your request');
@@ -226,7 +229,7 @@ async function findByCode(product_code) {
 
 async function subscribe(data) {
     try {
-        const { entity, user_id, code, value, product_id, transaction_id, end_date } = data;
+        const { entity, user_id, code, value, product_id, transaction_id, end_date, start_date } = data;
         const where = { code, entity, user_id };
         let memberProduct = await MemberProduct.findOne({ where });
         if (memberProduct && memberProduct.id) {
@@ -241,7 +244,7 @@ async function subscribe(data) {
                 value,
                 entity,
                 user_id,
-                start_date: sequelize.fn('NOW'),
+                start_date: start_date || sequelize.fn('NOW'),
             });
         }
         return MemberProductLine.create({
@@ -250,6 +253,7 @@ async function subscribe(data) {
             unit: code,
             transaction_id,
             end_date: end_date || null,
+            start_date: start_date || null,
             member_product_id: memberProduct.id,
         });
     } catch (error) {
