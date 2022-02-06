@@ -1224,6 +1224,18 @@ async function passwordResetConfirm(req, res) {
         const salt = bcrypt.genSaltSync();
         const password = bcrypt.hashSync(password1, salt);
 
+        // Validation: enforce a Password History to 24
+        const samePassword = await passwordService.show({
+            user_id: user.id,
+            password: password1,
+        });
+        if (samePassword && samePassword.id) {
+            return res.send({
+                success: false,
+                message: 'You have already used that password, try another'
+            });
+        }
+
         await userService.update(user.id, {
             salt,
             password,
