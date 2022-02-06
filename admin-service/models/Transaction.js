@@ -29,6 +29,10 @@ const Transaction = sequelize.define('transaction', {
     collection_id: Sequelize.UUID,
     txid: Sequelize.STRING,
     auto_id: Sequelize.INTEGER,
+    rejection_reason: Sequelize.STRING,
+    rejected_by: Sequelize.UUID,
+    approval_reason: Sequelize.STRING,
+    approved_by: Sequelize.UUID,
 }, {
     timestamps: false
 });

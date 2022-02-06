@@ -412,21 +412,27 @@ async function transactions(user_id) {
     }
 }
 
-async function updateTransaction(id, data) {
+async function updateTransaction(id, data, admin_user_id) {
     try {
-        const myData = { status: data.status }
+        let myData = {}
         const transaction = data.transaction;
         const user_id = transaction.user_id;
-        const user = await User.findOne({ where: { id: transaction.user_id } });
+        const user =  await User.findOne({where : {id: transaction.user_id}});
 
-        const fee = await Fee.findOne({ where: { subtype: transaction.subtype.charAt(0).toUpperCase() + transaction.subtype.slice(1), group_id: user.dataValues.group_id } });
-        if (!fee.value) {
-            return { success: false, message: 'Transaction fee is not configured!' }
-        }
+        const fee =  await Fee.findOne({where : {subtype: transaction.subtype.charAt(0).toUpperCase() + transaction.subtype.slice(1), group_id: user.dataValues.group_id} });
+       
+        if(!fee.value){
+           return {success: false, message: 'Transaction fee is not configured!'}
+       }
 
-        if (data.status === 'Completed') {
-            const mainAccount = await Account.findOne({ where: { id: '3cf7d2c0-80e1-4264-9f2f-6487fd1680c2' } });
-            const userWallet = await Account.findOne({
+        if(data.status === 'Completed'){
+            myData = {
+                status: data.status,
+                approval_reason: data.reason,
+                approved_by: admin_user_id
+            }
+            const mainAccount =  await Account.findOne({where : {id: '3cf7d2c0-80e1-4264-9f2f-6487fd1680c2'}});
+            const userWallet =  await Account.findOne({
                 where: { user_id },
             });
             let isBalance = isNaN(userWallet.available_balance);
@@ -457,8 +463,8 @@ async function updateTransaction(id, data) {
                 let accountCondition = { id: userWallet.id }
                 await Account.update(creditUser, { where: accountCondition })
 
-            } else if (transaction.subtype.toLowerCase() === "withdrawal") {
-                //console.log("subtype: "+transaction.subtype)
+            }else if(transaction.subtype.toLowerCase() === "withdraw"){
+                console.log("subtype: "+transaction.subtype)
                 let credit = {
                     available_balance: parseFloat(mainAccount.available_balance) + parseFloat(fee.value),
                     balance: parseFloat(mainAccount.balance) + parseFloat(fee.value)
@@ -473,11 +479,19 @@ async function updateTransaction(id, data) {
                 let accountCondition = { id: userWallet.id }
                 await Account.update(creditUser, { where: accountCondition })
             }
-
+            await Transaction.update(myData, {
+                where: { id }
+            });
+        }else{
+            myData = {
+                status: data.status,
+                rejection_reason: data.reason,
+                rejected_by: admin_user_id
+            }
+            await Transaction.update(myData, {
+                where: { id }
+            });
         }
-        await Transaction.update(myData, {
-            where: { id }
-        });
 
         return {
             success: true,
@@ -501,26 +515,15 @@ async function updateTransaction(id, data) {
     }
 }
 
-// async function debitWallet(id, data) {
-//     try {
-//         await Transaction.update(data, {
-//             where: { id }
-//         });
-//         return { success: true };
-//     } catch (error) {
-//         console.error(error.message || null);
-//         throw new Error('Could not process your request');
-//     }
-// }
-
-async function approveDeposit(id, data) {
+async function approveDeposit(id, data, admin_user_id) {
 
     //console.log(commissionData)
     try {
         const setting = await Setting.findOne({ where: { key: 'membership_fee' } });
         let sponsorBalance = null;
         let userBalance = null;
-        if (parseFloat(data.transaction.amount) < parseFloat(setting.dataValues.value)) {
+        let myData = {}
+        if(parseFloat(data.transaction.amount) < parseFloat(setting.dataValues.value)){
             return { success: false, message: "Insufficient funds" };
         }
 
@@ -573,8 +576,12 @@ async function approveDeposit(id, data) {
             userBalance = parseFloat(userAccount.dataValues.available_balance) + userTopUp;
 
             const user_id = user.dataValues.id;
-            let status = { status: data.status }
-            await Transaction.update(status, { where: { id } });
+            myData = {
+                status: data.status,
+                approval_reason: data.reason,
+                approved_by: admin_user_id
+            }
+            await Transaction.update(myData, { where: { id } });
 
             await Account.update(companyData, { where: companyCondition });
 
@@ -655,14 +662,17 @@ async function approveDeposit(id, data) {
             await Commission.create(commissionData);
             return {
                 success: true,
-                message: "Account was successfully updated",
-                data: { user: dataUser, sponsor: dataSponsor, commission: sponsorCommissionData, main: mainCommission }
-            };
-        } else {
-            let status = { status: data.status }
-            await Transaction.update(status, { where: { id } });
+                message: "Account was successfully updated", 
+                data: {user: dataUser, sponsor: dataSponsor, commission: sponsorCommissionData, main: mainCommission } };
+    }else{
+        //let status = {status: data.status}
+        myData = {
+            status: data.status,
+            approval_reason: data.reason,
+            approved_by: admin_user_id
         }
-
+        await Transaction.update(myData, { where: { id } });
+    }
 
     } catch (error) {
         console.error(error || null);

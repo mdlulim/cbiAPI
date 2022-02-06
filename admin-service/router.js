@@ -184,20 +184,22 @@ module.exports.set = app => {
      * 
      * Retrieve a company’s user kyc.
      */
-    app.get('/users/:id/kyc', kycController.show);
+    app.get('/users/:id/kyc', authMiddleware.checkAuth, kycController.show);
 
     /**
      * Update User's KYC
      * 
      * Update a company’s user kyc.
      */
-    app.put('/kyc', authMiddleware.checkAuth, kycController.update);
+    app.put('/kyc', authMiddleware.checkAuth, authMiddleware.checkAuth, kycController.update);
 
     app.get('/kyc-level/:id', authMiddleware.checkAuth, kycController.kyc_level);
 
-    //gets all kyc applications
-    app.get('/all-kyc/', authMiddleware.checkAuth, kycController.show_all);
+    //gets all pening kyc applications
+    app.get('/kyc-pending/', authMiddleware.checkAuth, kycController.pending);
 
+    //gets all kyc applications
+    app.get('/kyc-all/', authMiddleware.checkAuth, kycController.all);
 
 
     /**
@@ -250,6 +252,9 @@ module.exports.set = app => {
     app.post('/products/subcategories/:id/calculations', authMiddleware.checkAuth, productController.captureCalculations);
     app.post('/products/subcategories/:id/payouts', authMiddleware.checkAuth, productController.processPayouts);
 
+    app.get('/products/profits', authMiddleware.checkAuth, productController.getProductProfits);
+     app.get('/products/profits/:id', authMiddleware.checkAuth, productController.getProfitsPerProduct);
+    
     /**
      * Get Product Category
      * 
@@ -587,6 +592,7 @@ module.exports.set = app => {
 
     // Transfer funds Admin side 
     app.post("/transfer", authMiddleware.checkAuth, transferController.transfer);
+    app.get("/transfer-history", authMiddleware.checkAuth, transferController.history);
 
     //Broadcast messages
     app.get('/broadcast', authMiddleware.checkAuth, broadcastController.index);
