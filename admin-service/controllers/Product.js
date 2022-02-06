@@ -369,6 +369,12 @@ async function fxPayouts(req, res, productSubcategory) {
             });
 
             return async.map(fraxionHolders, async (member) => {
+                // validate commission
+                const comm = await commissionService.commissionPaid(member.id);
+                
+                // do not pay a member that has already been paid for the current date
+                if (comm && comm.id) return false;
+
                 /**
                  * START: Process Fraxion Payout
                  */
