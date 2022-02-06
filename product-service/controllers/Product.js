@@ -80,8 +80,6 @@ async function subscribe(req, res){
             });
         }
 
-        console.log(product.product_subcategory.indicators);
-
         const { product_subcategory } = product;
         const { code, indicators } = product_subcategory;
         const { commission_structure, educator_percentage, educator_fee } = indicators;
@@ -339,9 +337,12 @@ async function subscribe(req, res){
                     currency: product.currency,
                     status: 'Completed',
                 });
+                
+                // retrieve units from code
+                const units = parseInt(product.product_code.match(/\d+/).join(''));
 
                 // subscribe (add/update in user product table)
-                data.value = product.price;
+                data.value = units;
                 data.transaction_id = transaction.id;
                 data.start_date = moment().add(10, 'days').format('YYYY-MM-DD');
                 var userProduct = await productService.subscribe(data);
@@ -382,7 +383,6 @@ async function subscribe(req, res){
                  * - This is payable at time of initial buying CBI 5.00 per Fraxion
                  *   NB: Percentage is configurable
                  */
-                const units = parseInt(product.product_code.match(/\d+/).join('')); // retrieve units from code
                 var payoutAmount = parseFloat(educator_fee) * units;
                 return commissionPayout(res, {
                     user,
