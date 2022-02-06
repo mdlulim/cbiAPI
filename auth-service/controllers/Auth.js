@@ -1180,7 +1180,7 @@ async function passwordReset(req, res) {
 
         return res.send({
             success: true,
-            message: 'Password was succesffully sent via email'
+            message: 'Password was successfully sent via email'
         });
     } catch (error) {
         console.log('error', error.message)
