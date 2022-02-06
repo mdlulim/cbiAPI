@@ -70,6 +70,18 @@ async function subscribe(req, res){
 
         // get product details
         const product = await productService.findByCode(req.body.product_code);
+
+        // validate product
+        if (!product) {
+            return res.status(403)
+            .send({
+                success: false,
+                message: 'Failed to process request.'
+            });
+        }
+
+        console.log(product.product_subcategory.indicators);
+
         const { product_subcategory } = product;
         const { code, indicators } = product_subcategory;
         const { commission_structure, educator_percentage, educator_fee } = indicators;
@@ -81,15 +93,6 @@ async function subscribe(req, res){
         const isWC    = config.products.WC === code;
         const isFX    = config.products.FX === code;
         const isCBIx7 = config.products.CBIx7 === code;
-
-        // validate product
-        if (!product) {
-            return res.status(403)
-            .send({
-                success: false,
-                message: 'Failed to process request.'
-            });
-        }
 
         const data = {
             code,
