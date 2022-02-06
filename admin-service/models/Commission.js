@@ -15,6 +15,7 @@ const Commission = sequelize.define('commission', {
     archived: Sequelize.BOOLEAN,
     currency_code: Sequelize.STRING,
     commission_date: Sequelize.DATE,
+	metadata: Sequelize.JSONB,
     created: Sequelize.DATE,
     updated: Sequelize.DATE,
 }, {

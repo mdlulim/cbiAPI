@@ -7,15 +7,15 @@ const { CryptoAccount } = require('../models/CryptoAccount');
 const { Group } = require('../models/Group');
 const { User } = require('../models/User');
 const { Product } = require('../models/Product');
-const { UserProduct }  = require('../models/UserProduct');
-const { Transaction }  = require('../models/Transaction');
-const { Account }  = require('../models/Account');
-const { Fee }  = require('../models/Fee');
-const { Commission }  = require('../models/Commission');
-const { Setting }  = require('../models/Setting');
+const { UserProduct } = require('../models/UserProduct');
+const { Transaction } = require('../models/Transaction');
+const { Account } = require('../models/Account');
+const { Fee } = require('../models/Fee');
+const { Commission } = require('../models/Commission');
+const { Setting } = require('../models/Setting');
 const { KYC } = require('../models/KYC');
 
- 
+
 Address.belongsTo(User, { foreignKey: 'user_id', targetKey: 'id' });
 EmailAddress.belongsTo(User, { foreignKey: 'user_id', targetKey: 'id' });
 MobileNumber.belongsTo(User, { foreignKey: 'user_id', targetKey: 'id' });
@@ -25,7 +25,7 @@ Transaction.belongsTo(User, { foreignKey: 'user_id', targetKey: 'id' });
 User.belongsTo(Group, { foreignKey: 'group_id', targetKey: 'id' });
 Product.belongsTo(UserProduct, { foreignKey: 'id', targetKey: 'product_id' });
 User.belongsTo(UserProduct, { foreignKey: 'id', targetKey: 'user_id' });
-User.hasMany(KYC, {foreignKey: 'user_id', targetKey: 'id'});
+User.hasMany(KYC, { foreignKey: 'user_id', targetKey: 'id' });
 
 
 async function create(data) {
@@ -223,11 +223,11 @@ async function archive(id) {
         await User.update({
             status: 'Archived',
             archived: true,
-            deactivation_date:sequelize.fn('NOW'),
+            deactivation_date: sequelize.fn('NOW'),
             updated: sequelize.fn('NOW'),
         }, { where: { id } });
-        const user =  await User.findOne({where : {id}});
-        return { success: true, message: "Memmber was successfully updated", user: user};
+        const user = await User.findOne({ where: { id } });
+        return { success: true, message: "Memmber was successfully updated", user: user };
     } catch (error) {
         console.error(error.message || null);
         throw new Error('Could not process your request');
@@ -250,8 +250,8 @@ async function block(id) {
             blocked: true,
             updated: sequelize.fn('NOW'),
         }, { where: { id } });
-        const user =  await User.findOne({where : {id}});
-        return { success: true, message: "Memmber was successfully updated", user: user};
+        const user = await User.findOne({ where: { id } });
+        return { success: true, message: "Memmber was successfully updated", user: user };
     } catch (error) {
         console.error(error.message || null);
         throw new Error('Could not process your request');
@@ -274,8 +274,8 @@ async function unarchive(id) {
             archived: false,
             updated: sequelize.fn('NOW'),
         }, { where: { id } });
-        const user =  await User.findOne({where : {id}});
-        return { success: true, message: "Memmber was successfully updated", user: user};
+        const user = await User.findOne({ where: { id } });
+        return { success: true, message: "Memmber was successfully updated", user: user };
     } catch (error) {
         console.error(error.message || null);
         throw new Error('Could not process your request');
@@ -300,8 +300,8 @@ async function unblock(id) {
             updated: sequelize.fn('NOW'),
         }, { where: { id } });
 
-        const user =  await User.findOne({where : {id}});
-        return { success: true, message: "Memmber was successfully updated", user: user};
+        const user = await User.findOne({ where: { id } });
+        return { success: true, message: "Memmber was successfully updated", user: user };
     } catch (error) {
         console.error(error.message || null);
         throw new Error('Could not process your request');
@@ -414,72 +414,73 @@ async function transactions(user_id) {
 
 async function updateTransaction(id, data) {
     try {
-        const myData = {status: data.status}
+        const myData = { status: data.status }
         const transaction = data.transaction;
         const user_id = transaction.user_id;
-        const user =  await User.findOne({where : {id: transaction.user_id}});
+        const user = await User.findOne({ where: { id: transaction.user_id } });
 
-        const fee =  await Fee.findOne({where : {subtype: transaction.subtype.charAt(0).toUpperCase() + transaction.subtype.slice(1), group_id: user.dataValues.group_id} });
-       if(!fee.value){
-           return {success: false, message: 'Transaction fee is not configured!'}
-       }
-      
-        if(data.status === 'Completed'){
-            const mainAccount =  await Account.findOne({where : {id: '3cf7d2c0-80e1-4264-9f2f-6487fd1680c2'}});
-            const userWallet =  await Account.findOne({
+        const fee = await Fee.findOne({ where: { subtype: transaction.subtype.charAt(0).toUpperCase() + transaction.subtype.slice(1), group_id: user.dataValues.group_id } });
+        if (!fee.value) {
+            return { success: false, message: 'Transaction fee is not configured!' }
+        }
+
+        if (data.status === 'Completed') {
+            const mainAccount = await Account.findOne({ where: { id: '3cf7d2c0-80e1-4264-9f2f-6487fd1680c2' } });
+            const userWallet = await Account.findOne({
                 where: { user_id },
             });
             let isBalance = isNaN(userWallet.available_balance);
             let available_balance = userWallet.available_balance;
-            if(isBalance){
+            if (isBalance) {
                 available_balance = 0;
             }
 
             //9001127.1990
             //console.log("======================================Fees==============================")
 
-           // return user
-           // console.log("status: "+transaction.subtype.toLowerCase())
-            if(transaction.subtype.toLowerCase() === 'deposit'){
+            // return user
+            // console.log("status: "+transaction.subtype.toLowerCase())
+            if (transaction.subtype.toLowerCase() === 'deposit') {
                 //console.log("subtype: "+transaction.subtype)
                 let credit = {
-                    available_balance: parseFloat(mainAccount.available_balance)+parseFloat(fee.value),
-                    balance: parseFloat(mainAccount.balance)+parseFloat(fee.value)
+                    available_balance: parseFloat(mainAccount.available_balance) + parseFloat(fee.value),
+                    balance: parseFloat(mainAccount.balance) + parseFloat(fee.value)
                 };
-                let mainAccountCondition = {id: mainAccount.id}
-                await Account.update( credit, {where: mainAccountCondition})
+                let mainAccountCondition = { id: mainAccount.id }
+                await Account.update(credit, { where: mainAccountCondition })
 
-                
+
                 let creditUser = {
-                    available_balance: parseFloat(available_balance)+parseFloat(transaction.amount)-parseFloat(fee.value),
-                    balance: parseFloat(available_balance)+parseFloat(transaction.amount)-parseFloat(fee.value)
+                    available_balance: parseFloat(available_balance) + parseFloat(transaction.amount) - parseFloat(fee.value),
+                    balance: parseFloat(available_balance) + parseFloat(transaction.amount) - parseFloat(fee.value)
                 };
-                let accountCondition = {id: userWallet.id}
-                await Account.update( creditUser,{where: accountCondition})
+                let accountCondition = { id: userWallet.id }
+                await Account.update(creditUser, { where: accountCondition })
 
-            }else if(transaction.subtype.toLowerCase() === "withdrawal"){
+            } else if (transaction.subtype.toLowerCase() === "withdrawal") {
                 //console.log("subtype: "+transaction.subtype)
                 let credit = {
-                    available_balance: parseFloat(mainAccount.available_balance)+parseFloat(fee.value),
-                    balance: parseFloat(mainAccount.balance)+parseFloat(fee.value)
+                    available_balance: parseFloat(mainAccount.available_balance) + parseFloat(fee.value),
+                    balance: parseFloat(mainAccount.balance) + parseFloat(fee.value)
                 };
-                let mainAccountCondition = {id: mainAccount.id}
-                await Account.update( credit, {where: mainAccountCondition})
+                let mainAccountCondition = { id: mainAccount.id }
+                await Account.update(credit, { where: mainAccountCondition })
 
                 let creditUser = {
-                    available_balance: parseFloat(available_balance)+parseFloat(transaction.amount)-parseFloat(fee.value),
-                    balance: parseFloat(available_balance)+parseFloat(transaction.amount)-parseFloat(fee.value)
+                    available_balance: parseFloat(available_balance) + parseFloat(transaction.amount) - parseFloat(fee.value),
+                    balance: parseFloat(available_balance) + parseFloat(transaction.amount) - parseFloat(fee.value)
                 };
-                let accountCondition = {id: userWallet.id}
-                await Account.update( creditUser,{where: accountCondition})
+                let accountCondition = { id: userWallet.id }
+                await Account.update(creditUser, { where: accountCondition })
             }
-           
+
         }
         await Transaction.update(myData, {
             where: { id }
         });
 
-        return { success: true, 
+        return {
+            success: true,
             message: 'Transaction was updated successfully',
             data: {
                 status: data.status,
@@ -491,7 +492,8 @@ async function updateTransaction(id, data) {
                 fee: fee.dataValues.value,
                 reference: data.transaction.reference,
                 currency_code: data.transaction.currency.code,
-        } };
+            }
+        };
     } catch (error) {
         console.log(error)
         console.error(error.message || null);
@@ -515,70 +517,70 @@ async function approveDeposit(id, data) {
 
     //console.log(commissionData)
     try {
-        const setting =  await Setting.findOne({where : {key: 'membership_fee'}});
+        const setting = await Setting.findOne({ where: { key: 'membership_fee' } });
         let sponsorBalance = null;
         let userBalance = null;
-        if(parseFloat(data.transaction.amount) < parseFloat(setting.dataValues.value)){
+        if (parseFloat(data.transaction.amount) < parseFloat(setting.dataValues.value)) {
             return { success: false, message: "Insufficient funds" };
         }
 
-        const commission =  await Setting.findAll({category: 'commission'})
-        const userFee               = commission.filter(option => option.key === 'user_fee')[0];
+        const commission = await Setting.findAll({ category: 'commission' })
+        const userFee = commission.filter(option => option.key === 'user_fee')[0];
         const mainAccountCommission = commission.filter(option => option.key === 'main_account_commission')[0];
-        const sponsorCommission     = commission.filter(option => option.key === 'referral_commission')[0];
+        const sponsorCommission = commission.filter(option => option.key === 'referral_commission')[0];
 
-        if(!userFee.value){
+        if (!userFee.value) {
             return { success: false, message: "Registration user fee is not configered on the commission structure" };
         }
 
-        if(!mainAccountCommission.value){
+        if (!mainAccountCommission.value) {
             return { success: false, message: "Commission for CBI main account is not configered in the commission structure" };
         }
 
-        if(!sponsorCommission.value){
+        if (!sponsorCommission.value) {
             return { success: false, message: "Commission for sponsor is not configered in the commission structure" };
         }
 
 
-        if(data.status === 'Completed'){
-            const user =  await User.findOne({where : {id: data.transaction.user_id}});
-            const sponsor =  await User.findOne({where : {id: user.dataValues.sponsor}});
-        //console.log(setting)
-            const mainAccount =  await Account.findOne({where : {id: '3cf7d2c0-80e1-4264-9f2f-6487fd1680c2'}});
-            const userAccount =  await Account.findOne({where : {user_id: user.dataValues.id}});
-            const sponsorAccount =  await Account.findOne({where : {user_id: sponsor.dataValues.id}});
+        if (data.status === 'Completed') {
+            const user = await User.findOne({ where: { id: data.transaction.user_id } });
+            const sponsor = await User.findOne({ where: { id: user.dataValues.sponsor } });
+            //console.log(setting)
+            const mainAccount = await Account.findOne({ where: { id: '3cf7d2c0-80e1-4264-9f2f-6487fd1680c2' } });
+            const userAccount = await Account.findOne({ where: { user_id: user.dataValues.id } });
+            const sponsorAccount = await Account.findOne({ where: { user_id: sponsor.dataValues.id } });
 
-            const userTopUp = parseFloat(data.transaction.amount) - parseFloat(setting.dataValues.value)+(parseFloat(setting.dataValues.value)* parseFloat(userFee.value) / 100);
+            const userTopUp = parseFloat(data.transaction.amount) - parseFloat(setting.dataValues.value) + (parseFloat(setting.dataValues.value) * parseFloat(userFee.value) / 100);
 
-            let companyCondition    = {id: mainAccount.dataValues.id};
-            let companyData         = {
-                available_balance: parseFloat(mainAccount.dataValues.available_balance)+(parseFloat(setting.dataValues.value)* parseFloat(mainAccountCommission.value) / 100),
-                balance: parseFloat(mainAccount.dataValues.balance)+(parseFloat(setting.dataValues.value)* parseFloat(mainAccountCommission.value) / 100),
+            let companyCondition = { id: mainAccount.dataValues.id };
+            let companyData = {
+                available_balance: parseFloat(mainAccount.dataValues.available_balance) + (parseFloat(setting.dataValues.value) * parseFloat(mainAccountCommission.value) / 100),
+                balance: parseFloat(mainAccount.dataValues.balance) + (parseFloat(setting.dataValues.value) * parseFloat(mainAccountCommission.value) / 100),
             };
 
-            let sponsorCondition    = {id: sponsorAccount.dataValues.id};
-            let sponsorData         = {
-                available_balance: parseFloat(sponsorAccount.dataValues.available_balance)+(parseFloat(setting.dataValues.value)* parseFloat(sponsorCommission.value) / 100),
-                balance: parseFloat(sponsorAccount.dataValues.balance)+(parseFloat(setting.dataValues.value)* parseFloat(sponsorCommission.value) / 100)
+            let sponsorCondition = { id: sponsorAccount.dataValues.id };
+            let sponsorData = {
+                available_balance: parseFloat(sponsorAccount.dataValues.available_balance) + (parseFloat(setting.dataValues.value) * parseFloat(sponsorCommission.value) / 100),
+                balance: parseFloat(sponsorAccount.dataValues.balance) + (parseFloat(setting.dataValues.value) * parseFloat(sponsorCommission.value) / 100)
             };
-            sponsorBalance          = parseFloat(sponsorAccount.dataValues.available_balance)+(parseFloat(setting.dataValues.value)* parseFloat(sponsorCommission.value) / 100);
+            sponsorBalance = parseFloat(sponsorAccount.dataValues.available_balance) + (parseFloat(setting.dataValues.value) * parseFloat(sponsorCommission.value) / 100);
 
-            let userCondition       = {id: userAccount.dataValues.id};
-            let userData            = {
-                available_balance: parseFloat(userAccount.dataValues.available_balance)+userTopUp,
-                balance: parseFloat(userAccount.dataValues.balance)+userTopUp
+            let userCondition = { id: userAccount.dataValues.id };
+            let userData = {
+                available_balance: parseFloat(userAccount.dataValues.available_balance) + userTopUp,
+                balance: parseFloat(userAccount.dataValues.balance) + userTopUp
             };
-            userBalance             = parseFloat(userAccount.dataValues.available_balance)+userTopUp;
+            userBalance = parseFloat(userAccount.dataValues.available_balance) + userTopUp;
 
             const user_id = user.dataValues.id;
-            let status = {status: data.status}
+            let status = { status: data.status }
             await Transaction.update(status, { where: { id } });
 
-            await Account.update(companyData,{ where : companyCondition });
+            await Account.update(companyData, { where: companyCondition });
 
-            await Account.update(sponsorData,{ where : sponsorCondition });
+            await Account.update(sponsorData, { where: sponsorCondition });
 
-            await Account.update(userData,{ where : userCondition });
+            await Account.update(userData, { where: userCondition });
 
             await User.update({
                 status: 'Active',
@@ -591,12 +593,12 @@ async function approveDeposit(id, data) {
                 user_id: sponsor.id,
                 tx_type: 'credit',
                 subtype: 'referral',
-                note:'CBI Referral Commission',
+                note: 'CBI Referral Commission',
                 status: 'Completed',
                 reference: 'Pay Referral',
-                amount: parseFloat(setting.value)* parseFloat(sponsorCommission.value) / 100,
+                amount: parseFloat(setting.value) * parseFloat(sponsorCommission.value) / 100,
                 fee: 0,
-                total_amount: parseFloat(setting.value)* parseFloat(sponsorCommission.value) / 100,
+                total_amount: parseFloat(setting.value) * parseFloat(sponsorCommission.value) / 100,
                 balance: 0,
                 currency: data.transaction.currency,
                 source_transaction: data.transaction.user_id
@@ -606,23 +608,23 @@ async function approveDeposit(id, data) {
                 user_id: sponsor.id,
                 tx_type: 'credit',
                 subtype: 'registration',
-                note:'CBI Registration Fee',
+                note: 'CBI Registration Fee',
                 status: 'Completed',
                 reference: 'Pay Main Account',
-                amount: parseFloat(setting.value)* parseFloat(mainAccountCommission.value) / 100,
+                amount: parseFloat(setting.value) * parseFloat(mainAccountCommission.value) / 100,
                 fee: 0,
-                total_amount: parseFloat(setting.value)* parseFloat(mainAccountCommission.value) / 100,
+                total_amount: parseFloat(setting.value) * parseFloat(mainAccountCommission.value) / 100,
                 balance: 0,
                 currency: data.transaction.currency,
                 source_transaction: data.transaction.user_id
             }
 
-            const commissionData ={
+            const commissionData = {
                 user_id: sponsor.id,
                 type: 'REFERRAL',
                 referral_id: user.id,
                 status: 'Paid',
-                amount: parseFloat(setting.value)* parseFloat(sponsorCommission.value) / 100,
+                amount: parseFloat(setting.value) * parseFloat(sponsorCommission.value) / 100,
                 currency_code: data.transaction.currency.code,
                 commission_date: Date.now()
             }
@@ -634,7 +636,7 @@ async function approveDeposit(id, data) {
                 subtype: data.transaction.subtype,
                 tx_type: data.transaction.tx_type,
                 reference: data.transaction.reference,
-                amount: parseFloat(setting.value)* parseFloat(userFee.value) / 100,
+                amount: parseFloat(setting.value) * parseFloat(userFee.value) / 100,
                 currency_code: data.transaction.currency.code,
                 available_balance: userBalance,
             }
@@ -645,22 +647,23 @@ async function approveDeposit(id, data) {
                 email: sponsor.email,
                 subtype: data.transaction.subtype,
                 tx_type: data.transaction.tx_type,
-                amount: parseFloat(setting.value)* parseFloat(sponsorCommission.value) / 100,
+                amount: parseFloat(setting.value) * parseFloat(sponsorCommission.value) / 100,
                 currency_code: data.transaction.currency.code,
                 available_balance: sponsorBalance
             }
 
             await Commission.create(commissionData);
-            return { 
+            return {
                 success: true,
-                message: "Account was successfully updated", 
-                data: {user: dataUser, sponsor: dataSponsor, commission: sponsorCommissionData, main: mainCommission } };
-    }else{
-        let status = {status: data.status}
-        await Transaction.update(status, { where: { id } });
-    }
+                message: "Account was successfully updated",
+                data: { user: dataUser, sponsor: dataSponsor, commission: sponsorCommissionData, main: mainCommission }
+            };
+        } else {
+            let status = { status: data.status }
+            await Transaction.update(status, { where: { id } });
+        }
 
-       
+
     } catch (error) {
         console.error(error || null);
         throw new Error('Could not process your request');
@@ -759,7 +762,7 @@ async function updateBankAccounts(user_id, data) {
         return { success: true };
     } catch (error) {
         console.error(error.message || null);
-        throw new Error('Could not process your request'); 
+        throw new Error('Could not process your request');
     }
 }
 
@@ -806,7 +809,7 @@ async function findByPropertyValue(prop, value) {
  * @param {string} email 
  * @returns 
  */
- async function email(email) {
+async function email(email) {
     try {
         return User.findOne({
             where: { email },
@@ -834,14 +837,56 @@ async function findByEmail(email) {
     }
 }
 
-async function resetPassword(id, data){
-        try {
-            data.updated = sequelize.fn('NOW');
-            return User.update(data, { where: { id } });
-        } catch (error) {
-            console.error(error.message || null);
-            throw new Error('Could not process your request');
-        }
+async function resetPassword(id, data) {
+    try {
+        data.updated = sequelize.fn('NOW');
+        return User.update(data, { where: { id } });
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
+async function upline(user_id) {
+    try {
+        const options = {
+            nest: true,
+            replacements: {},
+            type: sequelize.QueryTypes.SELECT,
+        };
+        const data = [];
+        let found = false;
+        let id = user_id;
+        let level = 1; // payout MLM structure - 10 levels up
+
+        do {
+            // retrieve uplines who are WC
+            const query = `
+            SELECT "upline"."id", "upline"."first_name", "upline"."last_name", "upline"."expiry",
+                "upline"."email", "upline"."mobile", "group"."name", "account"."id" AS "account.id",
+                "account"."balance" AS "account.balance", "account"."available_balance" AS "account.available_balance"
+            FROM users AS "user"
+            INNER JOIN users AS "upline" ON "user"."sponsor" = "upline"."id"
+            INNER JOIN groups AS "group" ON "upline"."group_id" = "group"."id" AND "group"."name" = 'wealth-creator'
+            INNER JOIN accounts AS "account" ON "upline"."id" = "account"."user_id"
+            WHERE "user"."id" = '${id}' AND "upline"."id" != "user"."id" AND "upline"."expiry" >= NOW()
+            LIMIT 1`;
+            const records = await sequelize.query(query, options);
+            if (level <= 10 && records && records.length > 0) {
+                const [record] = records;
+                if (record && record.id) {
+                    data.push(record);
+                    id = record.id;
+                    found = true;
+                    level++;
+                } else found = false;
+            } else found = false;
+        } while (found);
+        return data;
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
 }
 
 module.exports = {
@@ -868,4 +913,5 @@ module.exports = {
     email,
     findByEmail,
     resetPassword,
+    upline,
 }

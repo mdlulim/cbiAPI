@@ -28,6 +28,7 @@ const Transaction = sequelize.define('transaction', {
     updated: Sequelize.DATE,
     collection_id: Sequelize.UUID,
     txid: Sequelize.STRING,
+    auto_id: Sequelize.INTEGER,
 }, {
     timestamps: false
 });

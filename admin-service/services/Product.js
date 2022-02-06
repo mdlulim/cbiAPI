@@ -250,6 +250,44 @@ async function showSubcategory(id) {
     }
 }
 
+async function showSubcategoryByCode(code) {
+    try {
+        return ProductSubCategory.findOne({
+            where: { code },
+        });
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request in service');
+    }
+}
+
+async function fraxionHolders() {
+    try {
+        const options = {
+            nest: true,
+            type: sequelize.QueryTypes.SELECT
+        };
+        const query = `
+        SELECT SUM("member_products_line"."value") AS fraxions, "user"."id", "user"."email", "user"."mobile",
+            "user"."first_name", "user"."last_name", "user"."referral_id", "account"."id" AS "account.id",
+            "account"."balance" AS "account.balance", "account"."available_balance" AS "account.available_balance"
+        FROM member_products "member_product"
+        INNER JOIN member_products_lines "member_products_line" ON "member_product"."id" = "member_products_line".member_product_id
+        INNER JOIN users "user" ON "member_product"."user_id" = "user"."id"
+        INNER JOIN groups "group" ON "user"."group_id" = "group"."id" AND "group"."name" = 'wealth-creator'
+        INNER JOIN wealth_creators "wealth_creator" ON "user"."id" = "wealth_creator"."user_id"
+        INNER JOIN accounts "account" ON "user"."id" = "account"."user_id"
+        WHERE "member_product".code = 'FX' AND "member_product"."status" = 'Active'
+            AND "member_product"."status" = 'Active' AND "member_products_line"."start_date" <= NOW()
+            AND "member_products_line"."end_date" >= NOW() AND "user"."expiry" >= NOW()
+        GROUP BY "user"."id", "account"."id", "account"."balance", "account"."available_balance"`;
+        return sequelize.query(query, options);
+    } catch (error) {
+        console.error(error.message || '---- errror -----');
+        throw new Error('Could not process your request in service');
+    }
+}
+
 async function fraxionCalculations(condition) {
     try {
         return FraxionCalculation.findAndCountAll({
@@ -359,12 +397,14 @@ module.exports = {
     show,
     update,
     destroy,
+    fraxionHolders,
     findByPermakey,
     categories,
     createCategory,
     getMembersByProductId,
     updateCategory,
     showCategory,
+    showSubcategoryByCode,
     fraxionCalculations,
     captureFraxionCalculations,
     getSubcategories,

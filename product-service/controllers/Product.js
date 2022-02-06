@@ -70,9 +70,9 @@ async function subscribe(req, res){
 
         // get product details
         const product = await productService.findByCode(req.body.product_code);
-        const { product_subcategory, indicators } = product;
-        const { commission_structure, educator_percentage } = indicators;
-        const { code } = product_subcategory;
+        const { product_subcategory } = product;
+        const { code, indicators } = product_subcategory;
+        const { commission_structure, educator_percentage, educator_fee } = indicators;
 
         // get user
         const user = await userService.show(req.user.id);
@@ -283,64 +283,17 @@ async function subscribe(req, res){
              * - Educators fees are payable to Wealth Creators ONLY who qualifies in
              *   accordance to 10 Level Structure.
              * - This is payable at time of initial buying 3% of investment amount
+             *   NB: Percentage is configurable
              */
-            if (commission_structure && educator_percentage) {
-                const upline = await userService.upline(user.id);
-                if (upline.length > 0) {
-                    const payoutAmount = totalAmount * parseFloat(educator_percentage) / 100;
-                    var level = 1;
-                    return async.map(upline, async (item) => {
-                        const { account } = item;
-                        const commission = payoutAmount * parseFloat(commission_structure[`level${level}`]) / 100;
-
-                        // update account balance
-                        await accountService.update({
-                            balance: parseFloat(account.balance) + commission,
-                            available_balance: parseFloat(account.available_balance) + commission,
-                        }, account.id);
-
-                        // log transaction
-                        const transact = await transactionService.create({
-                            tx_type: 'credit',
-                            subtype: 'educator-fees',
-                            user_id: item.id,
-                            amount: commission,
-                            reference: `EduComm-${product.product_code}`,
-                            note: `Received ${commission} ${product.currency.code} from ${user.first_name} (${user.username}) on ${product.type} ${product.title}`,
-                            currency: product.currency,
-                            total_amount: commission,
-                            status: 'Completed',
-                        });
-
-                        // update transaction
-                        var txid = product.product_code + transact.auto_id;
-                        var metadata = {
-                            entity: 'transactions',
-                            refid: transaction.id,
-                            type: 'crypto',
-                            currency: 'CBI',
-                            currency_code: 'CBI',
-                            level,
-                            level_percentage: commission_structure[`level${level}`],
-                        };
-                        await transactionService.update({ txid, metadata }, transact.id);
-
-                        level++;
-
-                        return { commission, item, txid };
-
-                    }, (err, results) => {
-                        if (err) {
-                            return res.status(500)
-                                .send({
-                                    success: false,
-                                    message: 'Could not process your request'
-                                });
-                        }
-                        return res.send({ success: true, results });
-                    });
-                }
-            }
+            var payoutAmount = totalAmount * parseFloat(educator_percentage) / 100;
+            return commissionPayout(res, {
+                user,
+                product,
+                transaction,
+                educator_percentage,
+                amount: payoutAmount,
+                commission_structure,
+            });
         }
         
         // Fraxions
@@ -387,6 +340,7 @@ async function subscribe(req, res){
                 // subscribe (add/update in user product table)
                 data.value = product.price;
                 data.transaction_id = transaction.id;
+                data.start_date = moment().add(10, 'days').format('YYYY-MM-DD');
                 var userProduct = await productService.subscribe(data);
     
                 // update transaction
@@ -408,12 +362,140 @@ async function subscribe(req, res){
                     amount: totalAmount,
                     first_name: user.first_name,
                 });
+        
+                /**
+                 * 
+                 * MLM Commission Structure Payout
+                 * 
+                 * Educators Fees:
+                 * 1. Are only payable to Paid up Wealth Creators
+                 * 2. Payable in accordance with the conditions set out below 
+                 * 3. Are only payable 10 levels up to his upline and where  there is no paid
+                 *    up upline that part is then going to the product income of the company
+                 * 4. It is payable in accordance with the 10 level structure indicated below
+                 * 
+                 * - Educators fees are payable to Wealth Creators ONLY who qualifies in
+                 *   accordance to 10 Level Structure.
+                 * - This is payable at time of initial buying CBI 5.00 per Fraxion
+                 *   NB: Percentage is configurable
+                 */
+                const units = parseInt(product.product_code.match(/\d+/).join('')); // retrieve units from code
+                var payoutAmount = parseFloat(educator_fee) * units;
+                return commissionPayout(res, {
+                    user,
+                    product,
+                    transaction,
+                    educator_percentage,
+                    amount: payoutAmount,
+                    commission_structure,
+                });
 
             } else {
                 return res.status(403)
                 .send({
                     success: false,
                     message: 'Failed to process request. Insufficient balance!'
+                });
+            }
+        }
+
+        // response
+        return res.send({ success: true });
+
+    } catch (err) {
+        console.log(err.message)
+        return res.status(500).send({
+            success: false,
+            message: 'Could not process your request'
+        });
+    }
+}
+
+
+/**
+ * 
+ * MLM Commission Structure Payout
+ * 
+ * @param {object}  res
+ * @param {object}  data
+ * 
+ * @return {object}
+ */
+async function commissionPayout(res, data) {
+    try {
+        const {
+            user,
+            amount,
+            product,
+            transaction,
+            educator_percentage,
+            commission_structure,
+        } = data;
+
+        if (commission_structure && educator_percentage) {
+            const upline = await userService.upline(user.id);
+            if (upline.length > 0) {
+                var level = 1;
+                return async.map(upline, async (item) => {
+                    const { account } = item;
+                    const commission = amount * parseFloat(commission_structure[`level${level}`]) / 100;
+
+                    // update account balance
+                    await accountService.update({
+                        balance: parseFloat(account.balance) + commission,
+                        available_balance: parseFloat(account.available_balance) + commission,
+                    }, account.id);
+
+                    // log transaction
+                    const transact = await transactionService.create({
+                        tx_type: 'credit',
+                        subtype: 'educator-fees',
+                        user_id: item.id,
+                        amount: commission,
+                        reference: `EduComm-${product.product_code}`,
+                        note: `Received ${commission} ${product.currency.code} from ${user.first_name} (${user.username}) on ${product.type} ${product.title}`,
+                        currency: product.currency,
+                        total_amount: commission,
+                        status: 'Completed',
+                    });
+
+                    // update transaction
+                    const txid = product.product_code + transact.auto_id;
+                    const metadata = {
+                        entity: 'transactions',
+                        refid: transaction.id,
+                        type: 'crypto',
+                        currency: 'CBI',
+                        currency_code: 'CBI',
+                        level,
+                        level_percentage: commission_structure[`level${level}`],
+                    };
+                    await transactionService.update({
+                        txid,
+                        metadata,
+                    }, transact.id);
+
+                    // next level
+                    level++;
+
+                    return {
+                        item,
+                        txid,
+                        commission,
+                    };
+
+                }, (err, results) => {
+                    if (err) {
+                        return res.status(500)
+                            .send({
+                                success: false,
+                                message: 'Could not process your request'
+                            });
+                    }
+                    return res.send({
+                        success: true,
+                        data: results,
+                    });
                 });
             }
         }
@@ -766,7 +848,8 @@ async function invest(req, res){
         // retrieve product by id
         const product = await productService.find(req.body.id, false);
         const { product_subcategory } = product;
-        const { code } = product_subcategory;
+        const { code, indicators } = product_subcategory;
+        const { commission_structure, educator_percentage } = indicators;
 
         // amount
         const amount = parseFloat(req.body.amount);
@@ -885,11 +968,33 @@ async function invest(req, res){
             email: user.email,
             first_name: user.first_name,
         });
-
-        // send response
-        return res.send({
-            success: true,
+        
+        /**
+         * 
+         * MLM Commission Structure Payout
+         * 
+         * Educators Fees:
+         * 1. Are only payable to Paid up Wealth Creators
+         * 2. Payable in accordance with the conditions set out below 
+         * 3. Are only payable 10 levels up to his upline and where  there is no paid
+         *    up upline that part is then going to the product income of the company
+         * 4. It is payable in accordance with the 10 level structure indicated below
+         * 
+         * - Educators fees are payable to Wealth Creators ONLY who qualifies in
+         *   accordance to 10 Level Structure.
+         * - This is payable at time of initial buying 5% of investment amount
+         *   NB: Percentage is configurable
+         */
+        const payoutAmount = amount * parseFloat(educator_percentage) / 100;
+        return commissionPayout(res, {
+            user,
+            product,
+            transaction,
+            educator_percentage,
+            amount: payoutAmount,
+            commission_structure,
         });
+
     } catch (err) {
         console.log(err.message)
         return res.status(500).send({
@@ -915,10 +1020,21 @@ async function earnings(req, res) {
     try {
         const { id } = req.user;
         const { permakey } = req.params;
-        const { data } = await productService.show(permakey);
+        const data = await productService.subcategory(permakey, false);
+        const { code } = data;
+
+        // product type check
+        const isFX = config.products.FX === code;
+        const isFP = config.products.FP === code;
+
         let earnings = [];
         if (data && data.id) {
-            earnings = await commissionService.index(id, data.id);
+            if (isFP) {
+                earnings = await commissionService.fixedPlans(id, data.id);
+            }
+            if (isFX) {
+                earnings = await commissionService.fraxions(id, code);
+            }
         }
         return res.send({
             success: true,
