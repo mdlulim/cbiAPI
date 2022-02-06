@@ -288,6 +288,24 @@ async function fraxionHolders() {
     }
 }
 
+async function commissionPaid(user_id) {
+    try {
+        const options = {
+            nest: true,
+            type: sequelize.QueryTypes.SELECT
+        };
+        const query = `
+        SELECT "commission"."id"
+        FROM commissions "commission"
+        WHERE "commission"."commission_date" = CAST(NOW() AS DATE)
+            AND "commission"."status" = 'Paid' AND "commission"."user_id" = '${user_id}'`;
+        return sequelize.query(query, options);
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request in service');
+    }
+}
+
 async function fraxionCalculations(condition) {
     try {
         return FraxionCalculation.findAndCountAll({
@@ -449,4 +467,5 @@ module.exports = {
     cancelStatus,
     getProductProfits,
     getProfitsPerProduct,
+    commissionPaid,
 }

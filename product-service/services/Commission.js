@@ -32,10 +32,8 @@ async function fraxions(user_id, code) {
         SELECT "commission"."id", "commission"."amount", "transaction"."txid", "commission"."commission_date",
             "commission"."status", "transaction"."created", "transaction"."currency"
         FROM commissions AS "commission"
-        INNER JOIN transactions AS "transaction" ON "commission"."id"::text = "transaction"."metadata"->>'refid'::text
-            AND "transaction"."metadata"->>'entity' = 'commissions'
+        INNER JOIN transactions AS "transaction" ON "commission"."referral_id" = "transaction"."id"
             AND "transaction".subtype = '${code.toLowerCase()}-payouts'
-        -- INNER JOIN currencies AS "currency" ON "transaction"."currency" = "currency"."code"
         WHERE "commission"."type" = '${code.toUpperCase()}-PROFIT-PAYOUT' AND "commission"."user_id" = '${user_id}'
             AND "transaction"."user_id" = '${user_id}'
         ORDER BY "transaction"."created" DESC;
