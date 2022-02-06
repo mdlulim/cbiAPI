@@ -1,10 +1,10 @@
 const moment = require('moment');
 const { Account } = require('../models/Account');
-const { Transfer } = require('../models/Transfer');
+const { Transaction } = require('../models/Transaction');
 
 async function transfer(data) {
     try {
-        const account =  await Account.findOne({where : { user_id: data.user_id}});
+        const account =  await Account.findOne({where : { id: data.wallet_id}});
         const mainAccount =  await Account.findOne({where : { id: '3cf7d2c0-80e1-4264-9f2f-6487fd1680c2'}});
         if (data.type === "credit") {
             let newmainAvaliable = parseFloat(mainAccount.available_balance) - parseFloat(data.amount);
@@ -21,7 +21,7 @@ async function transfer(data) {
                     user_id: data.user_id
                 }
             })
-            Account.update({
+            await Account.update({
                 balance: newmainBalance,
                 available_balance: newmainAvaliable
             }, {
@@ -29,13 +29,13 @@ async function transfer(data) {
                     id: '3cf7d2c0-80e1-4264-9f2f-6487fd1680c2'
                 }
             })
-
-            await Transfer.create({
-                user_id: data.user_id,
-                note: `account ${data.user_id} has been credited with ${parseFloat(data.amount)} CBI on ${moment().format()}`,
-                tx_type: 'credit',
-                amount: data.amount,
-            })
+            await Transaction.create({
+                tx_type: "credit",
+                subtype: "admin-credit",
+                note: "Admin Wallet Transfer (Credit)",
+                status: "Completed",
+                reference: `test`
+            });
 
             return {
                 message: `account ${data.user_id} has been credited with ${parseFloat(data.amount)} CBI on ${moment().format()}`
@@ -65,13 +65,13 @@ async function transfer(data) {
                 }
             });
           
-            await Transfer.create({
-                user_id: data.user_id,
-                note: `account ${data.user_id} has been debited with ${parseFloat(data.amount)} CBI on ${moment().format()}`,
-                tx_type: 'debit',
-                amount: data.amount,
-
-            })
+            await Transaction.create({
+                tx_type: "debit",
+                subtype: "admin-debit",
+                note: "Admin Wallet Transfer (Debit)",
+                status: "Completed",
+                reference: `test`
+            });
 
             return {
                 message: `account ${data.user_id} has been debited with ${parseFloat(data.amount)} CBI on ${moment().format()}`

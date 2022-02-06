@@ -591,7 +591,7 @@ module.exports.set = app => {
     app.get("/reports/:id/generate", authMiddleware.checkAuth, reportController.generate);
 
     // Transfer funds Admin side 
-    app.post("/transfer", authMiddleware.checkAuth, transferController.transfer);
+    app.post("/transfer", transferController.transfer);
     app.post("/transfer-history", authMiddleware.checkAuth, transferController.history);
 
     //Broadcast messages
