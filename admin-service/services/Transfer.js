@@ -1,6 +1,7 @@
 const moment = require('moment');
 const { Account } = require('../models/Account');
 const { Transaction } = require('../models/Transaction');
+const { Op } = require("sequelize");
 
 async function transfer(data) {
     try {
@@ -34,7 +35,8 @@ async function transfer(data) {
                 subtype: "admin-credit",
                 note: "Admin Wallet Transfer (Credit)",
                 status: "Completed",
-                reference: `test`
+                approval_reason: data.reason,
+                label: "admin-transfer"
             });
 
             return {
@@ -70,7 +72,8 @@ async function transfer(data) {
                 subtype: "admin-debit",
                 note: "Admin Wallet Transfer (Debit)",
                 status: "Completed",
-                reference: `test`
+                approval_reason: data.reason,
+                label: "admin-transfer"
             });
 
             return {
@@ -87,9 +90,9 @@ async function transfer(data) {
 
 async function history(data) {
     try {
-        const response = await Transfer.findAll({
+        const response = await Transaction.findAll({
             where: {
-                user_id: data
+                label: "admin-transfer"
             }
         })
         return {
