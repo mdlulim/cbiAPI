@@ -28,6 +28,7 @@ const Transaction = sequelize.define('transaction', {
     updated: Sequelize.DATE,
     collection_id: Sequelize.UUID,
     txid: Sequelize.STRING,
+    auto_id: Sequelize.INTEGER,
     rejection_reason: Sequelize.STRING,
     rejected_by: Sequelize.UUID,
     approval_reason: Sequelize.STRING,

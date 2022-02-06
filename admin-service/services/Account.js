@@ -27,6 +27,7 @@ async function mainaccount() {
 
 async function update(data, id) {
     try {
+        data.updated = sequelize.fn('NOW');
         return Account.update(data, {
             where: { id }
         });
