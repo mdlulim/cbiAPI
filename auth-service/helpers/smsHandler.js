@@ -6,11 +6,7 @@ const { smsApi } = config;
 /**
  * SMS Configurations
  */
-const smsUrl = `${smsApi.baseUrl + smsApi.servicePlanID}/batches`;
-const smsHeaders = {
-    'Authorization': `Bearer ${smsApi.apiKey}`,
-    'Content-Type': 'application/json',
-};
+const { provider } = smsApi;
 
 /**
  * Send SMS
@@ -18,17 +14,46 @@ const smsHeaders = {
  * @param {string} message 
  */
 function sendSms(recipients, message) {
-    return axios({
-        mode: 'no-cors',
-        method: 'POST',
-        url: smsUrl,
-        headers: smsHeaders,
-        data: {
-            from: smsApi.senderID,
-            to: recipients,
-            body: message,
-        },
-    });
+    if (provider === 'sinch') {
+        let data = smsApi[provider];
+        let smsUrl = `${data.baseUrl + data.servicePlanID}/batches`;
+        let smsHeaders = {
+            'Authorization': `Bearer ${data.apiKey}`,
+            'Content-Type': 'application/json',
+        };
+        return axios({
+            mode: 'no-cors',
+            method: 'POST',
+            url: smsUrl,
+            headers: smsHeaders,
+            data: {
+                from: smsApi.senderID,
+                to: recipients,
+                body: message,
+            },
+        });
+    }
+    if (provider === 'expertTexting') {
+        let data = smsApi[provider];
+        let smsUrl = `${data.baseUrl}Message/Send`;
+        let smsHeaders = {
+            'Content-Type': 'application/json',
+        };
+
+        smsUrl += `?username=${data.username}`;
+        smsUrl += `&api_key=${data.apiKey}`;
+        smsUrl += `&api_secret=${data.apiSecret}`;
+        smsUrl += `&from=${data.senderID}`;
+        smsUrl += `&to=${recipients.join('')}`;
+        smsUrl += `&text=${message}`;
+        smsUrl += `&type=text`;
+        return axios({
+            mode: 'no-cors',
+            method: 'POST',
+            url: smsUrl,
+            headers: smsHeaders,
+        });
+    }
 };
 
 const sendOTPAuth = async (number, otp) => {
