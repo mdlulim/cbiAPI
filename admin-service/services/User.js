@@ -420,7 +420,8 @@ async function updateTransaction(id, data, admin_user_id) {
         const user =  await User.findOne({where : {id: transaction.user_id}});
 
         const fee =  await Fee.findOne({where : {subtype: transaction.subtype.charAt(0).toUpperCase() + transaction.subtype.slice(1), group_id: user.dataValues.group_id} });
-       if(!fee.value){
+       
+        if(!fee.value){
            return {success: false, message: 'Transaction fee is not configured!'}
        }
 
@@ -461,8 +462,8 @@ async function updateTransaction(id, data, admin_user_id) {
                 let accountCondition = {id: userWallet.id}
                 await Account.update( creditUser,{where: accountCondition})
 
-            }else if(transaction.subtype.toLowerCase() === "withdrawal"){
-                //console.log("subtype: "+transaction.subtype)
+            }else if(transaction.subtype.toLowerCase() === "withdraw"){
+                console.log("subtype: "+transaction.subtype)
                 let credit = {
                     available_balance: parseFloat(mainAccount.available_balance)+parseFloat(fee.value),
                     balance: parseFloat(mainAccount.balance)+parseFloat(fee.value)
@@ -510,18 +511,6 @@ async function updateTransaction(id, data, admin_user_id) {
         throw new Error('Could not process your request');
     }
 }
-
-// async function debitWallet(id, data) {
-//     try {
-//         await Transaction.update(data, {
-//             where: { id }
-//         });
-//         return { success: true };
-//     } catch (error) {
-//         console.error(error.message || null);
-//         throw new Error('Could not process your request');
-//     }
-// }
 
 async function approveDeposit(id, data, admin_user_id) {
 
