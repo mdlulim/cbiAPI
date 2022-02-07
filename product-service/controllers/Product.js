@@ -70,17 +70,6 @@ async function subscribe(req, res){
 
         // get product details
         const product = await productService.findByCode(req.body.product_code);
-        const { product_subcategory } = product;
-        const { code, indicators } = product_subcategory;
-        const { commission_structure, educator_percentage, educator_fee } = indicators;
-
-        // get user
-        const user = await userService.show(req.user.id);
-
-        // product check
-        const isWC    = config.products.WC === code;
-        const isFX    = config.products.FX === code;
-        const isCBIx7 = config.products.CBIx7 === code;
 
         // validate product
         if (!product) {
@@ -90,6 +79,17 @@ async function subscribe(req, res){
                 message: 'Failed to process request.'
             });
         }
+
+        const { product_subcategory } = product;
+        const { code, indicators } = product_subcategory;
+
+        // get user
+        const user = await userService.show(req.user.id);
+
+        // product check
+        const isWC    = config.products.WC === code;
+        const isFX    = config.products.FX === code;
+        const isCBIx7 = config.products.CBIx7 === code;
 
         const data = {
             code,
@@ -285,6 +285,8 @@ async function subscribe(req, res){
              * - This is payable at time of initial buying 3% of investment amount
              *   NB: Percentage is configurable
              */
+
+            var { commission_structure, educator_percentage, educator_fee } = indicators;
             var payoutAmount = totalAmount * parseFloat(educator_percentage) / 100;
             return commissionPayout(res, {
                 user,
@@ -336,9 +338,12 @@ async function subscribe(req, res){
                     currency: product.currency,
                     status: 'Completed',
                 });
+                
+                // retrieve units from code
+                const units = parseInt(product.product_code.match(/\d+/).join(''));
 
                 // subscribe (add/update in user product table)
-                data.value = product.price;
+                data.value = units;
                 data.transaction_id = transaction.id;
                 data.start_date = moment().add(10, 'days').format('YYYY-MM-DD');
                 var userProduct = await productService.subscribe(data);
@@ -379,7 +384,8 @@ async function subscribe(req, res){
                  * - This is payable at time of initial buying CBI 5.00 per Fraxion
                  *   NB: Percentage is configurable
                  */
-                const units = parseInt(product.product_code.match(/\d+/).join('')); // retrieve units from code
+
+                var { commission_structure, educator_percentage, educator_fee } = indicators;
                 var payoutAmount = parseFloat(educator_fee) * units;
                 return commissionPayout(res, {
                     user,
