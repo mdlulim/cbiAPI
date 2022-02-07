@@ -720,17 +720,20 @@ async function update(req, res) {
     }
 }
 
-async function updateCategory(req, res) {
-    return productService.updateCategory(req.params.id, req.body)
-        .then(data => res.send(data))
-        .catch(err => {
-            console.log(err.message)
-            res.send({
-                success: false,
-                message: err.message,
+    async function updateCategory(req, res) {
+        try{
+            await productService.updateCategory(req.params.id, req.body)
+            return res.send({
+                success: true,
+                message: 'Category was successfully updated'
             });
-        });
-}
+        } catch (error) {
+            return res.status(500).send({
+                success: false,
+                message: 'Could not process request'
+            });
+        }
+    }
 
 // async function updateSubcategory(req, res) {
 //     return productService.updateSubcategory(req.params.id, req.body)
