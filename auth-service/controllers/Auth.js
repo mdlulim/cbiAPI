@@ -1207,15 +1207,15 @@ async function passwordResetConfirm(req, res) {
 
         const user = await userService.findByEmail(req.user.email);
 
-        if (!user || !user.verification || !user.verification.email) {
-            return res.send({
+        if (!user || !user.verification || !user.verification.token) {
+            return res.status(405).send({
                 success: false,
                 message: 'Access denied.'
             });
         }
 
         if (password1 !== password2) {
-            return res.send({
+            return res.status(403).send({
                 success: false,
                 message: 'Validation error. Passwords do not match.'
             });
@@ -1229,13 +1229,15 @@ async function passwordResetConfirm(req, res) {
             user_id: user.id,
             password: password1,
         });
+        
         if (samePassword && samePassword.id) {
-            return res.send({
+            return res.status(403).send({
                 success: false,
-                message: 'You have already used that password, try another'
+                message: 'You have already used the specified password, please enter a different password.'
             });
         }
 
+        delete user.verification.token;
         await userService.update(user.id, {
             salt,
             password,
@@ -1254,6 +1256,12 @@ async function passwordResetConfirm(req, res) {
             section: 'Account',
             subsection: 'Change password',
             data: { device },
+        });
+
+        // insert new password into passwords
+        await passwordService.create({
+            user_id: user.id,
+            password: password1,
         });
 
         // send email notification
