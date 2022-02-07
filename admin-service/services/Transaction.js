@@ -3,9 +3,12 @@ const { Transaction } = require('../models/Transaction');
 const { User } = require('../models/User');
 const { Document } = require('../models/Document');
 const { Account }  = require('../models/Account');
+const { Fee } = require('../models/Fee');
+const { Group } = require('../models/Group');
 
 User.hasMany(Transaction, {foreignKey: 'user_id', targetKey: 'id'});
 Transaction.belongsTo(User, {foreignKey: 'user_id', targetKey: 'id'});
+User.belongsTo(Group, { foreignKey: 'group_id', targetKey: 'id' });
 
 async function index(query) {
     try {
@@ -234,6 +237,123 @@ async function transactionstotal(data) {
 }
 
 
+async function updateBulk(data) {
+    try {
+        let myData = {}
+        const id = data.id;
+        const transaction = await Transaction.findOne({where : {id: data.id}});
+        const user =  await User.findOne({where : {id: transaction.user_id}});
+        const user_id = user.id;
+        const subtype = transaction.subtype.charAt(0).toUpperCase() + transaction.subtype.slice(1);
+        const fee =  await Fee.findOne({where : {subtype: subtype, group_id: user.group_id} });
+       
+        if(!fee.value){
+           return {success: false, message: 'Transaction fee is not configured!'}
+       }
+
+       if(transaction.status === 'Completed' || transaction.status === 'Rejected'){
+            return {success: false, message: 'Transaction have already been processed'}
+        }
+
+        if(data.status === 'Completed' && transaction.status === 'Pending'){
+            myData = {
+                status: data.status,
+                approval_reason: data.reason,
+                approved_by: data.admin_user_id
+            }
+            const mainAccount =  await Account.findOne({where : {id: '3cf7d2c0-80e1-4264-9f2f-6487fd1680c2'}});
+            const userWallet =  await Account.findOne({
+                where: { user_id },
+            });
+            let isBalance = isNaN(userWallet.available_balance);
+            let available_balance = userWallet.available_balance;
+            if (isBalance) {
+                available_balance = 0;
+            }
+
+            if (transaction.subtype.toLowerCase() === 'deposit') {
+                //console.log("subtype: "+transaction.subtype)
+                let credit = {
+                    available_balance: parseFloat(mainAccount.available_balance) + parseFloat(fee.value),
+                    balance: parseFloat(mainAccount.balance) + parseFloat(fee.value)
+                };
+                let mainAccountCondition = { id: mainAccount.id }
+                await Account.update(credit, { where: mainAccountCondition })
+
+                let creditUser = {
+                    available_balance: parseFloat(available_balance) + parseFloat(transaction.amount) - parseFloat(fee.value),
+                    balance: parseFloat(available_balance) + parseFloat(transaction.amount) - parseFloat(fee.value)
+                };
+                let accountCondition = { id: userWallet.id }
+                await Account.update(creditUser, { where: accountCondition })
+
+            }else if(transaction.subtype.toLowerCase() === "withdraw"){
+                console.log("subtype: "+transaction.subtype)
+                let credit = {
+                    available_balance: parseFloat(mainAccount.available_balance) + parseFloat(fee.value),
+                    balance: parseFloat(mainAccount.balance) + parseFloat(fee.value)
+                };
+                let mainAccountCondition = { id: mainAccount.id }
+                await Account.update(credit, { where: mainAccountCondition })
+
+                let creditUser = {
+                    available_balance: parseFloat(available_balance) + parseFloat(transaction.amount) - parseFloat(fee.value),
+                    balance: parseFloat(available_balance) + parseFloat(transaction.amount) - parseFloat(fee.value)
+                };
+                let accountCondition = { id: userWallet.id }
+                await Account.update(creditUser, { where: accountCondition })
+            }
+            await Transaction.update(myData, {
+                where: { id }
+            });
+            return {
+                success: true,
+                message: 'Transaction was updated successfully',
+                data: {
+                    status: data.status,
+                    first_name: user.first_name,
+                    email: user.email,
+                    subtype: transaction.subtype,
+                    tx_type: transaction.tx_type,
+                    amount: transaction.amount,
+                    fee: fee.value,
+                    reference: transaction.reference,
+                    currency_code: transaction.currency.code,
+                }
+            };
+        }else{
+            myData = {
+                status: data.status,
+                rejection_reason: data.reason,
+                rejected_by: data.admin_user_id
+            }
+            await Transaction.update(myData, {
+                where: { id }
+            });
+            return {
+                success: true,
+                message: 'Transaction was updated successfully',
+                data: {
+                    status: data.status,
+                    first_name: user.first_name,
+                    email: user.email,
+                    subtype: transaction.subtype,
+                    tx_type: transaction.tx_type,
+                    amount: transaction.amount,
+                    fee: fee.value,
+                    reference: transaction.reference,
+                    currency_code: transaction.currency.code,
+                }
+            };
+        }
+
+    } catch (error) {
+        console.log(error)
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
 
 
 
@@ -247,5 +367,6 @@ module.exports = {
     allTransactions,
     getProofOfPayment,
     transactions,
-    transactionstotal
+    transactionstotal,
+    updateBulk
 }
