@@ -1604,7 +1604,11 @@ async function otpResend(req, res) {
         const { transaction } = req.body;
         let user = null;
         if (transaction === 'activation') {
-            user = await userService.show(req.user.email);
+            user = await userService.findByEmail(req.user.email, {
+                archived: false,
+                blocked: false,
+                verified: false,
+            });
         } else {
             user = await userService.show(req.user.id);
         }

@@ -54,7 +54,7 @@ async function verifyLogin(data) {
         name: 'CBI',
         email: smtp.auth.user,
     };
-    return sendMail(from, email, `Sign-in confirmation code: ${code} - Do not share this with anyone`, template);
+    return sendMail(from, email, `Sign-in confirmation code: ${code.toString().substr(0, 3)} ${code.toString().substr(3, 3)} - Do not share this with anyone`, template);
 };
 
 async function notifyReferrer(data) {
