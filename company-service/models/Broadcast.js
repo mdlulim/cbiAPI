@@ -18,6 +18,7 @@ const Broadcast = sequelize.define('broadcast', {
 	summary: Sequelize.STRING,
     created: Sequelize.DATE,
     updated: Sequelize.DATE,
+    image: Sequelize.STRING
 }, {
     timestamps: false
 });
