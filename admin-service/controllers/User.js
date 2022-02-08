@@ -95,7 +95,7 @@ async function create(req, res) {
         const password = string.toLowerCase() + numbers.toString();
         const salt = bcrypt.genSaltSync();
         const securePassword = bcrypt.hashSync(password, salt);
-
+        const verified = true;
         // create user record
         const data = {
             ...req.body,
@@ -103,6 +103,7 @@ async function create(req, res) {
             password: securePassword,
             email,
             salt,
+            verified
         };
         await userService.create(data);
 
