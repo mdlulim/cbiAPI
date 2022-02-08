@@ -16,8 +16,8 @@ async function confirmEmail(data) {
 };
 
 async function resetPassword(data) {
-    const { email, token } = data;
-    data.link = `${baseurl.frontend}/reset-password/${token}`;
+    const { email, token, admin_baseurl } = data;
+    data.link = admin_baseurl ? `${baseurl.admin}/reset-password/${token}` : `${baseurl.frontend}/reset-password/${token}`;
     const template = emailTemplates.resetPassword(data);
     const from = {
         name: 'CBI',
