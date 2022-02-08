@@ -1,7 +1,15 @@
 const config = require('../config');
 const Sequelize = require('sequelize');
 const fs = require('fs');
-const doCA = fs.readFileSync(__dirname + '/../' + 'ca-certificate.crt');
+
+let doCA
+
+if (process.env.NODE_ENV === 'release') {
+    doCA = fs.readFileSync(__dirname + '/../' + 'ca-certificate-release.crt');
+} else {
+    doCA = fs.readFileSync(__dirname + '/../' + 'ca-certificate.crt');
+}
+
 var sequelize = new Sequelize(config.dbConnectionString, {
     ssl: true,
     dialect: 'postgres',

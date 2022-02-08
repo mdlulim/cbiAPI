@@ -1,0 +1,31 @@
+config = {
+    port: process.env.NODE_ENV ? 8080 : 8083,
+    dbConnectionString: 'postgresql://doadmin:CtTyMZ7Vj5pcX0kc@private-qa-db-postgresql-ams3-38151-do-user-7844381-0.b.db.ondigitalocean.com:25061/release-connection_pool?sslmode=require',
+    saltRounds: 2,
+    jwtSecret: 'BbZJjyoXAdr8BUZuiKKARWimKfrSmQ6fv8kZ7OFfc',
+    tokenExpireTime: '6h',
+    tokenExpireHours: 6,
+    baseurl: {
+        admin: 'https://admin.cbiglobal.io',
+        frontend: 'https://demo.cbiglobal.io',
+    },
+    mail: {
+        smtp: {
+            host: 'mail.cbiglobal.io',
+            port: 465,
+            secure: true,
+            auth: {
+                user: 'no-reply@cbiglobal.io',
+                pass: 'ocJ~$m[NTj#N',
+            }
+        }
+    },
+    buddy: {
+        staging: {
+            base_url: 'https://staging.buddy.na/api/v2/services',
+            authenticationToken: Buffer.from("6b05e06a-cdcb-41dd-8e01-8dcf551e726d").toString('base64')
+        }
+    }
+}
+
+module.exports = config;
