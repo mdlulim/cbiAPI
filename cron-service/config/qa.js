@@ -8,6 +8,7 @@ config = {
     baseurl: {
         admin: 'http://admin.qa.cbiglobal.io',
         frontend: 'http://qa.cbiglobal.io',
+        api: 'https://dev.qa.cbiglobal.io/v1/',
     },
     products: {
         CBIx7: 'CBIX7',

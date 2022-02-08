@@ -1162,14 +1162,13 @@ async function transactions(req, res){
     try {
         const { permakey } = req.params;
         const transactions = await productService.transactions(permakey, req.user.id);
-        const { count, rows } = transactions;
         return res.status(200).send({
             success: true,
             data: {
-                count,
+                count: transactions.length,
                 next: null,
                 previous: null,
-                results: rows,
+                results: transactions,
             }
         });
     } catch (err) {
