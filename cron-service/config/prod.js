@@ -8,6 +8,7 @@ config = {
     baseurl: {
         admin: process.env.BASE_URL_ADMIN,
         frontend: process.env.BASE_URL_FRONTEND,
+        api: process.env.BASE_URL_API
     },
     products: {
         CBIx7: 'CBIX7',
