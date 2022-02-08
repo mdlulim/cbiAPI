@@ -5,9 +5,9 @@ const fs = require('fs');
 let doCA
 
 if (process.env.NODE_ENV === 'release') {
-    let doCA = fs.readFileSync(__dirname + '/../' + 'ca-certificate-release.crt');
+    doCA = fs.readFileSync(__dirname + '/../' + 'ca-certificate-release.crt');
 } else {
-    let doCA = fs.readFileSync(__dirname + '/../' + 'ca-certificate.crt');
+    doCA = fs.readFileSync(__dirname + '/../' + 'ca-certificate.crt');
 }
 
 var sequelize = new Sequelize(config.dbConnectionString, {
