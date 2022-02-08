@@ -23,6 +23,10 @@ MemberProductLine.belongsTo(MemberProduct, { foreignKey: 'member_product_id', ta
 MemberProduct.hasMany(MemberProductLine, { foreignKey: 'member_product_id', targetKey: 'id', as: 'product_lines' });
 
 MemberProductLine.belongsTo(Product, { foreignKey: 'product_id', targetKey: 'id' });
+Product.hasMany(MemberProductLine, { foreignKey: 'product_id', targetKey: 'id' });
+
+MemberProductLine.belongsTo(Transaction, { foreignKey: 'transaction_id', targetKey: 'id' });
+Transaction.hasOne(MemberProductLine, { foreignKey: 'transaction_id', targetKey: 'id' });
 
 MemberProduct.belongsTo(ProductSubCategory, { foreignKey: 'code', targetKey: 'code' });
 
@@ -345,28 +349,52 @@ async function category(permakey) {
 
 async function transactions(code, user_id) {
     try {
-        const { Op } = sequelize;
-        return Transaction.findAndCountAll({
-            order: [['created', 'DESC']],
-            attributes: [
-                'fee',
-                'txid',
-                'note',
-                'status',
-                'created',
-                'tx_type',
-                'currency',
-                'reference',
-                'total_amount',
-                [sequelize.json('metadata.tokens'), 'tokens']
-            ],
-            where: {
-                user_id,
-                subtype: 'product',
-                txid: { [Op.iLike]: `${code}%` },
-                status: { [Op.iLike]: 'Completed' },
-            }
-        });
+        // const { Op } = sequelize;
+        // return Transaction.findAndCountAll({
+        //     order: [['created', 'DESC']],
+        //     attributes: [
+        //         'fee',
+        //         'txid',
+        //         'note',
+        //         'status',
+        //         'created',
+        //         'tx_type',
+        //         'currency',
+        //         'reference',
+        //         'total_amount',
+        //         [Transaction, sequelize.json('metadata.tokens'), 'tokens']
+        //     ],
+        //     include: [{
+        //         model: MemberProductLine,
+        //         include: [{ model: Product }]
+        //     }],
+        //     where: {
+        //         user_id,
+        //         subtype: 'product',
+        //         txid: { [Op.iLike]: `${code}%` },
+        //         status: { [Op.iLike]: 'Completed' },
+        //     }
+        // });
+
+        const options = {
+            nest: true,
+            replacements: {},
+            type: sequelize.QueryTypes.SELECT,
+        };
+        const sql = `
+        SELECT  "transaction"."fee", "transaction"."txid", "transaction"."note", "transaction"."status",
+            "transaction"."created", "transaction"."tx_type", "transaction"."currency", "transaction"."reference",
+            "transaction"."total_amount", "member_product"."start_date" AS "member_product.start_date", 
+            "member_product"."end_date" AS "member_product.end_date", "member_product"."value" AS "member_product.value",
+            "product"."title" AS "product.title", "product"."price" AS "product.price"
+        FROM transactions AS "transaction"
+        INNER JOIN member_products_lines AS "member_product" ON "transaction"."id" = "member_product"."transaction_id"
+        INNER JOIN products AS "product" ON "member_product"."product_id" = "product"."id"
+        WHERE "transaction"."user_id" = '${user_id}' AND "transaction"."subtype" = 'product'
+            AND "transaction"."txid" iLIKE '${code}%' AND "transaction"."status" iLIKE 'Completed'
+        ORDER BY "transaction"."created" DESC;
+        `;
+        return sequelize.query(sql, options);
     } catch (error) {
         console.error(error.message || null);
         throw new Error('Could not process your request');

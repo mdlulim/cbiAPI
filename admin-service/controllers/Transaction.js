@@ -2,6 +2,7 @@ const transactionService = require('../services/Transaction');
 const activityService = require('../services/Activity');
 const currencyService = require('../services/Currency');
 const userService = require('../services/User');
+const userController = require('./User');
 const emailHandler = require('../helpers/emailHandler');
 const { decrypt } = require('../utils');
 var Readable = require('stream').Readable
@@ -299,6 +300,110 @@ async function roles(req, res){
     }
 };
 
+async function updateBulkTransaction(req, res){
+    try {
+            const transactions = req.body.transactions;
+            transactions.forEach(function(transaction_req) {
+                let requestData = {
+                        id: transaction_req.id,
+                        admin_user_id: req.user.id,
+                        status: req.body.status,
+                        reason: req.body.reason
+                }
+                transactionService.updateBulk(requestData).then(async (data) => {
+                        let subtype = data.data.subtype;
+                        if (subtype.toLowerCase() === "deposit") {
+                            subtype = 'credited';
+                        } else {
+                            subtype = 'debited';
+                        }
+                        console.log(data)
+                        if (data.success) {
+                            await emailHandler.transactionNotification({
+                                first_name: data.data.first_name,
+                                email: data.data.email,
+                                status: data.data.status,
+                                amount: data.data.amount,
+                                subtype: subtype,
+                                reference: data.data.reference,
+                                currency_code: data.data.currency_code,
+                                sender: `${req.user.first_name} ${req.user.last_name} (${req.user.referral_id})`,
+                            })
+
+                            await activityService.addActivity({
+                                user_id: req.user.id,
+                                action: `${req.user.group_name}.transactions.${data.data.tx_type}.${data.data.subtype}`,
+                                section: 'Transactions',
+                                subsection: getSubsection(data.data),
+                                description: `${data.data.first_name} ${data.data.status}  a ${data.data.subtype} of ${data.data.amount} ${data.data.currency_code}`,
+                                ip: null,
+                                data,
+                            })
+                        }
+                })
+            })
+            return res.send({ success: true, message: 'Transactions was successfully updated' })
+    } catch (err) {
+        return res.send({
+            success: false,
+            message: 'Could not process your request'
+        });
+    }
+}
+
+async function updateTransaction(req, res) {
+    try {
+        const transact = req.body.transaction;
+        const admin_user_id = req.user.id;
+
+        if(req.body.transaction.status === 'Completed' || req.body.transaction.status === 'Rejected'){
+            return res.send({ success: false, message: 'This transaction has already been processed!' })
+        }
+
+        return userService.updateTransaction(req.params.id, req.body, admin_user_id).then(async (data) => {
+            let subtype = transact.subtype;
+            if (transact.subtype.toLowerCase() === "deposit") {
+                subtype = 'credited';
+            } else {
+                subtype = 'debited';
+            }
+
+            if (data.success) {
+                // send email to recipient
+                await emailHandler.transactionNotification({
+                    first_name: data.data.first_name,
+                    email: data.data.email,
+                    status: data.data.status,
+                    amount: data.data.amount,
+                    subtype: subtype,
+                    reference: data.data.reference,
+                    currency_code: data.data.currency_code,
+                    sender: `${req.user.first_name} ${req.user.last_name} (${req.user.referral_id})`,
+                }).then((response) => {
+                    console.log('')
+                });
+
+                await activityService.addActivity({
+                    user_id: req.user.id,
+                    action: `${req.user.group_name}.transactions.${data.data.tx_type}.${data.data.subtype}`,
+                    section: 'Transactions',
+                    subsection: getSubsection(data.data),
+                    description: `${data.data.first_name} ${data.data.status}  a ${data.data.subtype} of ${data.data.amount} ${data.data.currency_code}`,
+                    ip: null,
+                    data,
+                })
+            }
+            return res.send({ success: data.success, message: data.message })
+        })
+    } catch (err) {
+        return res.send({
+            success: false,
+            message: 'Could not process your request'
+        });
+    }
+}
+
+
 module.exports = {
     index,
     debitCreditUserAccount,
@@ -307,6 +412,7 @@ module.exports = {
     getProofOfPayment,
     batchProcessTransaction,
     transactions,
-    transactionstotal
+    transactionstotal,
+    updateBulkTransaction
 
 };

@@ -48,13 +48,13 @@ async function changePassword(data) {
 };
 
 async function verifyLogin(data) {
-    const { email } = data;
+    const { code, email } = data;
     const template = emailTemplates.verifyLogin(data);
     const from = {
         name: 'CBI',
         email: smtp.auth.user,
     };
-    return sendMail(from, email, 'Verify login - Do not share this sign-in confirmation code with anyone', template);
+    return sendMail(from, email, `Sign-in confirmation code: ${code.toString().substr(0, 3)} ${code.toString().substr(3, 3)} - Do not share this with anyone`, template);
 };
 
 async function notifyReferrer(data) {

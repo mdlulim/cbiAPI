@@ -8,9 +8,7 @@ module.exports.set = app => {
     
     app.get('/wc-autorenew/notify', cronController.autorenewNotify);
     
-    app.get('/wc-autorenew/notify', cronController.autorenewNotify);
+    app.get('/products/:permakey/daily/earnings', cronController.productDailyEarnings);
     
-    app.get('/products/:code/daily/earnings', cronController.productDailyEarnings);
-    
-    app.get('/products/:code/weekly/earnings', cronController.productWeeklyEarnings);
+    app.get('/products/:permakey/weekly/earnings', cronController.productWeeklyEarnings);
 };

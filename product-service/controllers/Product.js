@@ -82,7 +82,6 @@ async function subscribe(req, res){
 
         const { product_subcategory } = product;
         const { code, indicators } = product_subcategory;
-        const { commission_structure, educator_percentage, educator_fee } = indicators;
 
         // get user
         const user = await userService.show(req.user.id);
@@ -286,6 +285,8 @@ async function subscribe(req, res){
              * - This is payable at time of initial buying 3% of investment amount
              *   NB: Percentage is configurable
              */
+
+            var { commission_structure, educator_percentage, educator_fee } = indicators;
             var payoutAmount = totalAmount * parseFloat(educator_percentage) / 100;
             return commissionPayout(res, {
                 user,
@@ -383,6 +384,8 @@ async function subscribe(req, res){
                  * - This is payable at time of initial buying CBI 5.00 per Fraxion
                  *   NB: Percentage is configurable
                  */
+
+                var { commission_structure, educator_percentage, educator_fee } = indicators;
                 var payoutAmount = parseFloat(educator_fee) * units;
                 return commissionPayout(res, {
                     user,
@@ -1159,14 +1162,13 @@ async function transactions(req, res){
     try {
         const { permakey } = req.params;
         const transactions = await productService.transactions(permakey, req.user.id);
-        const { count, rows } = transactions;
         return res.status(200).send({
             success: true,
             data: {
-                count,
+                count: transactions.length,
                 next: null,
                 previous: null,
-                results: rows,
+                results: transactions,
             }
         });
     } catch (err) {

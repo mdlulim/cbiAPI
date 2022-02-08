@@ -361,7 +361,7 @@ module.exports.set = app => {
     * Update company’s product details.
     */
     app.put('/transactions/:id', authMiddleware.checkAuth, userController.updateTransaction);
-
+    app.put('/bulk-update/transactions', authMiddleware.checkAuth, transactionController.updateBulkTransaction);
     /**
     * Process Batch Transactions.
     * 
