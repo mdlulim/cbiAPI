@@ -432,11 +432,10 @@ async function updateTransaction(id, data, admin_user_id) {
                 approved_by: admin_user_id
             }
             const mainAccount =  await Account.findOne({where : {id: '3cf7d2c0-80e1-4264-9f2f-6487fd1680c2'}});
-            const userWallet =  await Account.findOne({
-                where: { user_id },
-            });
+            const userWallet =  await Account.findOne({ where: { user_id }, });
             let isBalance = isNaN(userWallet.available_balance);
             let available_balance = userWallet.available_balance;
+
             if (isBalance) {
                 available_balance = 0;
             }
@@ -612,7 +611,7 @@ async function approveDeposit(id, data, admin_user_id) {
             }
 
             const mainCommission = {
-                user_id: sponsor.id,
+                company_id: mainAccount.company_id,
                 tx_type: 'credit',
                 subtype: 'registration',
                 note: 'CBI Registration Fee',
@@ -637,6 +636,7 @@ async function approveDeposit(id, data, admin_user_id) {
             }
 
             const dataUser = {
+                user_id: user.id,
                 status: data.status,
                 first_name: user.first_name,
                 email: user.email,
@@ -649,6 +649,7 @@ async function approveDeposit(id, data, admin_user_id) {
             }
 
             const dataSponsor = {
+                sponsor_id: sponsor.id,
                 status: data.status,
                 first_name: sponsor.first_name,
                 email: sponsor.email,

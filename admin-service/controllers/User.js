@@ -600,12 +600,10 @@ async function approveDeposit(req, res) {
                     ip: null,
                     data,
                 })
-                
                 return res.send({ success: data.success, message: data.message})
             }else{
                 return res.send({ success: data.success, message: data.message})
             }
-           
         });
     } catch (err) {
         return res.status(500).send({
