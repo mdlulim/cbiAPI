@@ -166,6 +166,14 @@ async function subscribe(req, res){
                 total_amount: amount,
                 currency: product.currency,
                 status: 'Completed',
+                metadata: {
+                    type: 'crypto',
+                    currency: 'CBI',
+                    currency_code: 'CBI',
+                    fees: {
+                        admin_fee: adminFee,
+                    },
+                }
             });
 
             // subscribe (add/update in user product table)
@@ -235,6 +243,7 @@ async function subscribe(req, res){
                 subtype: 'product',
                 user_id: user.id,
                 amount: totalAmount,
+                fee: req.body.fee || 0,
                 reference: `Buy-${product.product_code}`,
                 note: `Bought ${product.title}`,
                 total_amount: totalAmount,
@@ -700,7 +709,7 @@ async function sellCBIx7Tokens(data, res) {
             tx_type: 'credit',
             subtype: 'product',
             user_id: user.id,
-            fee: 0,
+            fee: req.body.fee || 0,
             amount: calculations.amount,
             reference: `Sell-${product.product_code}`,
             note: `Sold to ${product.title} product`,
@@ -882,7 +891,7 @@ async function invest(req, res){
         const currency = await currencyService.show(currency_code); // get currency
         const transData = {
             currency,
-            fee: null,
+            fee: req.body.fee || 0,
             amount: amount,
             total_amount: totalAmount,
             user_id: user.id,
