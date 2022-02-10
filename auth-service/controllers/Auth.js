@@ -58,6 +58,7 @@ async function validate(req, res) {
 
 async function tokensVerify(req, res) {
     try {
+        console.log(req.body)
         const { type } = req.body;
         if (type === 'login') {
             const data = await authService.verifyLogin({
@@ -1142,7 +1143,6 @@ async function passwordChange(req, res) {
 async function passwordReset(req, res) {
     try {
         const { email } = req.body;
-        console.log(email)
         const user = await userService.findByEmail(email);
 
         if (!user) {
@@ -1176,6 +1176,7 @@ async function passwordReset(req, res) {
             first_name,
             email,
             token,
+            admin_baseurl: req.body.baseurl ? req.body.baseurl : '',
         });
 
         return res.send({
