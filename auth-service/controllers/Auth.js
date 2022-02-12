@@ -342,7 +342,7 @@ async function validateMigrateToken(req, res) {
 async function migrateTokenResend(req, res) {
     try {
         const { token } = req.body;
-        const migrate = await userService.showOldUserByToken(token);
+        const migrate = await userService.showOldUserByToken(token, true);
 
         if (migrate && migrate.id) {
             const { id, phone, metadata } = migrate;

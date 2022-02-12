@@ -107,15 +107,15 @@ async function showOldUser(email) {
     }
 }
 
-async function showOldUserByToken(token) {
+async function showOldUserByToken(token, migrated = false) {
     try {
         const { Op } = sequelize;
         return OldSystemClient.findOne({
             where: {
                 email_verification_token: token,
                 allow_migration: true,
-                migrated: false,
                 blocked: false,
+                migrated,
                 user_id: {
                     [Op.ne]: null,
                 },
