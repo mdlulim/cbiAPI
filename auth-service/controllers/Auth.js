@@ -316,6 +316,12 @@ async function validateMigrateToken(req, res) {
                 }
             }
 
+            // send welcome email
+            await emailHandler.migrateWelcome({
+                first_name: newUser.first_name,
+                email: newUser.email,
+            });
+
             // update migration table
             await userService.updateOldUser({
                 migrated: true,

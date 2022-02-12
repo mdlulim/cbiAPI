@@ -48,6 +48,17 @@ async function welcome(data) {
     return sendMail(from, email, 'Welcome to CBI Global!', template);
 };
 
+async function migrateWelcome(data) {
+    const { email } = data;
+    data.url = `${baseurl.frontend}/login`;
+    const template = emailTemplates.migrateWelcome(data);
+    const from = {
+        name: 'CBI',
+        email: smtp.auth.user,
+    };
+    return sendMail(from, email, 'Welcome to the New CBI Application!', template);
+};
+
 async function changePassword(data) {
     const { email } = data;
     const template = emailTemplates.changePassword(data);
@@ -89,6 +100,7 @@ async function loginNotify(data) {
 };
 
 module.exports = {
+    migrateWelcome,
     migrateConfirmEmail,
     confirmEmail,
     resetPassword,
