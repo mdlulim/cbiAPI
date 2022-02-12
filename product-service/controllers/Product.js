@@ -20,7 +20,7 @@ const {
     productPurchaseConfirmation,
     cancellationRequestConfirmation,
 } = require('../helpers/emailHandler');
-const { calculateSellCBIX7 } = require('../utils');
+const { calculateSellCBIX7, getFixedPlanFee } = require('../utils');
 
 const getTxid = (prefix, autoid) => {
     return prefix.toUpperCase() + autoid.toString();
@@ -887,11 +887,14 @@ async function invest(req, res){
             available_balance,
         } = wallet;
 
+        // get fees
+        const feeAmount = getFixedPlanFee(amount, fees);
+
         // log transaction
         const currency = await currencyService.show(currency_code); // get currency
         const transData = {
             currency,
-            fee: req.body.fee || 0,
+            fee: feeAmount || 0,
             amount: amount,
             total_amount: totalAmount,
             user_id: user.id,
