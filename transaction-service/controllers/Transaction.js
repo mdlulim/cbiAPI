@@ -149,6 +149,14 @@ async function create(req, res) {
                     balance: senderBalance,
                     available_balance: senderAvailableBalance,
                 }, senderWallet.id);
+
+                // add balances to a transaction
+                await transactionService.update({
+                    available_balance_before: senderWallet.available_balance,
+                    balance_before: senderWallet.balance,
+                    available_balance: senderAvailableBalance,
+                    balance: senderBalance,
+                }, transaction.id);
     
                 // update wallets (recipient)
                 const recipientBalance = parseFloat(recipientWallet.balance) + data.amount;
@@ -179,18 +187,21 @@ async function create(req, res) {
 
                 // insert recipient transaction
                 const trans = await transactionService.create({
+                    fee: 0,
                     user_id: recipient.id,
                     tx_type: 'credit',
                     subtype: 'payment',
                     note: `Payment from ${user.first_name} ${user.last_name} (${user.referral_id})`,
                     reference: 'Internal-Payment',
-                    balance: recipientAvailableBalance,
-                    fee: 0,
                     amount: data.amount,
                     total_amount: data.amount,
                     currency: data.currency,
                     source_transaction: user.referral_id,
                     destination_transaction: recipient.referral_id,
+                    available_balance_before: recipientWallet.available_balance,
+                    balance_before: recipientWallet.balance,
+                    available_balance: recipientAvailableBalance,
+                    balance: recipientBalance,
                     status: 'Completed',
                 });
 

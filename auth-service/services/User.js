@@ -1,5 +1,6 @@
 const sequelize = require('../config/db');
 const { Group } = require('../models/Group');
+const { OldSystemClient }  = require('../models/OldSystemClient');
 const { User }  = require('../models/User');
 
 User.belongsTo(Group, { foreignKey: 'group_id', targetKey: 'id' });
@@ -84,11 +85,68 @@ async function findByPropertyValue(prop, value) {
     }
 }
 
+async function showOldUser(email) {
+    try {
+        const { Op } = sequelize;
+        return OldSystemClient.findOne({
+            where: {
+                blocked: false,
+                migrated: false,
+                allow_migration: true,
+                user_id: {
+                    [Op.ne]: null,
+                },
+                email: {
+                    [Op.iLike]: email.trim(),
+                }
+            },
+        });
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
+async function showOldUserByToken(token) {
+    try {
+        const { Op } = sequelize;
+        return OldSystemClient.findOne({
+            where: {
+                email_verification_token: token,
+                allow_migration: true,
+                migrated: false,
+                blocked: false,
+                user_id: {
+                    [Op.ne]: null,
+                },
+            },
+        });
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
+async function updateOldUser(data, id) {
+    try {
+        data.updated = sequelize.fn('NOW');
+        return OldSystemClient.update(data, {
+            where: { id },
+        });
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
 module.exports = {
     create,
     show,
     update,
     findByEmail,
+    updateOldUser,
     findByPropertyValue,
+    showOldUserByToken,
     findByReferralId,
+    showOldUser,
 }
