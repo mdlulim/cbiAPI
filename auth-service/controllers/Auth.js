@@ -325,8 +325,9 @@ async function validateMigrateToken(req, res) {
             // update migration table
             await userService.updateOldUser({
                 migrated: true,
-                mobile_otp_code: true,
-                email_verification_token: true,
+                metadata: null,
+                mobile_otp_code: null,
+                email_verification_token: null,
             }, id);
 
             // success
