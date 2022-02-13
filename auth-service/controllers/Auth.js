@@ -386,7 +386,7 @@ async function migrateTokenResend(req, res) {
 async function migrateMobileConfirm(req, res) {
     try {
         const { token, code } = req.body;
-        const migrate = await userService.showOldUserByToken(token);
+        const migrate = await userService.showOldUserByToken(token, true);
 
         if (migrate && migrate.id) {
             const { id, user_id, mobile_otp_code, attempts } = migrate;
@@ -410,7 +410,6 @@ async function migrateMobileConfirm(req, res) {
             if (mobile_otp_code === code) {
                 // update attempts
                 await userService.updateOldUser({
-                    migrated: true,
                     mobile_otp_code: null,
                     mobile_verified: true,
                     email_verification_token: null,
@@ -435,6 +434,7 @@ async function migrateMobileConfirm(req, res) {
 
                 // return success
                 return res.send({
+                    auth: true,
                     success: true,
                 });
             }
