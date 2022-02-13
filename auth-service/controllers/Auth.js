@@ -249,6 +249,9 @@ async function validateMigrateToken(req, res) {
                     salt,
                     password,
                     verified: true,
+                    verification: {
+                        email: true
+                    }
                 });
 
                 // create user cbi wallet
@@ -325,9 +328,6 @@ async function validateMigrateToken(req, res) {
             // update migration table
             await userService.updateOldUser({
                 migrated: true,
-                metadata: null,
-                mobile_otp_code: null,
-                email_verification_token: null,
             }, id);
 
             // success
