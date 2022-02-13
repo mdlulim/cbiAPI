@@ -13,6 +13,21 @@ async function create(data) {
     }
 }
 
+async function update(data, user_id) {
+    try {
+        return MobileNumber.update(data, {
+            where: {
+                user_id,
+                is_primary: true,
+            }
+        });
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
 module.exports = {
     create,
+    update,
 }

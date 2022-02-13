@@ -192,6 +192,373 @@ async function tokensValidate(req, res) {
     }
 }
 
+async function validateMigrateEmail(req, res) {
+    try {
+        const { email } = req.body;
+        const user = await userService.showOldUser(email);
+        return res.send({
+            success: true,
+            exists: (user && user.id) ? true : false,
+        });
+    } catch (error) {
+        console.log(error)
+        return res.status(500).send({
+            success: false,
+            message: 'Could not process request'
+        });
+    }
+}
+
+async function validateMigrateToken(req, res) {
+    try {
+        const { token } = req.body;
+        const migrate = await userService.showOldUserByToken(token);
+        const data = {};
+        let auth = false;
+
+        if (migrate && migrate.id) {
+            const {
+                id,
+                phone,
+                metadata,
+                email,
+            } = migrate;
+            const { salt, password } = metadata;
+
+            /** 
+             * Migrate record to the user's table
+             */
+            const newUser = await userService.findByEmail(cleanEmail(email), {
+                blocked: false,
+                verified: false,
+                archived: false,
+                old_system_user: true,
+            });
+
+            if (!newUser) {
+                return res.status(403).send({
+                    success: false,
+                    message: 'Migration failed. Please contact support.'
+                });
+            }
+
+            if (newUser && newUser.id) {
+
+                // update user record
+                await userService.update(newUser.id, {
+                    salt,
+                    password,
+                    verified: true,
+                });
+
+                // create user cbi wallet
+                await accountService.create({
+                    name: 'cbi-wallet',
+                    label: 'CBI Wallet',
+                    reference: newUser.referral_id,
+                    is_primary: true,
+                    user_id: newUser.id,
+                });
+
+                // create primary email address record
+                await emailAddressService.create({
+                    user_id: newUser.id,
+                    email: cleanEmail(email),
+                    is_primary: true,
+                    is_verified: true,
+                });
+
+                // create primary mobile number record
+                if (newUser.mobile) {
+                    await mobileNumberService.create({
+                        user_id: newUser.id,
+                        number: newUser.mobile,
+                        is_primary: true,
+                        is_verified: false,
+                    });
+                }
+
+                // create (default) notification record for the user
+                const notifications = [];
+                notifications.push({
+                    user_id: newUser.id,
+                    key: 'marketing-communication',
+                    activity: 'Marketing & Communication',
+                    description: 'Get the latest promotions, updates and tips',
+                    sms: true,
+                    email: true,
+                    push: true,
+                });
+                notifications.push({
+                    user_id: newUser.id,
+                    key: 'account-activity-updates',
+                    activity: 'Account Activity & Updates',
+                    description: 'Get notified about your account activity and updates. Choose the type(s) of notification to get notified with.',
+                    sms: true,
+                    email: true,
+                    push: true,
+                });
+                await notificationService.create(notifications);
+            }
+
+            if (newUser.mobile) {
+
+                // create/generate
+                const code = await otpService.migrateCreate({
+                    email_verified: true,
+                    metadata,
+                }, id);
+
+                // send OTP (SMS)
+                if (code) {
+                    const mobile = phone.replace('+', '');
+                    await sendOTPAuth(mobile, code);
+                }
+            }
+
+            // send welcome email
+            await emailHandler.migrateWelcome({
+                first_name: newUser.first_name,
+                email: newUser.email,
+            });
+
+            // update migration table
+            await userService.updateOldUser({
+                migrated: true,
+                mobile_otp_code: true,
+                email_verification_token: true,
+            }, id);
+
+            // success
+            auth = true;
+            data.mobile = newUser.mobile;
+        }
+        return res.send({
+            auth,
+            data,
+            success: true,
+        });
+    } catch (error) {
+        console.log(error)
+        return res.status(500).send({
+            success: false,
+            message: 'Could not process request'
+        });
+    }
+}
+
+async function migrateTokenResend(req, res) {
+    try {
+        const { token } = req.body;
+        const migrate = await userService.showOldUserByToken(token, true);
+
+        if (migrate && migrate.id) {
+            const { id, phone, metadata } = migrate;
+
+            // create/generate
+            const code = await otpService.migrateCreate({
+                metadata,
+            }, id);
+
+            // send OTP (SMS)
+            if (code) {
+                const mobile = phone.replace('+', '');
+                await sendOTPAuth(mobile, code);
+            }
+
+            return res.send({
+                success: true,
+            });
+        }
+        return res.status(403).send({
+            success: false,
+        });
+    } catch (error) {
+        console.log(error)
+        return res.status(500).send({
+            success: false,
+            message: 'Could not process request'
+        });
+    }
+}
+
+async function migrateMobileConfirm(req, res) {
+    try {
+        const { token, code } = req.body;
+        const migrate = await userService.showOldUserByToken(token);
+
+        if (migrate && migrate.id) {
+            const { id, user_id, mobile_otp_code, attempts } = migrate;
+
+            if (attempts >= 3) {
+                // block record
+                await userService.updateOldUser({
+                    blocked: true,
+                    blocked_reason: 'OTP attempts exceeded, user provided wrong OTP for more than 3 times.'
+                }, id);
+
+                // return error message
+                return res.status(403).send({
+                    auth: false,
+                    success: false,
+                    message: 'Wrong OTP code provided. Attempts exceeded, please contact support for further assistance.',
+                });
+            }
+            
+            // check if codes match
+            if (mobile_otp_code === code) {
+                // update attempts
+                await userService.updateOldUser({
+                    migrated: true,
+                    mobile_otp_code: null,
+                    mobile_verified: true,
+                    email_verification_token: null,
+                }, id);
+
+                // update mobile numbers table record
+                await mobileNumberService.update({
+                    is_verified: true,
+                }, user_id);
+
+                // get user record
+                const user = await userService.show(user_id);
+                const { verification } = user;
+
+                // update user table record
+                await userService.update(user_id, {
+                    verification: {
+                        ...verification,
+                        mobile: true,
+                    },
+                })
+
+                // return success
+                return res.send({
+                    success: true,
+                });
+            }
+
+            // update attempts
+            await userService.updateOldUser({
+                attempts: attempts + 1,
+            }, id);
+
+            // return error message
+            return res.status(403).send({
+                auth: false,
+                success: true,
+                message: `Wrong OTP code provided, you have ${3 - attempts} left.`,
+            });
+        }
+
+        // return error message
+        return res.status(403).send({
+            auth: false,
+            success: false,
+            message: 'Access denied',
+        });
+    } catch (error) {
+        console.log(error)
+        return res.status(500).send({
+            success: false,
+            message: 'Could not process request'
+        });
+    }
+}
+
+async function migrateConfirm(req, res) {
+    try {
+        const {
+            confirm_password,
+            password,
+            geoinfo,
+            device,
+            email,
+        } = req.body;
+
+        // validate email
+        if (!email) {
+            return res.status(403).send({
+                success: false,
+                message: 'Registration failed. Email address is required.'
+            });
+        }
+
+        // validate password
+        if (!password) {
+            return res.status(403).send({
+                success: false,
+                message: 'Registration failed. Password is required.'
+            });
+        }
+
+        // validate confirm password
+        if (!confirm_password) {
+            return res.status(403).send({
+                success: false,
+                message: 'Registration failed. Confirm Password is required.'
+            });
+        }
+
+        // validate if passwords match
+        if (confirm_password !== password) {
+            return res.status(403).send({
+                success: false,
+                message: 'Registration failed. Password do not match.'
+            });
+        }
+
+        const user = await userService.showOldUser(email);
+
+        if (!user) {
+            return res.status(403).send({
+                success: false,
+                message: 'Access denied'
+            });
+        }
+
+        const code = generator.generate({ length: 6, numbers: true }).toUpperCase();
+        const token = jwt.sign({
+            code,
+            id: user.id,
+        }, jwtSecret, {
+            expiresIn: '30m'
+        });
+
+        // generate salt
+        const salt = bcrypt.genSaltSync();
+        const encPassword = bcrypt.hashSync(password, salt);
+
+        // update
+        await userService.updateOldUser({
+            email_verification_token: token,
+            metadata: {
+                password: encPassword,
+                token_expiry: moment().add(30, 'minutes').format('YYYY-MM-DD HH:mm:ss'),
+                geoinfo,
+                device,
+                salt,
+            }
+        }, user.id);
+
+        // send verification email
+        await emailHandler.migrateConfirmEmail({
+            first_name: user.first_name,
+            email: user.email,
+            token,
+        });
+
+        return res.send({
+            success: true
+        });
+    } catch (error) {
+        return res.status(500).send({
+            success: false,
+            message: 'Could not process request'
+        });
+    }
+}
+
 async function resendActivationEmail(req, res) {
     try {
         const { Op } = sequelize;
@@ -1701,9 +2068,14 @@ async function otpVerify(req, res) {
 module.exports = {
     validate,
     tokensVerify,
+    migrateConfirm,
     tokensValidate,
     tokensVerifyResend,
     resendActivationEmail,
+    validateMigrateEmail,
+    validateMigrateToken,
+    migrateTokenResend,
+    migrateMobileConfirm,
     login,
     socialLogin,
     register,

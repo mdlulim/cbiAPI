@@ -40,7 +40,7 @@ async function authenticate(data) {
     return User.findOne({
         where: {
             [Op.or]: [
-                { email: user },
+                { email: { [Op.iLike]: user } },
                 { mobile: user },
                 { username: user },
             ],

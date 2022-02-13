@@ -72,6 +72,78 @@ const welcome = data => {
     }
 };
 
+const migrateWelcome = data => {
+    const {
+        url,
+        first_name,
+    } = data;
+    const html = `
+        <!DOCTYPE html>
+        <html lang="en">
+        
+        <head>
+            <meta charset="UTF-8">
+            <meta http-equiv="X-UA-Compatible" content="IE=edge">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Document</title>
+        </head>
+        
+        <body>
+            <div style="
+                    font-family: Arial, Helvetica, sans-serif; 
+                    color: darkslategray; 
+                    min-width: 360px; 
+                    max-width: 600px; 
+                    margin: 0 auto;
+                    line-height: 1.5;">
+                <div style="margin: 0 5%;">
+                    <div style="padding: 20px 0; margin-bottom: 20px; background-color: #2D3357;  background-image: linear-gradient(310deg,#141727,#3a416f);  color: white; ">
+                        <div style="text-align: center;">
+                            <img src="https://cdn-cbigold.ams3.digitaloceanspaces.com/public/email/CDC3837FF1DF9ADC1FF459D0278FD.png" height="50px" alt="">
+                        </div>
+                        <!-- Email topic -->
+                        <p style="line-height: 2; text-align: center;">
+                            Hi ${first_name}, <br />
+                        </p>
+                        <h2 style="text-align: center;">Welcome to the New CBI Application!!</h2>
+                    </div>
+                    <!-- Greetings and short message -->
+        
+                    <!-- Email body -->
+                    <div>
+                        <p>
+                            Your account has been successfully migrated and setup. If you have successfully verified your mobile number you can now proceed to login by 
+                            clicking the <a href="${url}" target="_blank" rel="noopener noreferrer">login</a> button below. Otherwise, if you have issues with verifying 
+                            your mobile number, please <a href="mailto:migrate@cbiglobal.io">contact support</a> on <a href="mailto:migrate@cbiglobal.io" target="_blank">migrate@cbiglobal.io</a> for further assistance.<br />
+                        <p>
+                        <a href="${url}" target="_blank" rel="noopener noreferrer">
+                            <button
+                                style="background-image: linear-gradient(310deg,#c89623,#c89623); color: white; padding: 15px; border: none; cursor: pointer;">
+                                Login
+                            </button>
+                        </a><br/><br/>
+                        <p style="padding-top:50px"><strong>Cheers</strong>,<br />CBI Support</p>
+                    </div>
+                </div>
+                <!-- Email footer -->
+                <div>
+                    <p style="text-align: center; line-height: 1.5; font-size: smaller;">
+                        &copy;2021 CBI Global<br />
+                        <a href="${frontend}">Help Centre</a> | <a href="${frontend}">Terms and conditions</a> | <a href="${frontend}">Security and privacy</a>
+                    </p>
+                </div>
+            </div>
+        </body>
+        
+        </html>
+    `;
+    const text = ``;
+    return {
+        html,
+        text
+    }
+};
+
 const resetPassword = data => {
     const {
         link,
@@ -373,6 +445,71 @@ const loginNotify = data => {
     }
 };
 
+const migrateConfirmEmail = data => {
+    const {
+        link,
+        first_name,
+    } = data;
+    const html = `
+    <!DOCTYPE html>
+    <html lang="en">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Document</title>
+    </head>
+
+    <body>
+        <div style="
+                font-family: Arial, Helvetica, sans-serif; 
+                color: darkslategray; 
+                min-width: 360px; 
+                max-width: 600px; 
+                margin: 0 auto;
+                line-height: 1.5;">
+            <div style="padding: 20px 0; margin-bottom: 20px; background-color: #2D3357;  background-image: linear-gradient(310deg,#141727,#3a416f);  color: white; ">
+                <div style="text-align: center;">
+                    <img src="https://cdn-cbigold.ams3.digitaloceanspaces.com/public/email/CDC3837FF1DF9ADC1FF459D0278FD.png" height="50px" alt="" />
+                </div>
+                <!-- Email topic -->
+                <p style="line-height: 2; text-align: center;">
+                    Hi ${first_name}, <br />
+                </p>
+                <h2 style="text-align: center;">Email Verification</h2>
+            </div>
+            <div style="margin: 0 5%; border-bottom: 1px solid grey;">
+                <!-- Email body -->
+                <div>
+                    <p>
+                        Thank you for starting the migration process. To start exploring the New CBI Application,
+                        please confirm your email address: <br/><br/>
+                        <a href="${link}" target="_blank" rel="noopener noreferrer"><button style="background-image: linear-gradient(310deg,#c89623,#c89623); color: white; padding: 15px; border: none; cursor: pointer;">Click Here to Verify Email</button></a>
+                    </p>
+                    <p>If this request isn't authorized by you, <a href="mailto:migrate@cbiglobal.io" style="text-decoration: none;">contact support</a></p>
+                    <p style="padding-top:50px"><strong>Cheers</strong>,<br />CBI Support</p>
+                </div>
+            </div>
+            <!-- Email footer -->
+            <div>
+                <p style="text-align: center; line-height: 1.5; font-size: smaller;">
+                    &copy;2021 CBI Global<br />
+                    <a href="${frontend}">Help Centre</a> | <a href="${frontend}">Terms and conditions</a> | <a href="${frontend}">Security and privacy</a>
+                </p>
+            </div>
+        </div>
+    </body>
+
+    </html>
+    `;
+    const text = ``;
+    return {
+        html,
+        text
+    }
+};
+
 const confirmEmail = data => {
     const {
         link,
@@ -515,10 +652,12 @@ const notifyReferrer = data => {
 
 module.exports = {
     welcome,
+    migrateWelcome,
     resetPassword,
     changePassword,
     verifyLogin,
     loginNotify,
     confirmEmail,
+    migrateConfirmEmail,
     notifyReferrer,
 };
