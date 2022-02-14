@@ -430,7 +430,12 @@ async function migrateMobileConfirm(req, res) {
                         ...verification,
                         mobile: true,
                     },
-                })
+                });
+
+                // mark mobile number as verified
+                await mobileNumberService.update({
+                    is_verified: true,
+                }, user_id);
 
                 // return success
                 return res.send({
