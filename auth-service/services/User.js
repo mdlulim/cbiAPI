@@ -113,6 +113,7 @@ async function showOldUserByToken(token, migrated = false) {
         return OldSystemClient.findOne({
             where: {
                 email_verification_token: token,
+                mobile_verified: false,
                 allow_migration: true,
                 blocked: false,
                 migrated,

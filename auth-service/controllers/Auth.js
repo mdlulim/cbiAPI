@@ -249,6 +249,9 @@ async function validateMigrateToken(req, res) {
                     salt,
                     password,
                     verified: true,
+                    verification: {
+                        email: true
+                    }
                 });
 
                 // create user cbi wallet
@@ -325,8 +328,6 @@ async function validateMigrateToken(req, res) {
             // update migration table
             await userService.updateOldUser({
                 migrated: true,
-                mobile_otp_code: true,
-                email_verification_token: true,
             }, id);
 
             // success
@@ -385,7 +386,7 @@ async function migrateTokenResend(req, res) {
 async function migrateMobileConfirm(req, res) {
     try {
         const { token, code } = req.body;
-        const migrate = await userService.showOldUserByToken(token);
+        const migrate = await userService.showOldUserByToken(token, true);
 
         if (migrate && migrate.id) {
             const { id, user_id, mobile_otp_code, attempts } = migrate;
@@ -409,7 +410,6 @@ async function migrateMobileConfirm(req, res) {
             if (mobile_otp_code === code) {
                 // update attempts
                 await userService.updateOldUser({
-                    migrated: true,
                     mobile_otp_code: null,
                     mobile_verified: true,
                     email_verification_token: null,
@@ -430,10 +430,16 @@ async function migrateMobileConfirm(req, res) {
                         ...verification,
                         mobile: true,
                     },
-                })
+                });
+
+                // mark mobile number as verified
+                await mobileNumberService.update({
+                    is_verified: true,
+                }, user_id);
 
                 // return success
                 return res.send({
+                    auth: true,
                     success: true,
                 });
             }
