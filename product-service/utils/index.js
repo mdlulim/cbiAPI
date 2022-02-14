@@ -90,7 +90,30 @@ function calculateSellCBIX7(data) {
     };
 }
 
+function getFixedPlanFee(amount, fees) {
+    const {
+        registration_fee,
+        commission_percentage,
+        registration_percentage,
+    } = fees;
+    let feeAmount = 0;
+
+    // plus commission percentage
+    if (commission_percentage) {
+        feeAmount += (parseFloat(commission_percentage) * parseFloat(amount) / 100);
+    }
+
+    // plus registration fee / percentage
+    if (registration_percentage) {
+        feeAmount += (parseFloat(registration_percentage) * parseFloat(amount) / 100);
+    } else if (registration_fee) {
+        feeAmount += parseFloat(registration_fee);
+    }
+    return feeAmount;
+}
+
 module.exports = {
     sendMail,
     calculateSellCBIX7,
+    getFixedPlanFee,
 };

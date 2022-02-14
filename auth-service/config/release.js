@@ -6,8 +6,8 @@ config = {
     tokenExpireTime: '6h',
     tokenExpireHours: 6,
     baseurl: {
-        admin: 'https://admin.cbiglobal.io',
-        frontend: 'https://demo.cbiglobal.io',
+        admin: 'https://admin.release.cbiglobal.io',
+        frontend: 'https://release.cbiglobal.io',
     },
     mail: {
         smtp: {

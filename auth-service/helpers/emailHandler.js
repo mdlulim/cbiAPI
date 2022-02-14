@@ -15,6 +15,17 @@ async function confirmEmail(data) {
     return sendMail(from, email, 'Confirm your email address', template);
 };
 
+async function migrateConfirmEmail(data) {
+    const { email, token } = data;
+    data.link = `${baseurl.frontend}/migrate/activate/${token}`;
+    const template = emailTemplates.migrateConfirmEmail(data);
+    const from = {
+        name: 'CBI',
+        email: smtp.auth.user,
+    };
+    return sendMail(from, email, 'Confirm your email address', template);
+};
+
 async function resetPassword(data) {
     const { email, token, admin_baseurl } = data;
     data.link = admin_baseurl ? `${baseurl.admin}/reset-password/${token}` : `${baseurl.frontend}/reset-password/${token}`;
@@ -35,6 +46,17 @@ async function welcome(data) {
         email: smtp.auth.user,
     };
     return sendMail(from, email, 'Welcome to CBI Global!', template);
+};
+
+async function migrateWelcome(data) {
+    const { email } = data;
+    data.url = `${baseurl.frontend}/login`;
+    const template = emailTemplates.migrateWelcome(data);
+    const from = {
+        name: 'CBI',
+        email: smtp.auth.user,
+    };
+    return sendMail(from, email, 'Welcome to the New CBI Application!', template);
 };
 
 async function changePassword(data) {
@@ -78,6 +100,8 @@ async function loginNotify(data) {
 };
 
 module.exports = {
+    migrateWelcome,
+    migrateConfirmEmail,
     confirmEmail,
     resetPassword,
     verifyLogin,
