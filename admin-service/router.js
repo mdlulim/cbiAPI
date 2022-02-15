@@ -68,7 +68,6 @@ module.exports.set = app => {
 
     app.get('/users/email/:email', authMiddleware.checkAuth, userController.email);
 
-
     /**
      * Retrieve User Mobiles
      * 

@@ -505,33 +505,6 @@ async function updateBankAccounts(req, res) {
     }
 }
 
-// async function creditUserWallet(req, res){
-//     try {
-//         return userService.creditWallet(req.params.id, req.body)
-//         .then(data => {
-//             console.log(data)
-//             res.send({ success: true, message: 'Account was successfully updated' }) 
-//         });
-//     } catch (err) {
-//         return res.status(500).send({
-//             success: false,
-//             message: 'Could not process your request'
-//         });
-//     }
-// }
-
-// async function debitUserWallet(req, res){
-//     try {
-//         return userService.debitWallet(req.params.id, req.body)
-//         .then(data => res.send({ success: true, message: 'Account was successfully updated' }));
-//     } catch (err) {
-//         return res.status(500).send({
-//             success: false,
-//             message: 'Could not process your request'
-//         });
-//     }
-// }
-
 async function approveDeposit(req, res) {
     try {
         const admin_user_id = req.user.id;

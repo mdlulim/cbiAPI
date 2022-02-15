@@ -12,24 +12,35 @@ User.belongsTo(Group, { foreignKey: 'group_id', targetKey: 'id' });
 
 async function index(query) {
     try {
-        const { offset, limit } = query;
+        const { Op } = sequelize;
+        const { offset, limit, start_date, end_date } = query;
         const where = query || {};
         const userWhere = {};
         delete where.offset;
         delete where.limit;
+        delete where.start_date;
+        delete where.end_date;
+        console.log("===========================TEST QUERY=============================");
+        
 
         if (where.user) {
             userWhere.id = where.user;
             delete where.user;
         }
-
-        return Transaction.findAndCountAll({
+        if(start_date && end_date){
+            where.created = { [Op.between]: [new Date(start_date), new Date(end_date)] }
+        }
+        //console.log(query);
+        console.log(where);
+        const results = Transaction.findAndCountAll({
             where,
             include: [{ model: User, where: userWhere }],
             order: [['created', 'DESC']],
             offset: offset || 0,
             limit: limit || 100,
         });
+        console.log(results);
+        return results;
     } catch (error) {
         console.error(error.message || null);
         throw new Error('Could not process your request');
@@ -172,7 +183,9 @@ async function transactions(query, data) {
                     ],
                     model: User, 
                     where: userWhere }],
-            order: [['created', 'DESC']]
+                    order: [['created', 'DESC']],
+                    offset: offset || 0,
+                    limit: limit || 100,
         });
     } catch (error) {
         console.error(error || null);
