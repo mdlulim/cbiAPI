@@ -47,12 +47,14 @@ async function create(data) {
  */
 async function index(query) {
     try {
-        const { offset, limit } = query;
+        const { Op } = sequelize;
+        const { offset, limit, start_date, end_date } = query;
         const where = query || {};
         const groupWhere = {};
-
         delete where.offset;
         delete where.limit;
+        // delete where.start_date;
+        // delete where.end_date;
 
         if (where.group) {
             if (where.group === 'admin') {
@@ -62,6 +64,11 @@ async function index(query) {
             }
             delete where.group;
         }
+
+        // if(start_date && end_date){
+        //     where.created = { [Op.between]: [new Date(start_date), new Date(end_date)] }
+        // }
+
         const users = await User.findAndCountAll({
             attributes: [
                 'id',
@@ -123,6 +130,7 @@ async function index(query) {
             where: { status: "Archived",},
              include: [{ model: Group, where: groupWhere, required: true }],
         })
+        console.log(users.rows[0])
         const { count, rows } = users;
         return {
             success: true,
@@ -439,7 +447,7 @@ async function updateTransaction(id, data, admin_user_id) {
         const user_id = transaction.user_id;
         const user =  await User.findOne({where : {id: transaction.user_id}});
 
-        const fee =  await Fee.findOne({where : {subtype: transaction.subtype.charAt(0).toUpperCase() + transaction.subtype.slice(1), group_id: user.dataValues.group_id} });
+        const fee =  await Fee.findOne({where : {subtype: transaction.subtype, group_id: user.dataValues.group_id} });
        
         if(!fee.value){
            return {success: false, message: 'Transaction fee is not configured!'}
@@ -833,7 +841,6 @@ async function findByPropertyValue(prop, value) {
         throw new Error('Could not process your request');
     }
 }
-
 
 /**
  * Get a single of group that has been created.
