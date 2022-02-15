@@ -107,11 +107,31 @@ async function index(query) {
             offset: offset || 0,
             limit: limit || 100,
         });
+        const activeCount = await User.count({
+            where: { status: "Active",},
+             include: [{ model: Group, where: groupWhere, required: true }],
+        })
+        const pendingCount = await User.count({
+            where: { status: "Pending",},
+             include: [{ model: Group, where: groupWhere, required: true }],
+        })
+        const blockedCount = await User.count({
+            where: { status: "Bocked",},
+             include: [{ model: Group, where: groupWhere, required: true }],
+        })
+        const archivedCount = await User.count({
+            where: { status: "Archived",},
+             include: [{ model: Group, where: groupWhere, required: true }],
+        })
         const { count, rows } = users;
         return {
             success: true,
             data: {
                 count,
+                active: activeCount,
+                pending: pendingCount,
+                blocked: blockedCount,
+                archived: archivedCount,
                 next: null,
                 previous: null,
                 results: rows,
