@@ -7,7 +7,7 @@ let doCA
 if (process.env.NODE_ENV === 'release') {
     doCA = fs.readFileSync(__dirname + '/../' + 'ca-certificate-release.crt');
 } else if (process.env.NODE_ENV === 'production') {
-    doCA = fs.readFileSync(__dirname + '/../' + 'ca-certificate-release.crt');
+    doCA = fs.readFileSync(__dirname + '/../' + 'ca-certificate-production.crt');
 } else {
     doCA = fs.readFileSync(__dirname + '/../' + 'ca-certificate.crt');
 }
