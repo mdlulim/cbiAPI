@@ -603,4 +603,11 @@ module.exports.set = app => {
    // Activies Admin side
    app.get("/activities", authMiddleware.checkAuth, activityController.index);
    app.get("/activities/:id", authMiddleware.checkAuth, activityController.getActivitiesByUser);
+
+    /**
+     * This sets transactions included in csv file to stautus 'In Progress' 
+     * 
+     * Updates user records on db with data from batch file
+     */
+     app.post('/create-batch', authMiddleware.checkAuth, transactionController.createBatch);
 };
