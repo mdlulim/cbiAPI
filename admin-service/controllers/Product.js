@@ -1,6 +1,11 @@
+const axios = require('axios');
+const async = require('async');
+const moment = require('moment');
+const config = require('../config');
 const sequelize = require('../config/db');
 const accountService = require('../services/Account');
 const activityService = require('../services/Activity');
+const commissionService = require('../services/Commission');
 const investmentService = require('../services/Investment');
 const productService = require('../services/Product');
 const settingService = require('../services/Setting');
@@ -266,18 +271,334 @@ async function subcategoryCalculations(req, res) {
     }
 }
 
+/**
+ * 
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
 async function processPayouts(req, res) {
     try {
-        
+
+        // retrieve product information
+        const productSubcategory = await productService.showSubcategory(req.params.id);
+        const { code } = productSubcategory;
+
+        // product check
+        const isFX = config.products.FX === code;
+
+        switch (true) {
+            case isFX: return fxPayouts(req, res, productSubcategory);
+        }
+
         return res.send({
             success: true,
-            data: null
+            data: null,
         });
     } catch (error) {
         console.log(error.message || '=====error=====');
         return res.status(500).send({
             success: false,
             message: 'Could not process request'
+        });
+    }
+}
+
+async function fxPayouts(req, res, productSubcategory) {
+    try {
+
+        // get current fraxion holders
+        const fraxionHolders = await productService.fraxionHolders();
+
+        if (fraxionHolders && fraxionHolders.length > 0) {
+
+            /**
+             * START: Conversions and Calculations
+             */
+
+            // fetch USD/ZAR rate
+            const { exchange } = config;
+            const usdZarRate = await axios({
+                mode: 'no-cors',
+                method: 'GET',
+                url: `${exchange.baseurl}exchangerate/USD/ZAR?apikey=${exchange.apikey}`,
+                headers: { 'Content-Type': 'application/json' },
+                crossdomain: true,
+            })
+                .then((json) => json.data)
+                .then(res => {
+                    const { rate } = res;
+                    return rate || null;
+                });
+
+            // retrieve settings to get CBI/ZAR rate
+            const configuration = await settingService.config();
+            var settings = {};
+
+            if (configuration && configuration.length > 0) {
+                configuration.map(item => {
+                    const { key, value } = item;
+                    settings[key] = value;
+                });
+            }
+            const { cbi_zar_value, transaction_fee_percentage } = settings;
+
+            // retrieve product information to get educator percentage
+            const { code, indicators, description } = productSubcategory;
+            const { commission_structure, educator_percentage } = indicators;
+
+            const commissions = [];
+            var payoutTotal = 0;
+            var educatorFees = 0;
+
+            // retrieve payout amounts in CBI
+            const { payout_amount, educator_amount, start_date, end_date } = req.body;
+            const transactionFees = (parseFloat(cbi_zar_value) * parseFloat(transaction_fee_percentage) / 100);
+            const cbiToZar = parseFloat(cbi_zar_value) + transactionFees;
+            const payoutAmount = (parseFloat(payout_amount) * parseFloat(usdZarRate) / cbiToZar); // per FX Unit
+            const educatorAmount = (parseFloat(educator_amount) * parseFloat(usdZarRate) / cbiToZar); // per FX Unit
+
+            // insert payout record
+            const commissionPayout = await commissionService.createPayout({
+                product_code: code,
+                payment_date: new Date().toISOString(),
+                captured_by: req.user.id,
+                data: {
+                    ...req.body,
+                },
+            });
+
+            return async.map(fraxionHolders, async (member) => {
+                // validate commission
+                const comm = await commissionService.commissionPaid(member.id);
+                
+                // do not pay a member that has already been paid for the current date
+                if (comm && comm.id) return false;
+
+                /**
+                 * START: Process Fraxion Payout
+                 */
+                const { fraxions } = member;
+                const units = parseInt(fraxions);
+                const memberPayout = payoutAmount * units;
+                const unitAmount = payoutAmount;
+                payoutTotal += memberPayout;
+
+                // update account balance
+                var { account } = member;
+                
+                await accountService.update({
+                    balance: parseFloat(account.balance) + memberPayout,
+                    available_balance: parseFloat(account.available_balance) + memberPayout,
+                }, account.id);
+
+                // log transaction
+                const memberTransaction = await transactionService.create({
+                    tx_type: 'credit',
+                    subtype: `${code.toLowerCase()}-payouts`,
+                    user_id: member.id,
+                    amount: memberPayout,
+                    reference: `EduComm-${code}`,
+                    note: `Received ${memberPayout.toFixed(4)} CBI on ${description} Payout`,
+                    total_amount: memberPayout,
+                    status: 'Completed',
+                });
+
+                // update transaction
+                if (memberTransaction.id) {
+                    var txid = code + memberTransaction.auto_id;
+                    var metadata = {
+                        type: 'crypto',
+                        currency: 'CBI',
+                        currency_code: 'CBI',
+                        entity: 'commissions',
+                        refid: commissionPayout.id,
+                    };
+                    await transactionService.update({ txid, metadata }, memberTransaction.id);
+                }
+
+                // retrieve fraxion holder's uplines
+                const uplines = await userService.upline(member.id);
+
+                if (uplines && uplines.length > 0) {
+                    var level = 1;
+
+                    /**
+                     * Perform Educator Fee payout to Upline
+                     * 
+                     * Educators fees are payable to Wealth Creators ONLY who qualifies
+                     * in accordance to 10 Level Structure.
+                     * 
+                     * This is payable when the Profits are declared a % for education
+                     * will be declared and this is allocated in accordance with the 10
+                     * level structure.
+                     */
+                    return async.map(uplines, async (upline) => {
+                        var { account } = upline;
+                        const commission = educatorAmount * parseFloat(commission_structure[`level${level}`]) / 100;
+                        educatorFees += commission;
+    
+                        // update account balance
+                        await accountService.update({
+                            balance: parseFloat(account.balance) + commission,
+                            available_balance: parseFloat(account.available_balance) + commission,
+                        }, account.id);
+    
+                        // log transaction
+                        const uplineTransaction = await transactionService.create({
+                            tx_type: 'credit',
+                            subtype: 'educator-fees',
+                            user_id: upline.id,
+                            amount: commission,
+                            reference: `EduComm-${code}`,
+                            note: `Received ${commission.toFixed(4)} ${code} from ${member.first_name} (${member.username}) on ${description}`,
+                            total_amount: commission,
+                            status: 'Completed',
+                        });
+    
+                        // update transaction
+                        var txid = code + uplineTransaction.auto_id;
+                        var metadata = {
+                            entity: 'transactions',
+                            refid: memberTransaction.id,
+                            type: 'crypto',
+                            currency: 'CBI',
+                            currency_code: 'CBI',
+                            level,
+                            level_percentage: commission_structure[`level${level}`],
+                        };
+                        await transactionService.update({ txid, metadata }, uplineTransaction.id);
+    
+                        level++;
+
+                        commissions.push({
+                            user_id: upline.id,
+                            type: `${code.toLowerCase()}-EDU-FEES`,
+                            referral_id: commissionPayout.id,
+                            amount: commission,
+                            status: 'Paid',
+                            currency_code: 'CBI',
+                            commission_date: new Date(),
+                            metadata: {
+                                level,
+                                percentage: commission_structure[`level${level}`],
+                            },
+                        });
+    
+                        return { commission, upline, txid };
+                        
+                    }, (err, results) => {
+                        if (err) {
+                            console.error(err.message || '---- errror -----');
+                            return res.status(500)
+                                .send({
+                                    success: false,
+                                    message: 'Could not process your request'
+                                });
+                        }
+                        return results;
+                    });
+                }
+
+                commissions.push({
+                    user_id: member.id,
+                    type: `${code.toUpperCase()}-PROFIT-PAYOUT`,
+                    referral_id: memberTransaction.id,
+                    amount: memberPayout,
+                    status: 'Paid',
+                    currency_code: 'CBI',
+                    commission_date: new Date(),
+                    metadata: {
+                        uplines,
+                        unit_amount: unitAmount,
+                        amount_paid: memberPayout,
+                    },
+                });
+
+                return {
+                    ...member,
+                    uplines,
+                    unit_amount: unitAmount,
+                    amount_paid: memberPayout,
+                };
+            }, async (err, results) => {
+                if (err) {
+                    console.error(err.message || '---- errror -----');
+                    return res.status(500)
+                        .send({
+                            success: false,
+                            message: 'Could not process your request'
+                        });
+                }
+
+                // log commission payments
+                await commissionService.bulkCreate(commissions);
+
+                // update product sub-category
+                await productService.updateSubcategory(productSubcategory.id, {
+                    indicators: {
+                        ...indicators,
+                        payout: {
+                            end_date,
+                            start_date,
+                            last_payout_date: moment().format('YYYY-MM-DD'),
+                        }
+                    }
+                });
+
+                // log activity
+                await activityService.addActivity({
+                    user_id: req.user.id,
+                    action: `${req.user.group_name}.products.process-payout`,
+                    description: `${req.user.group_name} processed/declared payout for ${description.toLowerCase()} product`,
+                    subsection: 'Products',
+                    section: `${description} (${code}) Payout`,
+                    data: req.body,
+                    ip: null,
+                });
+
+                // update payout
+                await commissionService.updatePayout(commissionPayout.id, {
+                    data: {
+                        ...req.body,
+                        educator_percentage,
+                        commission_structure,
+                        educator_fees: educatorFees,
+                        payout_total: payoutTotal,
+                        usd_zar_rate: usdZarRate,
+                        cbi_to_zar: cbiToZar,
+                        cbi_zar_value,
+                        results,
+                    }
+                });
+
+                return res.send({
+                    success: true,
+                    data: {
+                        end_date,
+                        start_date,
+                        educator_percentage,
+                        educator_fees: educatorFees,
+                        payout_total: payoutTotal,
+                        usd_zar_rate: usdZarRate,
+                        cbi_to_zar: cbiToZar,
+                        cbi_zar_value,
+                        results,
+                    }
+                });
+            });
+        }
+        return res.send({
+            success: true,
+            data: {
+                fraxion_holders: fraxionHolders,
+            }
+        });
+    } catch (err) {
+        console.log(err.message || '======= ERRROR =======');
+        return res.status(500).send({
+            success: false,
+            message: 'Could not process request',
         });
     }
 }
@@ -301,7 +622,7 @@ async function captureCalculations(req, res) {
 
         var data = null;
         const isFX = code.toUpperCase() === 'FX';
-        
+
         // update subcategory
         // for now only Fraxion (Staking) calculations are supported
         if (isFX) {
@@ -399,17 +720,20 @@ async function update(req, res) {
     }
 }
 
-async function updateCategory(req, res) {
-    return productService.updateCategory(req.params.id, req.body)
-        .then(data => res.send(data))
-        .catch(err => {
-            console.log(err.message)
-            res.send({
-                success: false,
-                message: err.message,
+    async function updateCategory(req, res) {
+        try{
+            await productService.updateCategory(req.params.id, req.body)
+            return res.send({
+                success: true,
+                message: 'Category was successfully updated'
             });
-        });
-}
+        } catch (error) {
+            return res.status(500).send({
+                success: false,
+                message: 'Could not process request'
+            });
+        }
+    }
 
 // async function updateSubcategory(req, res) {
 //     return productService.updateSubcategory(req.params.id, req.body)
@@ -508,7 +832,8 @@ async function getSubcategories(req, res) {
         });
     } catch (error) {
         console.log(error.message)
-        return res.send({ success: false,
+        return res.send({
+            success: false,
             message: 'Could not process request'
         });
     }
@@ -541,7 +866,7 @@ async function cancellationsAction(req, res) {
                 message: 'Cancellations on this product not allowed'
             });
         }
-        
+
         // apply cancellation penalties if any, and
         // top-up member wallet balance accordingly
         let isPercentage = false;
@@ -602,7 +927,7 @@ async function cancellationsAction(req, res) {
                 if (creditAmount > 0) {
                     // retrieve member's wallet
                     const wallet = await accountService.wallet(member_id);
-    
+
                     // log transaction
                     const currency = await currencyService.show(currency_code); // get currency
                     const transData = {
@@ -623,7 +948,7 @@ async function cancellationsAction(req, res) {
                     const txid = getTxid(product_code, transaction.auto_id);
                     await transactionService.update({ txid }, transaction.id);
                     transaction.txid = txid;
-                    
+
                     // deduct funds from user wallet
                     await accountService.update({
                         balance: parseFloat(wallet.balance) + creditAmount,
@@ -632,7 +957,7 @@ async function cancellationsAction(req, res) {
                     }, wallet.id);
                 }
             }
-            
+
             // log activity log
             await activityService.addActivity({
                 user_id: req.user.id,

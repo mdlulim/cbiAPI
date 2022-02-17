@@ -23,6 +23,10 @@ MemberProductLine.belongsTo(MemberProduct, { foreignKey: 'member_product_id', ta
 MemberProduct.hasMany(MemberProductLine, { foreignKey: 'member_product_id', targetKey: 'id', as: 'product_lines' });
 
 MemberProductLine.belongsTo(Product, { foreignKey: 'product_id', targetKey: 'id' });
+Product.hasMany(MemberProductLine, { foreignKey: 'product_id', targetKey: 'id' });
+
+MemberProductLine.belongsTo(Transaction, { foreignKey: 'transaction_id', targetKey: 'id' });
+Transaction.hasOne(MemberProductLine, { foreignKey: 'transaction_id', targetKey: 'id' });
 
 MemberProduct.belongsTo(ProductSubCategory, { foreignKey: 'code', targetKey: 'code' });
 
@@ -167,7 +171,7 @@ async function find(id, return_object = true) {
     }
 }
 
-async function show(permakey) {
+async function show(permakey, return_object = true) {
     try {
         const product = await Product.findOne({
             where: { permakey },
@@ -179,10 +183,13 @@ async function show(permakey) {
                 include: [{ model: ProductCategory }],
             }]
         });
-        return {
-            success: true,
-            data: product,
-        };
+        if (return_object) {
+            return {
+                success: true,
+                data: product,
+            };
+        }
+        return product;
     } catch (error) {
         console.error(error.message || null);
         throw new Error('Could not process your request');
@@ -226,7 +233,7 @@ async function findByCode(product_code) {
 
 async function subscribe(data) {
     try {
-        const { entity, user_id, code, value, product_id, transaction_id, end_date } = data;
+        const { entity, user_id, code, value, product_id, transaction_id, end_date, start_date } = data;
         const where = { code, entity, user_id };
         let memberProduct = await MemberProduct.findOne({ where });
         if (memberProduct && memberProduct.id) {
@@ -241,7 +248,7 @@ async function subscribe(data) {
                 value,
                 entity,
                 user_id,
-                start_date: sequelize.fn('NOW'),
+                start_date: start_date || sequelize.fn('NOW'),
             });
         }
         return MemberProductLine.create({
@@ -250,6 +257,7 @@ async function subscribe(data) {
             unit: code,
             transaction_id,
             end_date: end_date || null,
+            start_date: start_date || null,
             member_product_id: memberProduct.id,
         });
     } catch (error) {
@@ -341,28 +349,52 @@ async function category(permakey) {
 
 async function transactions(code, user_id) {
     try {
-        const { Op } = sequelize;
-        return Transaction.findAndCountAll({
-            order: [['created', 'DESC']],
-            attributes: [
-                'fee',
-                'txid',
-                'note',
-                'status',
-                'created',
-                'tx_type',
-                'currency',
-                'reference',
-                'total_amount',
-                [sequelize.json('metadata.tokens'), 'tokens']
-            ],
-            where: {
-                user_id,
-                subtype: 'product',
-                txid: { [Op.iLike]: `${code}%` },
-                status: { [Op.iLike]: 'Completed' },
-            }
-        });
+        // const { Op } = sequelize;
+        // return Transaction.findAndCountAll({
+        //     order: [['created', 'DESC']],
+        //     attributes: [
+        //         'fee',
+        //         'txid',
+        //         'note',
+        //         'status',
+        //         'created',
+        //         'tx_type',
+        //         'currency',
+        //         'reference',
+        //         'total_amount',
+        //         [Transaction, sequelize.json('metadata.tokens'), 'tokens']
+        //     ],
+        //     include: [{
+        //         model: MemberProductLine,
+        //         include: [{ model: Product }]
+        //     }],
+        //     where: {
+        //         user_id,
+        //         subtype: 'product',
+        //         txid: { [Op.iLike]: `${code}%` },
+        //         status: { [Op.iLike]: 'Completed' },
+        //     }
+        // });
+
+        const options = {
+            nest: true,
+            replacements: {},
+            type: sequelize.QueryTypes.SELECT,
+        };
+        const sql = `
+        SELECT  "transaction"."fee", "transaction"."txid", "transaction"."note", "transaction"."status",
+            "transaction"."created", "transaction"."tx_type", "transaction"."currency", "transaction"."reference",
+            "transaction"."total_amount", "member_product"."start_date" AS "member_product.start_date", 
+            "member_product"."end_date" AS "member_product.end_date", "member_product"."value" AS "member_product.value",
+            "product"."title" AS "product.title", "product"."price" AS "product.price"
+        FROM transactions AS "transaction"
+        INNER JOIN member_products_lines AS "member_product" ON "transaction"."id" = "member_product"."transaction_id"
+        INNER JOIN products AS "product" ON "member_product"."product_id" = "product"."id"
+        WHERE "transaction"."user_id" = '${user_id}' AND "transaction"."subtype" = 'product'
+            AND "transaction"."txid" iLIKE '${code}%' AND "transaction"."status" iLIKE 'Completed'
+        ORDER BY "transaction"."created" DESC;
+        `;
+        return sequelize.query(sql, options);
     } catch (error) {
         console.error(error.message || null);
         throw new Error('Could not process your request');

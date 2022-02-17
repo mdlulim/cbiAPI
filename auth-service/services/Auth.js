@@ -40,7 +40,7 @@ async function authenticate(data) {
     return User.findOne({
         where: {
             [Op.or]: [
-                { email: user },
+                { email: { [Op.iLike]: user } },
                 { mobile: user },
                 { username: user },
             ],
@@ -503,13 +503,10 @@ async function verifyLogin(data) {
             // Check device (again)
             const {
                 IPv4,
-                city,
                 country_code,
                 country_name,
                 latitude,
                 longitude,
-                postal,
-                state,
             } = geoinfo;
             const {
                 browser,
@@ -517,7 +514,7 @@ async function verifyLogin(data) {
                 os_version,
                 is_mobile,
             } = device;
-            const location = `${city}, ${state} - ${country_name} ${postal}`;
+            const location = country_name;
             const userDevice = await UserDevice.findOne({
                 where: {
                     user_id: id,

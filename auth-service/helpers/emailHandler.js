@@ -15,9 +15,20 @@ async function confirmEmail(data) {
     return sendMail(from, email, 'Confirm your email address', template);
 };
 
-async function resetPassword(data) {
+async function migrateConfirmEmail(data) {
     const { email, token } = data;
-    data.link = `${baseurl.frontend}/reset-password/${token}`;
+    data.link = `${baseurl.frontend}/migrate/activate/${token}`;
+    const template = emailTemplates.migrateConfirmEmail(data);
+    const from = {
+        name: 'CBI',
+        email: smtp.auth.user,
+    };
+    return sendMail(from, email, 'Confirm your email address', template);
+};
+
+async function resetPassword(data) {
+    const { email, token, admin_baseurl } = data;
+    data.link = admin_baseurl ? `${baseurl.admin}/reset-password/${token}` : `${baseurl.frontend}/reset-password/${token}`;
     const template = emailTemplates.resetPassword(data);
     const from = {
         name: 'CBI',
@@ -37,6 +48,17 @@ async function welcome(data) {
     return sendMail(from, email, 'Welcome to CBI Global!', template);
 };
 
+async function migrateWelcome(data) {
+    const { email } = data;
+    data.url = `${baseurl.frontend}/login`;
+    const template = emailTemplates.migrateWelcome(data);
+    const from = {
+        name: 'CBI',
+        email: smtp.auth.user,
+    };
+    return sendMail(from, email, 'Welcome to the New CBI Application!', template);
+};
+
 async function changePassword(data) {
     const { email } = data;
     const template = emailTemplates.changePassword(data);
@@ -48,13 +70,13 @@ async function changePassword(data) {
 };
 
 async function verifyLogin(data) {
-    const { email } = data;
+    const { code, email } = data;
     const template = emailTemplates.verifyLogin(data);
     const from = {
         name: 'CBI',
         email: smtp.auth.user,
     };
-    return sendMail(from, email, 'Verify login - Do not share this sign-in confirmation code with anyone', template);
+    return sendMail(from, email, `Sign-in confirmation code: ${code.toString().substr(0, 3)} ${code.toString().substr(3, 3)} - Do not share this with anyone`, template);
 };
 
 async function notifyReferrer(data) {
@@ -78,6 +100,8 @@ async function loginNotify(data) {
 };
 
 module.exports = {
+    migrateWelcome,
+    migrateConfirmEmail,
     confirmEmail,
     resetPassword,
     verifyLogin,

@@ -24,6 +24,31 @@ const authMiddleware = require('./middlewares/auth');
 module.exports.set = app => {
 
     /**
+     * Confirm migrate user
+     */
+    app.post('/migrate/confirm', authController.migrateConfirm);
+
+    /**
+     * Migrate validate and verify email
+     */
+    app.post('/migrate/validate', authController.validateMigrateEmail);
+
+    /**
+     * Migrate validate token
+     */
+    app.post('/migrate/validate/token', authController.validateMigrateToken);
+
+    /**
+     * Migrate resend token
+     */
+    app.post('/migrate/token/resend', authController.migrateTokenResend);
+
+    /**
+     * Migrate confirm mobile number
+     */
+    app.post('/migrate/mobile/confirm', authController.migrateMobileConfirm);
+
+    /**
      * Validate
      */
     app.post('/validate/:prop/:value', authController.validate);

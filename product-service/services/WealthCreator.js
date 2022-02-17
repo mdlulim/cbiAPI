@@ -26,6 +26,42 @@ async function create(data) {
     }
 }
 
+async function show(user_id) {
+    try {
+        const { fn, Op } = sequelize;
+        return WealthCreator.findOne({
+            attributes: [
+                'id',
+                'frequency',
+            ],
+            include: [{
+                model: User,
+                required: true,
+                attributes: [
+                    'id',
+                    'status',
+                    'expiry',
+                    'autorenew',
+                ],
+                where: {
+                    terms_agree: true,
+                    expiry: {
+                        [Op.gte]: fn('NOW')
+                    }
+                }
+            }],
+            where: {
+                user_id,
+                status: { [Op.iLike]: 'ACTIVE' }
+            }
+        });
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
 module.exports = {
     create,
+    show,
 }

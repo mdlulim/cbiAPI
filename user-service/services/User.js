@@ -139,6 +139,8 @@ async function referrals(id) {
                     email,
                     mobile,
                     visibility,
+                    group_id,
+                    expiry,
                     0 AS level
             FROM users
             WHERE id = '${id}'
@@ -155,6 +157,8 @@ async function referrals(id) {
                     ft.email,
                     ft.mobile,
                     ft.visibility,
+                    ft.group_id,
+                    ft.expiry,
                     level + 1
             FROM users ft
         JOIN descendant d
@@ -175,10 +179,13 @@ async function referrals(id) {
                 a.last_name AS "referral.last_name",
                 a.referral_id AS "referral.referral_id",
                 d.level,
-                n.nicename AS "country.nicename", n.iso AS "country.iso"
+                n.nicename AS "country.nicename",
+                n.iso AS "country.iso",
+                CASE WHEN g.name = 'wealth-creator' AND d.expiry >= NOW() THEN true ELSE false END AS is_wealth_creator
         FROM descendant d
         LEFT JOIN users a ON d.sponsor = a.id
         INNER JOIN countries n ON d.nationality = n.iso
+        LEFT OUTER JOIN groups g ON d.group_id = g.id
         WHERE d.level <= (
             SELECT s.value::INT
             FROM settings s

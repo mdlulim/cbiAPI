@@ -17,6 +17,7 @@ const Transaction = sequelize.define('transaction', {
     fee: Sequelize.FLOAT,
     total_amount: Sequelize.FLOAT,
     balance: Sequelize.FLOAT,
+    available_balance: Sequelize.FLOAT,
     label: Sequelize.STRING,
     company_id: Sequelize.UUID,
     currency: Sequelize.JSONB,
@@ -29,6 +30,8 @@ const Transaction = sequelize.define('transaction', {
     collection_id: Sequelize.UUID,
     txid: Sequelize.STRING,
     auto_id: Sequelize.INTEGER,
+    balance_before: Sequelize.FLOAT,
+    available_balance_before: Sequelize.FLOAT,
 }, {
     timestamps: false
 });

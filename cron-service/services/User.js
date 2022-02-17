@@ -1,12 +1,16 @@
 const sequelize = require('../config/db');
 const moment = require('moment');
 const { Group } = require('../models/Group');
+const { MemberProduct } = require('../models/MemberProduct');
 const { Notification } = require('../models/Notification');
 const { User }  = require('../models/User');
 
 User.belongsTo(Group, { foreignKey: 'group_id', targetKey: 'id' });
 Notification.belongsTo(User, { foreignKey: 'user_id', targetKey: 'id' });
 User.hasMany(User, { foreignKey: 'user_id', targetKey: 'id' });
+
+MemberProduct.belongsTo(User, { foreignKey: 'user_id', targetKey: 'id' });
+User.hasMany(MemberProduct, { foreignKey: 'user_id', targetKey: 'id' });
 
 async function create(data) {
     try {
@@ -136,6 +140,151 @@ async function wcDueForAutoRenew(query) {
     }
 }
 
+async function upline(user_id) {
+    try {
+        const options = {
+            nest: true,
+            replacements: {},
+            type: sequelize.QueryTypes.SELECT,
+        };
+        const data = [];
+        let found = false;
+        let id = user_id;
+        let level = 1; // payout MLM structure - 10 levels up
+        
+        do {
+            // retrieve uplines who are WC
+            const query = `
+            SELECT "upline"."id", "upline"."first_name", "upline"."last_name", "upline"."expiry",
+                "upline"."email", "upline"."mobile", "group"."name", "account"."id" AS "account.id",
+                "account"."balance" AS "account.balance", "account"."available_balance" AS "account.available_balance"
+            FROM users AS "user"
+            INNER JOIN users AS "upline" ON "user"."sponsor" = "upline"."id"
+            INNER JOIN groups AS "group" ON "upline"."group_id" = "group"."id" AND "group"."name" = 'wealth-creator'
+            INNER JOIN accounts AS "account" ON "upline"."id" = "account"."user_id"
+            WHERE "user"."id" = '${id}' AND "upline"."id" != "user"."id" AND "upline"."expiry" >= NOW()
+            LIMIT 1`;
+            const records = await sequelize.query(query, options);
+            if (level <= 10 && records && records.length > 0) {
+                const [record] = records;
+                if (record && record.id) {
+                    data.push(record);
+                    id = record.id;
+                    found = true;
+                    level++;
+                } else found = false;
+            } else found = false;
+        } while (found);
+        return data;
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
+async function referrals(id) {
+    try {
+        const sql = `
+        WITH RECURSIVE descendant AS (
+            SELECT  id,
+                    first_name,
+                    last_name,
+                    referral_id,
+                    sponsor,
+                    status,
+                    nationality,
+                    email,
+                    mobile,
+                    visibility,
+                    group_id,
+                    expiry,
+                    0 AS level
+            FROM users
+            WHERE id = '${id}'
+        
+            UNION ALL
+        
+            SELECT  ft.id,
+                    ft.first_name,
+                    ft.last_name,
+                    ft.referral_id,
+                    ft.sponsor,
+                    ft.status,
+                    ft.nationality,
+                    ft.email,
+                    ft.mobile,
+                    ft.visibility,
+                    ft.group_id,
+                    ft.expiry,
+                    level + 1
+            FROM users ft
+        JOIN descendant d
+        ON ft.sponsor = d.id
+        )
+        
+        SELECT  d.id,
+                d.first_name,
+                d.last_name,
+                d.referral_id,
+                d.status,
+                d.nationality,
+                d.email,
+                d.mobile,
+                d.visibility,
+                a.id AS "referral.id",
+                a.first_name AS "referral.first_name",
+                a.last_name AS "referral.last_name",
+                a.referral_id AS "referral.referral_id",
+                d.level,
+                n.nicename AS "country.nicename",
+                n.iso AS "country.iso"
+        FROM descendant d
+        LEFT JOIN users a ON d.sponsor = a.id
+        INNER JOIN countries n ON d.nationality = n.iso
+        INNER JOIN wealth_creators wc ON d.id = wc.user_id
+        INNER JOIN groups g ON d.group_id = g.id
+        WHERE d.level <= (
+            SELECT s.value::INT
+            FROM settings s
+            WHERE s.category = 'system' AND s.subcategory = 'config' AND s.key = 'max_referral_levels'
+            LIMIT 1
+        ) AND d.expiry >= NOW()
+        ORDER BY level, "referral.id"`;
+        const options = {
+            nest: true,
+            type: sequelize.QueryTypes.SELECT
+        };
+        return sequelize.query(sql, options);
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
+async function fraxions(id) {
+    try {
+        const { fn, Op } = sequelize;
+        const response = await MemberProduct.findOne({
+            attributes: ['value'],
+            where: {
+                user_id: id,
+                code: { [Op.iLike]: 'FX' },
+                status: { [Op.iLike]: 'ACTIVE' },
+                [Op.and]: [
+                    { start_date: { [Op.ne]: null } },
+                    { start_date: { [Op.lte]: fn('NOW') } },
+                    { end_date: { [Op.ne]: null } },
+                    { end_date: { [Op.gte]: fn('NOW') } }
+                ],
+            },
+        });
+        return (response && response.value) ? parseInt(response.value) : 0;
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
 module.exports = {
     create,
     index,
@@ -143,4 +292,7 @@ module.exports = {
     update,
     wcEligibleForAutoRenewNotify,
     wcDueForAutoRenew,
+    upline,
+    referrals,
+    fraxions,
 }

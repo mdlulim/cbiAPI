@@ -8,6 +8,7 @@ config = {
     baseurl: {
         admin: 'https://admin.cbiglobal.io',
         frontend: 'https://demo.cbiglobal.io',
+        api: 'https://dev.cbiglobal.io/v1/',
     },
     products: {
         CBIx7: 'CBIX7',
@@ -27,6 +28,20 @@ config = {
         }
     },
     smsApi: {
+        provider: 'sinch',
+        sinch: {
+            baseUrl: 'https://sms.api.sinch.com/xms/v1/',
+            servicePlanID: '2774eff8837d47148f4a0671a2412785',
+            apiKey: 'f2bc6930ae434c17b84235a58e2df77f',
+            senderID: '447537432321',
+        },
+        expertTexting: {
+            baseUrl: 'https://www.experttexting.com/ExptRestApi/sms/json/',
+            username: 'cbiglobal',
+            apiKey: '6qnwzv07s019kr0',
+            apiSecret: '8dphg44g5qz0y15',
+            senderID: 'DEFAULT',
+        },
         baseUrl: 'https://sms.api.sinch.com/xms/v1/',
         servicePlanID: '2774eff8837d47148f4a0671a2412785',
         apiKey: 'f2bc6930ae434c17b84235a58e2df77f',

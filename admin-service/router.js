@@ -68,7 +68,6 @@ module.exports.set = app => {
 
     app.get('/users/email/:email', authMiddleware.checkAuth, userController.email);
 
-
     /**
      * Retrieve User Mobiles
      * 
@@ -361,7 +360,7 @@ module.exports.set = app => {
     * Update company’s product details.
     */
     app.put('/transactions/:id', authMiddleware.checkAuth, userController.updateTransaction);
-
+    app.put('/bulk-update/transactions', authMiddleware.checkAuth, transactionController.updateBulkTransaction);
     /**
     * Process Batch Transactions.
     * 
@@ -592,6 +591,7 @@ module.exports.set = app => {
 
     // Transfer funds Admin side 
     app.post("/transfer", authMiddleware.checkAuth, transferController.transfer);
+    app.get("/transfer-history", authMiddleware.checkAuth, transferController.history);
 
     //Broadcast messages
     app.get('/broadcast', authMiddleware.checkAuth, broadcastController.index);

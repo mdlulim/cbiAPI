@@ -8,6 +8,7 @@ const productService = require('../services/Product');
 const settingService = require('../services/Setting');
 const transactionService = require('../services/Transaction');
 const userService = require('../services/User');
+const wealthCreatorService = require('../services/WealthCreator');
 const emailHandler = require('../helpers/emailHandler');
 const sequelize = require('../config/db');
 const { products } = require('../config');
@@ -16,6 +17,78 @@ const { FP, FX } = products;
 const getTxid = (subtype, autoid) => {
     return subtype.substr(0, 3).toUpperCase() + autoid.toString();
 };
+
+async function stars(req, res) {
+    try {
+        const wealthCreators = await wealthCreatorService.index();
+
+        if (wealthCreators && wealthCreators.length > 0) {
+            return async.map(wealthCreators, async (item, callback) => {
+                let stars = 0; // default is NO STAR
+
+                // retrieve member/wc referrals
+                const referrals = await userService.referrals(item.id);
+                let directSponsored = 0;
+                let downline = 0;
+
+                if (referrals && referrals.length > 0) {
+                    referrals.map(item => {
+                        if (item.level === 1) directSponsored++;   // direct sponsored/referral
+                        if (item.level >= 1)  downline++;          // downline
+                    });
+                }
+
+                // retrieve member fraxions
+                const fraxions = await userService.fraxions(item.id);
+
+                // * * * * * * * (7 stars)
+
+                // * * * * * * (6 stars)
+
+                // * * * * * (5 stars)
+
+                // * * * * (4 stars)
+                
+                // * * * (3 stars)
+
+                // * * (2 stars)
+
+                // * (1 star)
+
+                // update member/wc record, set stars
+                // await userService.update({
+                //     stars,
+                // }, item.id);
+
+                return {
+                    ...item,
+                    // referrals,
+                    downline,
+                    directSponsored,
+                    fraxions,
+                    stars,
+                };
+            }, (err, results) => {
+                if (err) throw err;
+                return res.send({
+                    success: true,
+                    results,
+                });
+            });
+        }
+
+        return res.send({
+            success: true,
+            data: null,
+        });
+    } catch (error) {
+        console.log(error);
+        return res.status(500).send({
+            success: false,
+            message: 'Could not process request'
+        });
+    }
+}
 
 /**
  * Auto-renew wealth creator membership
@@ -227,15 +300,12 @@ async function index(req, res){
  */
 async function productDailyEarnings(req, res){
     try {
-        const { code } = req.params;
-        const product = await productService.findByCode(code);
+        const { permakey } = req.params;
+        const product = await productService.findByPermakey(permakey);
 
         if (product && product.id) {
             const { product_category } = product;
             switch (product_category.code) {
-                case FX:
-                    break;
-                    
                 case FP: return fixedPlansDailyEarnings(product, res);
             }
         }
@@ -260,16 +330,12 @@ async function productDailyEarnings(req, res){
  */
 async function productWeeklyEarnings(req, res){
     try {
-        const { code } = req.params;
-        const product = await productService.findByCode(code);
+        const { permakey } = req.params;
+        const product = await productService.findByPermakey(permakey);
 
         if (product && product.id) {
             const { product_category } = product;
             switch (product_category.code) {
-                case FX:
-                    
-                    break;
-                    
                 case FP: return fixedPlansWeeklyEarnings(product, res);
             }
         }
@@ -499,7 +565,109 @@ async function fixedPlansWeeklyEarnings(product, res) {
     });
 }
 
+
+/**
+ * 
+ * MLM Commission Structure Payout
+ * 
+ * @param {object}  res
+ * @param {object}  data
+ * 
+ * @return {object}
+ */
+async function commissionPayout(res, data) {
+    try {
+        const {
+            user,
+            amount,
+            product,
+            transaction,
+            educator_percentage,
+            commission_structure,
+        } = data;
+
+        if (commission_structure && educator_percentage) {
+            const upline = await userService.upline(user.id);
+            if (upline.length > 0) {
+                var level = 1;
+                return async.map(upline, async (item) => {
+                    const { account } = item;
+                    const commission = amount * parseFloat(commission_structure[`level${level}`]) / 100;
+
+                    // update account balance
+                    await accountService.update({
+                        balance: parseFloat(account.balance) + commission,
+                        available_balance: parseFloat(account.available_balance) + commission,
+                    }, account.id);
+
+                    // log transaction
+                    const transact = await transactionService.create({
+                        tx_type: 'credit',
+                        subtype: 'educator-fees',
+                        user_id: item.id,
+                        amount: commission,
+                        reference: `EduComm-${product.product_code}`,
+                        note: `Received ${commission} ${product.currency.code} from ${user.first_name} (${user.username}) on ${product.type} ${product.title}`,
+                        currency: product.currency,
+                        total_amount: commission,
+                        status: 'Completed',
+                    });
+
+                    // update transaction
+                    const txid = product.product_code + transact.auto_id;
+                    const metadata = {
+                        entity: 'transactions',
+                        refid: transaction.id,
+                        type: 'crypto',
+                        currency: 'CBI',
+                        currency_code: 'CBI',
+                        level,
+                        level_percentage: commission_structure[`level${level}`],
+                    };
+                    await transactionService.update({
+                        txid,
+                        metadata,
+                    }, transact.id);
+
+                    // next level
+                    level++;
+
+                    return {
+                        item,
+                        txid,
+                        commission,
+                    };
+
+                }, (err, results) => {
+                    if (err) {
+                        return res.status(500)
+                            .send({
+                                success: false,
+                                message: 'Could not process your request'
+                            });
+                    }
+                    return res.send({
+                        success: true,
+                        data: results,
+                    });
+                });
+            }
+        }
+
+        // response
+        return res.send({ success: true });
+
+    } catch (err) {
+        console.log(err.message)
+        return res.status(500).send({
+            success: false,
+            message: 'Could not process your request'
+        });
+    }
+}
+
 module.exports = {
+    stars,
     autorenew,
     autorenewNotify,
     index,

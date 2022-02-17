@@ -95,7 +95,7 @@ async function create(req, res) {
         const password = string.toLowerCase() + numbers.toString();
         const salt = bcrypt.genSaltSync();
         const securePassword = bcrypt.hashSync(password, salt);
-
+        const verified = true;
         // create user record
         const data = {
             ...req.body,
@@ -103,6 +103,7 @@ async function create(req, res) {
             password: securePassword,
             email,
             salt,
+            verified
         };
         await userService.create(data);
 
@@ -126,7 +127,6 @@ async function create(req, res) {
                 email,
             });
         }
-        console.log(req.body)
         // response
         return res.send({ success: true, message: 'User was successfully created'});
 
@@ -247,7 +247,6 @@ async function block(req, res) {
     try {
         await userService.block(req.params.id)
             .then((data) => {
-                console.log(data)
                 if (data.success) {
                     const user = data.user;
                     // send email to recipient
@@ -278,7 +277,6 @@ async function unarchive(req, res) {
     try {
         await userService.unarchive(req.params.id)
             .then((data) => {
-                console.log(data)
                 if (data.success) {
                     const user = data.user;
                     // send email to recipient
@@ -385,12 +383,12 @@ async function updateTransaction(req, res) {
     try {
         const transact = req.body.transaction;
         const admin_user_id = req.user.id;
+
         if(req.body.transaction.status === 'Completed' || req.body.transaction.status === 'Rejected'){
-            return res.send({ success: false, message: 'This transaction has already been proccessed!' })
+            return res.send({ success: false, message: 'This transaction has already been processed!' })
         }
 
         return userService.updateTransaction(req.params.id, req.body, admin_user_id).then(async (data) => {
-            // console.log(data)
             let subtype = transact.subtype;
 
             if (transact.subtype.toLowerCase() === "deposit") {
@@ -411,7 +409,7 @@ async function updateTransaction(req, res) {
                     currency_code: data.data.currency_code,
                     sender: `${req.user.first_name} ${req.user.last_name} (${req.user.referral_id})`,
                 }).then((response) => {
-                    console.log(response)
+                    console.log('')
                 });
 
                 await activityService.addActivity({
@@ -507,39 +505,14 @@ async function updateBankAccounts(req, res) {
     }
 }
 
-// async function creditUserWallet(req, res){
-//     try {
-//         return userService.creditWallet(req.params.id, req.body)
-//         .then(data => {
-//             console.log(data)
-//             res.send({ success: true, message: 'Account was successfully updated' }) 
-//         });
-//     } catch (err) {
-//         return res.status(500).send({
-//             success: false,
-//             message: 'Could not process your request'
-//         });
-//     }
-// }
-
-// async function debitUserWallet(req, res){
-//     try {
-//         return userService.debitWallet(req.params.id, req.body)
-//         .then(data => res.send({ success: true, message: 'Account was successfully updated' }));
-//     } catch (err) {
-//         return res.status(500).send({
-//             success: false,
-//             message: 'Could not process your request'
-//         });
-//     }
-// }
-
 async function approveDeposit(req, res) {
     try {
-
-        return userService.approveDeposit(req.params.id, req.body).then(async (data) => {
+        const admin_user_id = req.user.id;
+        if(req.body.transaction.status === 'Completed' || req.body.transaction.status === 'Rejected'){
+            return res.send({ success: false, message: 'This transaction has already been proccessed!' })
+        }
+        return userService.approveDeposit(req.params.id, req.body, admin_user_id).then(async (data) => {
             if(data.success){
-                
                 const transaction = await transactionService.create(data.data.commission);
                 const transactionToMain = await transactionService.create(data.data.main);
 
@@ -600,12 +573,10 @@ async function approveDeposit(req, res) {
                     ip: null,
                     data,
                 })
-                
                 return res.send({ success: data.success, message: data.message})
             }else{
                 return res.send({ success: data.success, message: data.message})
             }
-           
         });
     } catch (err) {
         return res.status(500).send({
