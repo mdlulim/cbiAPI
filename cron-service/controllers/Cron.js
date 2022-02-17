@@ -8,6 +8,7 @@ const productService = require('../services/Product');
 const settingService = require('../services/Setting');
 const transactionService = require('../services/Transaction');
 const userService = require('../services/User');
+const wealthCreatorService = require('../services/WealthCreator');
 const emailHandler = require('../helpers/emailHandler');
 const sequelize = require('../config/db');
 const { products } = require('../config');
@@ -16,6 +17,78 @@ const { FP, FX } = products;
 const getTxid = (subtype, autoid) => {
     return subtype.substr(0, 3).toUpperCase() + autoid.toString();
 };
+
+async function stars(req, res) {
+    try {
+        const wealthCreators = await wealthCreatorService.index();
+
+        if (wealthCreators && wealthCreators.length > 0) {
+            return async.map(wealthCreators, async (item, callback) => {
+                let stars = 0; // default is NO STAR
+
+                // retrieve member/wc referrals
+                const referrals = await userService.referrals(item.id);
+                let directSponsored = 0;
+                let downline = 0;
+
+                if (referrals && referrals.length > 0) {
+                    referrals.map(item => {
+                        if (item.level === 1) directSponsored++;   // direct sponsored/referral
+                        if (item.level >= 1)  downline++;          // downline
+                    });
+                }
+
+                // retrieve member fraxions
+                const fraxions = await userService.fraxions(item.id);
+
+                // * * * * * * * (7 stars)
+
+                // * * * * * * (6 stars)
+
+                // * * * * * (5 stars)
+
+                // * * * * (4 stars)
+                
+                // * * * (3 stars)
+
+                // * * (2 stars)
+
+                // * (1 star)
+
+                // update member/wc record, set stars
+                // await userService.update({
+                //     stars,
+                // }, item.id);
+
+                return {
+                    ...item,
+                    // referrals,
+                    downline,
+                    directSponsored,
+                    fraxions,
+                    stars,
+                };
+            }, (err, results) => {
+                if (err) throw err;
+                return res.send({
+                    success: true,
+                    results,
+                });
+            });
+        }
+
+        return res.send({
+            success: true,
+            data: null,
+        });
+    } catch (error) {
+        console.log(error);
+        return res.status(500).send({
+            success: false,
+            message: 'Could not process request'
+        });
+    }
+}
 
 /**
  * Auto-renew wealth creator membership
@@ -594,6 +667,7 @@ async function commissionPayout(res, data) {
 }
 
 module.exports = {
+    stars,
     autorenew,
     autorenewNotify,
     index,
