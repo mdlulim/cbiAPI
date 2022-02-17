@@ -114,10 +114,29 @@ async function upline(user_id) {
     }
 }
 
+async function directReferrals(id, status = null) {
+    try {
+        const { Op } = sequelize;
+        const where = { sponsor: id };
+        if (status) {
+            where.status = {
+                [Op.iLike]: status,
+            };
+        }
+        return User.findAndCountAll({
+            where,
+        });
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
 module.exports = {
     create,
     index,
     show,
     update,
     upline,
+    directReferrals,
 }
