@@ -20,7 +20,6 @@ async function index(query) {
         delete where.limit;
         delete where.start_date;
         delete where.end_date;
-        
 
         if (where.user) {
             userWhere.id = where.user;
@@ -29,8 +28,6 @@ async function index(query) {
         if(start_date && end_date){
             where.created = { [Op.between]: [new Date(start_date), new Date(end_date)] }
         }
-        //console.log(query);
-        //console.log(where);
         const results = Transaction.findAndCountAll({
             where,
             include: [{ model: User, where: userWhere }],

@@ -48,13 +48,15 @@ async function create(data) {
 async function index(query) {
     try {
         const { Op } = sequelize;
-        const { offset, limit, start_date, end_date } = query;
+        const { offset, limit, status, start_date, end_date, search } = query;
         const where = query || {};
         const groupWhere = {};
         delete where.offset;
         delete where.limit;
-        // delete where.start_date;
-        // delete where.end_date;
+        delete where.status;
+        delete where.start_date;
+        delete where.end_date;
+        delete where.search;
 
         if (where.group) {
             if (where.group === 'admin') {
@@ -64,10 +66,17 @@ async function index(query) {
             }
             delete where.group;
         }
-
-        // if(start_date && end_date){
-        //     where.created = { [Op.between]: [new Date(start_date), new Date(end_date)] }
+        // console.log('=========================Test Data '+search)
+        // if(search){
+        //     where.first_name  = { [Op.like]: '%'+search+'%' }
+        //     where.last_name   = { [Op.like]: '%'+search+'%' }
+        //     where.referral_id = { [Op.like]: '%'+search+'%' }
+        //     console.log('=========================Test Data====================================')
         // }
+
+        if(start_date && end_date){
+           where.created = { [Op.between]: [new Date(start_date), new Date(end_date)] }
+        }
 
         const users = await User.findAndCountAll({
             attributes: [
@@ -130,7 +139,7 @@ async function index(query) {
             where: { status: "Archived",},
              include: [{ model: Group, where: groupWhere, required: true }],
         })
-        console.log(users.rows[0])
+
         const { count, rows } = users;
         return {
             success: true,
