@@ -33,7 +33,7 @@ async function index() {
             type: sequelize.QueryTypes.SELECT
         };
         const sql = `
-        SELECT DISTINCT "wealth_creator"."user_id", "user"."id", "user"."email", "user"."first_name", "user"."expiry",
+        SELECT DISTINCT "wealth_creator"."user_id", "user"."id", "user"."email", "user"."first_name", "user"."expiry", "user"."stars",
             "notification"."email" AS "notification.email", "notification"."sms" AS "notification.sms",
             "wealth_creator"."id" AS "membership.id", "wealth_creator"."frequency" AS "membership.frequency",
             "wealth_creator"."created" AS "membership.created"

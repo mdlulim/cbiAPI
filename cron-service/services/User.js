@@ -82,6 +82,16 @@ async function update(data, id) {
     }
 }
 
+async function bulkUpdate(data, where) {
+    try {
+        data.updated = sequelize.fn('NOW');
+        return User.update(data, { where });
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
 async function wcEligibleForAutoRenewNotify(query) {
     try {
         const today   = moment().format('YYYY-MM-DD');
@@ -198,6 +208,7 @@ async function referrals(id) {
                     visibility,
                     group_id,
                     expiry,
+                    stars,
                     0 AS level
             FROM users
             WHERE id = '${id}'
@@ -216,6 +227,7 @@ async function referrals(id) {
                     ft.visibility,
                     ft.group_id,
                     ft.expiry,
+                    ft.stars,
                     level + 1
             FROM users ft
         JOIN descendant d
@@ -236,6 +248,7 @@ async function referrals(id) {
                 a.last_name AS "referral.last_name",
                 a.referral_id AS "referral.referral_id",
                 d.level,
+                d.stars,
                 n.nicename AS "country.nicename",
                 n.iso AS "country.iso"
         FROM descendant d
@@ -290,6 +303,7 @@ module.exports = {
     index,
     show,
     update,
+    bulkUpdate,
     wcEligibleForAutoRenewNotify,
     wcDueForAutoRenew,
     upline,
