@@ -3,11 +3,12 @@ const { Country } = require('../models/Country');
 
 async function index() {
     try {
-        const countries = await Country.findAndCountAll({
-            where: {
-                blacklisted: false,
-            },
-        });
+        // const countries = await Country.findAndCountAll({
+        //     where: {
+        //         blacklisted: false,
+        //     },
+        // });
+        const countries = await Country.findAndCountAll();
         return countries;
     } catch (error) {
         console.error(error.message || null);
@@ -17,6 +18,7 @@ async function index() {
 
 async function blacklist(id) {
     try {
+       
         return Country.update({ blacklisted: true }, { where: { id } });
     } catch (error) {
         console.error(error.message || null);
@@ -26,6 +28,7 @@ async function blacklist(id) {
 
 async function unblacklist(id) {
     try {
+        console.log("==========================================unblacklist")
         return Country.update({ blacklisted: false }, { where: { id } });
     } catch (error) {
         console.error(error.message || null);
