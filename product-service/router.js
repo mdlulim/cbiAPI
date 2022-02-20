@@ -1,5 +1,6 @@
 const authMiddleware    = require('./middlewares/auth');
 const productController = require('./controllers/Product');
+const wealthCreatorController = require('./controllers/WealthCreator');
 
 module.exports.set = app => {
     /**
@@ -22,6 +23,13 @@ module.exports.set = app => {
      * Retrieve product categories.
      */
     app.get('/categories', authMiddleware.checkAuth, productController.categories);
+    
+    /**
+     * Retrieve Product Categories
+     * 
+     * Retrieve product categories.
+     */
+    app.post('/wealth-creator/qualify', authMiddleware.checkAuth, wealthCreatorController.qualify);
     
     /**
      * Retrieve Single Product Category

@@ -403,6 +403,35 @@ async function updateTransaction(req, res) {
     }
 }
 
+async function createBatch(req, res) {
+    try {
+        return transactionService.createBatch(req.body)
+            .then(data => res.send(data))
+            .catch(err => {
+                res.send({
+                    success: false,
+                    message: err.message,
+                });
+            });
+              
+    } catch (err) {
+        console.log(err);
+        if (err.name === 'SequelizeUniqueConstraintError') {
+            console.log(err.errors[0].ValidationErrorItem);
+            return res.status(403).send({
+                success: false,
+                message: `Validation error.`
+            });
+        }
+        return res.send({
+            success: false,
+            message: 'Could not process request'
+        });
+    }
+}
+
+
+
 
 module.exports = {
     index,
@@ -413,6 +442,7 @@ module.exports = {
     batchProcessTransaction,
     transactions,
     transactionstotal,
-    updateBulkTransaction
+    updateBulkTransaction,
+    createBatch,
 
 };

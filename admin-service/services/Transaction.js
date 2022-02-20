@@ -363,6 +363,24 @@ async function updateBulk(data) {
     }
 }
 
+async function createBatch(data) {
+    try {
+        await sequelize.transaction(async (transaction) => {
+            data.forEach(async(row) => {
+                console.log(row)
+                await Transaction.update({
+                    status: row.status,
+                }, { where: { txid: row.txid }, transaction });
+            })
+        })
+        
+        return { success: true, message: 'Successfully modified' };
+    } catch (error) {
+        //console.error(error || null);
+        throw new Error('Could not process your request');
+    }
+}
+
 
 
 
@@ -377,5 +395,6 @@ module.exports = {
     getProofOfPayment,
     transactions,
     transactionstotal,
-    updateBulk
+    updateBulk,
+    createBatch
 }

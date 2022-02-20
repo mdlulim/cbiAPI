@@ -26,6 +26,29 @@ async function create(data) {
     }
 }
 
+async function index() {
+    try {
+        const options = {
+            nest: true,
+            type: sequelize.QueryTypes.SELECT
+        };
+        const sql = `
+        SELECT DISTINCT "wealth_creator"."user_id", "user"."id", "user"."email", "user"."first_name", "user"."expiry",
+            "notification"."email" AS "notification.email", "notification"."sms" AS "notification.sms",
+            "wealth_creator"."id" AS "membership.id", "wealth_creator"."frequency" AS "membership.frequency",
+            "wealth_creator"."created" AS "membership.created"
+        FROM "users" AS "user"
+        INNER JOIN "wealth_creators" AS "wealth_creator" ON "user"."id" = "wealth_creator"."user_id"
+        INNER JOIN "groups" AS "group" ON "user"."group_id" = "group"."id" AND "group"."name" = 'wealth-creator' AND "group"."channel" = 'frontend'
+        INNER JOIN "notifications" AS "notification" ON "user"."id" = "notification"."user_id" AND "notification"."key" = 'account-activity-updates'
+        WHERE "user"."expiry" IS NOT NULL AND "user"."expiry" >= NOW() AND "user"."status" ILIKE 'ACTIVE'`;
+        return sequelize.query(sql, options);
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request');
+    }
+}
+
 async function show(user_id) {
     try {
         const { fn, Op } = sequelize;
@@ -63,5 +86,6 @@ async function show(user_id) {
 
 module.exports = {
     create,
+    index,
     show,
 }

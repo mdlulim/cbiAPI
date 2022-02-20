@@ -20,7 +20,8 @@ async function index(user) {
             summary,
             publisher,
             published,
-            audience
+            audience,
+            image
         FROM broadcasts
         WHERE '${user.group_id}' = ANY(audience)`;
         return sequelize.query(sql, options);
