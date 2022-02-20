@@ -228,6 +228,17 @@ async function show(id) {
     }
 }
 
+async function showUserProduct(id) {
+    try {
+        return UserProduct.findOne({
+            where: { id },
+        });
+    } catch (error) {
+        console.error(error.message || null);
+        throw new Error('Could not process your request in service');
+    }
+}
+
 async function showCategory(id) {
     try {
         return ProductCategory.findOne({
@@ -468,4 +479,5 @@ module.exports = {
     getProductProfits,
     getProfitsPerProduct,
     commissionPaid,
+    showUserProduct,
 }
