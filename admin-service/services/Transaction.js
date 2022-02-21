@@ -264,7 +264,7 @@ async function updateBulk(data) {
             return {success: false, message: 'Transaction have already been processed'}
         }
 
-        if(data.status === 'Completed' && transaction.status === 'Pending'){
+        if(data.status === 'Completed' && (transaction.status === 'Pending' || transaction.status === 'InProgress')){
             myData = {
                 status: data.status,
                 approval_reason: data.reason,
