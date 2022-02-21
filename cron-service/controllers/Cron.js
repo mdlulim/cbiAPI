@@ -1,6 +1,7 @@
 const async = require('async');
 const moment = require('moment');
 const accountService = require('../services/Account');
+const archiveService = require('../services/Archive');
 const commissionService = require('../services/Commission');
 const cronService = require('../services/Cron');
 const investmentService = require('../services/Investment');
@@ -12,7 +13,10 @@ const wealthCreatorService = require('../services/WealthCreator');
 const emailHandler = require('../helpers/emailHandler');
 const sequelize = require('../config/db');
 const { products } = require('../config');
-const { FP, FX } = products;
+const CONSTANTS = require('../constants');
+
+const { FP } = products;
+const { WEALTH_CREATOR } = CONSTANTS;
 
 const getTxid = (subtype, autoid) => {
     return subtype.substr(0, 3).toUpperCase() + autoid.toString();
@@ -20,9 +24,26 @@ const getTxid = (subtype, autoid) => {
 
 async function stars(req, res) {
     try {
+        const { Op } = sequelize;
         const wealthCreators = await wealthCreatorService.index();
 
         if (wealthCreators && wealthCreators.length > 0) {
+            
+            // update wealth creator records
+            // set stars for all back to zero
+            // make a backup of all current wealth creators first
+            await archiveService.create({
+                relation: 'users',
+                data: wealthCreators,
+                service: 'cron-service_wc-stars',
+                description: 'Wealth Creator Stars Back-Up',
+            });
+            await userService.bulkUpdate({ stars: 0 }, {
+                referral_id: {
+                    [Op.gte]: 0,
+                }
+            });
+
             return async.map(wealthCreators, async (item, callback) => {
                 let stars = 0; // default is NO STAR
 
@@ -30,11 +51,28 @@ async function stars(req, res) {
                 const referrals = await userService.referrals(item.id);
                 let directSponsored = 0;
                 let downline = 0;
+                let oneStar = 0;
+                let twoStars = 0;
+                let threeStars = 0;
+                let fourStars = 0;
+                let fiveStars = 0;
+                let sixStars = 0;
 
                 if (referrals && referrals.length > 0) {
                     referrals.map(item => {
                         if (item.level === 1) directSponsored++;   // direct sponsored/referral
-                        if (item.level >= 1)  downline++;          // downline
+                        if (item.level >= 1)  {
+                            // downline stars
+                            if (item.stars >= 6) sixStars++;
+                            else if (item.stars >= 5) fiveStars++;
+                            else if (item.stars >= 4) fourStars++;
+                            else if (item.stars >= 3) threeStars++;
+                            else if (item.stars >= 2) twoStars++;
+                            else if (item.stars >= 1) oneStar++;
+
+                            // downline
+                            downline++;
+                        }
                     });
                 }
 
@@ -42,18 +80,73 @@ async function stars(req, res) {
                 const fraxions = await userService.fraxions(item.id);
 
                 // * * * * * * * (7 stars)
+                if (
+                    fraxions >= WEALTH_CREATOR.STARS[7].FRAXIONS && 
+                    directSponsored >= WEALTH_CREATOR.STARS[7].DIRECT_SPONSORED && 
+                    downline >= WEALTH_CREATOR.STARS[7].DOWNLINE && 
+                    sixStars >= WEALTH_CREATOR.STARS[7].FOUR_BY_STARS
+                ) {
+                    stars = 7;
+                }
 
                 // * * * * * * (6 stars)
+                else if (
+                    fraxions >= WEALTH_CREATOR.STARS[6].FRAXIONS && 
+                    directSponsored >= WEALTH_CREATOR.STARS[6].DIRECT_SPONSORED && 
+                    downline >= WEALTH_CREATOR.STARS[6].DOWNLINE && 
+                    fiveStars >= WEALTH_CREATOR.STARS[6].FOUR_BY_STARS
+                ) {
+                    stars = 6;
+                }
 
                 // * * * * * (5 stars)
+                else if (
+                    fraxions >= WEALTH_CREATOR.STARS[5].FRAXIONS && 
+                    directSponsored >= WEALTH_CREATOR.STARS[5].DIRECT_SPONSORED && 
+                    downline >= WEALTH_CREATOR.STARS[5].DOWNLINE && 
+                    fourStars >= WEALTH_CREATOR.STARS[5].FOUR_BY_STARS
+                ) {
+                    stars = 5;
+                }
 
                 // * * * * (4 stars)
+                else if (
+                    fraxions >= WEALTH_CREATOR.STARS[4].FRAXIONS && 
+                    directSponsored >= WEALTH_CREATOR.STARS[4].DIRECT_SPONSORED && 
+                    downline >= WEALTH_CREATOR.STARS[4].DOWNLINE && 
+                    threeStars >= WEALTH_CREATOR.STARS[4].FOUR_BY_STARS
+                ) {
+                    stars = 4;
+                }
                 
                 // * * * (3 stars)
+                else if (
+                    fraxions >= WEALTH_CREATOR.STARS[3].FRAXIONS && 
+                    directSponsored >= WEALTH_CREATOR.STARS[3].DIRECT_SPONSORED && 
+                    downline >= WEALTH_CREATOR.STARS[3].DOWNLINE && 
+                    twoStars >= WEALTH_CREATOR.STARS[3].FOUR_BY_STARS
+                ) {
+                    stars = 3;
+                }
 
                 // * * (2 stars)
+                else if (
+                    fraxions >= WEALTH_CREATOR.STARS[2].FRAXIONS && 
+                    directSponsored >= WEALTH_CREATOR.STARS[2].DIRECT_SPONSORED && 
+                    downline >= WEALTH_CREATOR.STARS[2].DOWNLINE && 
+                    oneStar >= WEALTH_CREATOR.STARS[2].FOUR_BY_STARS
+                ) {
+                    stars = 2;
+                }
 
                 // * (1 star)
+                else if (
+                    fraxions >= WEALTH_CREATOR.STARS[1].FRAXIONS && 
+                    directSponsored >= WEALTH_CREATOR.STARS[1].DIRECT_SPONSORED && 
+                    downline >= WEALTH_CREATOR.STARS[1].DOWNLINE
+                ) {
+                    stars = 1;
+                }
 
                 // update member/wc record, set stars
                 // await userService.update({
