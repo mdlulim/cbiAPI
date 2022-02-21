@@ -254,8 +254,8 @@ async function updateBulk(data) {
         const user =  await User.findOne({where : {id: transaction.user_id}});
         const user_id = user.id;
         const subtype = transaction.subtype.charAt(0).toUpperCase() + transaction.subtype.slice(1);
-        const fee =  await Fee.findOne({where : {subtype: subtype, group_id: user.group_id} });
-       
+        const fee =  await Fee.findOne({where : {subtype: subtype.toLowerCase(), group_id: user.group_id} });
+        
         if(!fee.value){
            return {success: false, message: 'Transaction fee is not configured!'}
        }

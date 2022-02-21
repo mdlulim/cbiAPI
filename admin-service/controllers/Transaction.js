@@ -109,10 +109,10 @@ async function debitCreditUserAccount(req, res) {
                 success: true,
                 data: credited,
             });
-        }else{
+        } else {
             const debit = transactionService.debitWallet(req.params.id, req.body)
             // send email to member
-           //await emailHandler.depositRequestNotification({
+            //await emailHandler.depositRequestNotification({
             //     first_name: user.first_name,
             //     email: user.email,
             //     reference: txid,
@@ -185,10 +185,10 @@ async function getProofOfPayment(req, res) {
     }
 }
 
-async function allTransactions(req, res){
+async function allTransactions(req, res) {
     try {
         return transactionService.allTransactions()
-        .then(data => res.send(data));
+            .then(data => res.send(data));
     } catch (err) {
         return res.status(500).send({
             success: false,
@@ -215,10 +215,10 @@ async function batchProcessTransaction(req, res) {
         *convert the file to json object
         */
         s.pipe(csv()).on('data', (data) => results.push(data)).on('end', () => {
-           // console.log(results);
+            // console.log(results);
         });
 
-       // console.log(results, "+++++++++++++++++++")
+        // console.log(results, "+++++++++++++++++++")
 
 
         //update transactions on db
@@ -237,7 +237,7 @@ async function batchProcessTransaction(req, res) {
 
     } catch (err) {
         if (err.name === 'SequelizeUniqueConstraintError') {
-           // console.log(err.errors[0].ValidationErrorItem);
+            // console.log(err.errors[0].ValidationErrorItem);
             return res.status(403).send({
                 success: false,
                 message: `Validation error.`
@@ -250,7 +250,7 @@ async function batchProcessTransaction(req, res) {
     }
 }
 
-async function transactions(req, res){
+async function transactions(req, res) {
     try {
         const transactions = await transactionService.transactions(req.query, req.body);
         const { count, rows } = transactions;
@@ -270,7 +270,7 @@ async function transactions(req, res){
     }
 };
 
-async function transactionstotal(req, res){
+async function transactionstotal(req, res) {
     try {
         const response = await transactionService.transactionstotal(req.body)
         return res.send({
@@ -285,7 +285,7 @@ async function transactionstotal(req, res){
     }
 };
 
-async function roles(req, res){
+async function roles(req, res) {
     try {
         const response = await transactionService.transactionstotal(req.body)
         return res.send({
@@ -300,49 +300,49 @@ async function roles(req, res){
     }
 };
 
-async function updateBulkTransaction(req, res){
+async function updateBulkTransaction(req, res) {
     try {
-            const transactions = req.body.transactions;
-            transactions.forEach(function(transaction_req) {
-                let requestData = {
-                        id: transaction_req.id,
-                        admin_user_id: req.user.id,
-                        status: req.body.status,
-                        reason: req.body.reason
-                }
-                transactionService.updateBulk(requestData).then(async (data) => {
-                        let subtype = data.data.subtype;
-                        if (subtype.toLowerCase() === "deposit") {
-                            subtype = 'credited';
-                        } else {
-                            subtype = 'debited';
-                        }
-                        console.log(data)
-                        if (data.success) {
-                            await emailHandler.transactionNotification({
-                                first_name: data.data.first_name,
-                                email: data.data.email,
-                                status: data.data.status,
-                                amount: data.data.amount,
-                                subtype: subtype,
-                                reference: data.data.reference,
-                                currency_code: data.data.currency_code,
-                                sender: `${req.user.first_name} ${req.user.last_name} (${req.user.referral_id})`,
-                            })
+        const transactions = req.body.transactions;
+        transactions.forEach(async (transaction_req) => {
+            let requestData = {
+                id: transaction_req.id,
+                admin_user_id: req.user.id,
+                status: req.body.status,
+                reason: req.body.reason
+            }
 
-                            await activityService.addActivity({
-                                user_id: req.user.id,
-                                action: `${req.user.group_name}.transactions.${data.data.tx_type}.${data.data.subtype}`,
-                                section: 'Transactions',
-                                subsection: getSubsection(data.data),
-                                description: `${data.data.first_name} ${data.data.status}  a ${data.data.subtype} of ${data.data.amount} ${data.data.currency_code}`,
-                                ip: null,
-                                data,
-                            })
-                        }
+            let data = await transactionService.updateBulk(requestData)
+
+            let subtype = data.data.subtype;
+            if (subtype.toLowerCase() === "deposit") {
+                subtype = 'credited';
+            } else {
+                subtype = 'debited';
+            }
+            if (data.success) {
+                await emailHandler.transactionNotification({
+                    first_name: data.data.first_name,
+                    email: data.data.email,
+                    status: data.data.status,
+                    amount: data.data.amount,
+                    subtype: subtype,
+                    reference: data.data.reference,
+                    currency_code: data.data.currency_code,
+                    sender: `${req.user.first_name} ${req.user.last_name} (${req.user.referral_id})`,
                 })
-            })
-            return res.send({ success: true, message: 'Transactions was successfully updated' })
+
+                await activityService.addActivity({
+                    user_id: req.user.id,
+                    action: `${req.user.group_name}.transactions.${data.data.tx_type}.${data.data.subtype}`,
+                    section: 'Transactions',
+                    subsection: getSubsection(data.data),
+                    description: `${data.data.first_name} ${data.data.status}  a ${data.data.subtype} of ${data.data.amount} ${data.data.currency_code}`,
+                    ip: null,
+                    data,
+                })
+            }
+        })
+        return res.send({ success: true, message: 'Transactions was successfully updated' })
     } catch (err) {
         return res.send({
             success: false,
@@ -356,7 +356,7 @@ async function updateTransaction(req, res) {
         const transact = req.body.transaction;
         const admin_user_id = req.user.id;
 
-        if(req.body.transaction.status === 'Completed' || req.body.transaction.status === 'Rejected'){
+        if (req.body.transaction.status === 'Completed' || req.body.transaction.status === 'Rejected') {
             return res.send({ success: false, message: 'This transaction has already been processed!' })
         }
 
@@ -413,7 +413,7 @@ async function createBatch(req, res) {
                     message: err.message,
                 });
             });
-              
+
     } catch (err) {
         console.log(err);
         if (err.name === 'SequelizeUniqueConstraintError') {
