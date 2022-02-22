@@ -33,7 +33,7 @@ async function blacklist(req, res){
 
 async function unblacklist(req, res){
     try {
-        return countryService.blacklist(req.params.id)
+        return countryService.unblacklist(req.params.id)
         .then(() => res.send({ success: true }));
     } catch (error) {
         return res.send({

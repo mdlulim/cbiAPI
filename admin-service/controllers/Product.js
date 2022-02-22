@@ -849,9 +849,10 @@ async function cancellationsAction(req, res) {
             reason,
         } = req.body;
 
+        
         // get user product
         const userProduct = await productService.showUserProduct(user_product_id);
-
+   
         // retrieve settings config
         const settings = await settingService.findByKey('product_cancellation_penalty_fee');
 
