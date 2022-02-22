@@ -529,7 +529,7 @@ async function approveDeposit(req, res) {
                     action: `${req.user.group_name}.transactions.${req.body.transaction.tx_type}.${req.body.transactionsubtype}`,
                     section: 'Transactions',
                     subsection: getSubsection(req.body.transaction),
-                    description: `${req.user.first_name} approved a ${req.body.transaction.subtype} of ${req.body.transaction.amount} ${req.body.transaction.currency.code}`,
+                    description: `${req.user.first_name} approved a ${req.body.transaction.subtype} of ${req.body.transaction.amount} ${req.body.transaction['currency.code']}`,
                     ip: null,
                     data,
                 });
@@ -554,15 +554,17 @@ async function approveDeposit(req, res) {
                     sender: `${req.user.first_name} ${req.user.last_name} (${req.user.referral_id})`,
                 })
 
-                await emailHandler.memberCommissionFee({
-                    first_name: data.data.sponsor.first_name,
-                    email: data.data.sponsor.email,
-                    status: data.data.sponsor.status,
-                    amount: data.data.sponsor.amount,
-                    reference: data.data.user.first_name,
-                    currency_code: data.data.sponsor.currency_code,
-                    sender: `${req.user.first_name} ${req.user.last_name} (${req.user.referral_id})`,
-                })
+                if(data.data.sponsor){
+                    await emailHandler.memberCommissionFee({
+                        first_name: data.data.sponsor.first_name,
+                        email: data.data.sponsor.email,
+                        status: data.data.sponsor.status,
+                        amount: data.data.sponsor.amount,
+                        reference: data.data.user.first_name,
+                        currency_code: data.data.sponsor.currency_code,
+                        sender: `${req.user.first_name} ${req.user.last_name} (${req.user.referral_id})`,
+                    })
+                }
 
                 await activityService.addActivity({
                     user_id: req.user.id,

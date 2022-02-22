@@ -541,7 +541,7 @@ async function updateTransaction(id, data, admin_user_id) {
                 amount: data.transaction.amount,
                 fee: fee.dataValues.value,
                 reference: data.transaction.reference,
-                currency_code: data.transaction.currency.code,
+                currency_code: data.transaction['currency.code'],
             }
         };
     } catch (error) {
@@ -583,11 +583,20 @@ async function approveDeposit(id, data, admin_user_id) {
 
         if (data.status === 'Completed') {
             const user = await User.findOne({ where: { id: data.transaction.user_id } });
-            const sponsor = await User.findOne({ where: { id: user.dataValues.sponsor } });
+
             //console.log(setting)
             const mainAccount = await Account.findOne({ where: { id: '3cf7d2c0-80e1-4264-9f2f-6487fd1680c2' } });
             const userAccount = await Account.findOne({ where: { user_id: user.dataValues.id } });
-            const sponsorAccount = await Account.findOne({ where: { user_id: sponsor.dataValues.id } });
+            
+            let sponsor = {};
+            let sponsorAccount = {}
+
+            if(user.dataValues.sponsor){
+                 sponsor = await User.findOne({ where: { id: user.dataValues.sponsor } });
+                 sponsorAccount = await Account.findOne({ where: { user_id: sponsor.dataValues.id } });
+            }else{
+                 sponsorAccount = mainAccount;
+            }
 
             const userTopUp = parseFloat(data.transaction.amount) - parseFloat(setting.dataValues.value) + (parseFloat(setting.dataValues.value) * parseFloat(userFee.value) / 100);
 
@@ -632,19 +641,38 @@ async function approveDeposit(id, data, admin_user_id) {
                 updated: sequelize.fn('NOW'),
             }, { where: { id: user_id } });
 
-            const sponsorCommissionData = {
-                user_id: sponsor.id,
-                tx_type: 'credit',
-                subtype: 'referral',
-                note: 'CBI Referral Commission',
-                status: 'Completed',
-                reference: 'Pay Referral',
-                amount: parseFloat(setting.value) * parseFloat(sponsorCommission.value) / 100,
-                fee: 0,
-                total_amount: parseFloat(setting.value) * parseFloat(sponsorCommission.value) / 100,
-                balance: 0,
-                currency: data.transaction.currency,
-                source_transaction: data.transaction.user_id
+            let sponsorCommissionData = {}
+            if(sponsor){
+                sponsorCommissionData = {
+                    user_id: sponsor.id,
+                    tx_type: 'credit',
+                    subtype: 'referral',
+                    note: 'CBI Referral Commission',
+                    status: 'Completed',
+                    reference: 'Pay Referral',
+                    amount: parseFloat(setting.value) * parseFloat(sponsorCommission.value) / 100,
+                    fee: 0,
+                    total_amount: parseFloat(setting.value) * parseFloat(sponsorCommission.value) / 100,
+                    balance: 0,
+                    currency: data.transaction.currency,
+                    source_transaction: data.transaction.user_id
+                }
+            }else{
+                sponsorCommissionData = {
+                    user_id: mainAccount.company_id,
+                    tx_type: 'credit',
+                    subtype: 'global_referral',
+                    note: 'CBI Global Referral Commission',
+                    status: 'Completed',
+                    reference: 'Pay Global Referral',
+                    amount: parseFloat(setting.value) * parseFloat(sponsorCommission.value) / 100,
+                    fee: 0,
+                    total_amount: parseFloat(setting.value) * parseFloat(sponsorCommission.value) / 100,
+                    balance: 0,
+                    currency: data.transaction.currency,
+                    source_transaction: data.transaction.user_id
+                }
+
             }
 
             const mainCommission = {
@@ -661,17 +689,15 @@ async function approveDeposit(id, data, admin_user_id) {
                 currency: data.transaction.currency,
                 source_transaction: data.transaction.user_id
             }
-
             const commissionData = {
-                user_id: sponsor.id,
-                type: 'REFERRAL',
-                referral_id: user.id,
+                user_id: sponsor && sponsor.id ? sponsor.id : mainAccount.company_id,
+                type: sponsor && sponsor.id ? 'REFERRAL' : 'GLOBAL_REFERRAL',
+                referral_id: sponsor && sponsor.id ? user.id : '2c5d6c5c-90e1-46a1-8600-544c59dc45c6' ,
                 status: 'Paid',
                 amount: parseFloat(setting.value) * parseFloat(sponsorCommission.value) / 100,
-                currency_code: data.transaction.currency.code,
+                currency_code: data.transaction['currency.code'],
                 commission_date: Date.now()
             }
-
             const dataUser = {
                 user_id: user.id,
                 status: data.status,
@@ -681,27 +707,30 @@ async function approveDeposit(id, data, admin_user_id) {
                 tx_type: data.transaction.tx_type,
                 reference: data.transaction.reference,
                 amount: parseFloat(setting.value) * parseFloat(userFee.value) / 100,
-                currency_code: data.transaction.currency.code,
+                currency_code: data.transaction['currency.code'],
                 available_balance: userBalance,
             }
 
-            const dataSponsor = {
-                sponsor_id: sponsor.id,
-                status: data.status,
-                first_name: sponsor.first_name,
-                email: sponsor.email,
-                subtype: data.transaction.subtype,
-                tx_type: data.transaction.tx_type,
-                amount: parseFloat(setting.value) * parseFloat(sponsorCommission.value) / 100,
-                currency_code: data.transaction.currency.code,
-                available_balance: sponsorBalance
+            let dataSponsor = {}
+            if(sponsor){
+                 dataSponsor = {
+                    sponsor_id: sponsor.id,
+                    status: data.status,
+                    first_name: sponsor.first_name,
+                    email: sponsor.email,
+                    subtype: data.transaction.subtype,
+                    tx_type: data.transaction.tx_type,
+                    amount: parseFloat(setting.value) * parseFloat(sponsorCommission.value) / 100,
+                    currency_code: data.transaction['currency.code'],
+                    available_balance: sponsorBalance
+                }
             }
 
             await Commission.create(commissionData);
             return {
                 success: true,
                 message: "Account was successfully updated", 
-                data: {user: dataUser, sponsor: dataSponsor, commission: sponsorCommissionData, main: mainCommission } };
+                data: {user: dataUser, sponsor: sponsor ? dataSponsor : {}, commission: sponsorCommissionData, main: mainCommission } };
     }else{
         //let status = {status: data.status}
         myData = {
